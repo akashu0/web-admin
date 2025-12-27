@@ -10,10 +10,8 @@ interface LearningCenterFormProps {
 
 // Study abroad countries with their currencies
 const STUDY_ABROAD_COUNTRIES = [
+    // Europe
     { name: 'United Kingdom', currency: 'GBP' },
-    { name: 'United States', currency: 'USD' },
-    { name: 'Canada', currency: 'CAD' },
-    { name: 'Australia', currency: 'AUD' },
     { name: 'Germany', currency: 'EUR' },
     { name: 'France', currency: 'EUR' },
     { name: 'Ireland', currency: 'EUR' },
@@ -22,20 +20,45 @@ const STUDY_ABROAD_COUNTRIES = [
     { name: 'Sweden', currency: 'SEK' },
     { name: 'Denmark', currency: 'DKK' },
     { name: 'Norway', currency: 'NOK' },
-    { name: 'New Zealand', currency: 'NZD' },
-    { name: 'Singapore', currency: 'SGD' },
-    { name: 'Japan', currency: 'JPY' },
-    { name: 'South Korea', currency: 'KRW' },
     { name: 'Spain', currency: 'EUR' },
     { name: 'Italy', currency: 'EUR' },
+    { name: 'Finland', currency: 'EUR' },
+    { name: 'Austria', currency: 'EUR' },
+
+    // North America
+    { name: 'United States', currency: 'USD' },
+    { name: 'Canada', currency: 'CAD' },
+
+    // Oceania
+    { name: 'Australia', currency: 'AUD' },
+    { name: 'New Zealand', currency: 'NZD' },
+
+    // Middle East
+    { name: 'United Arab Emirates', currency: 'AED' },
+    { name: 'Saudi Arabia', currency: 'SAR' },
+    { name: 'Qatar', currency: 'QAR' },
+
+    // Southeast Asia
+    { name: 'Singapore', currency: 'SGD' },
+    { name: 'Malaysia', currency: 'MYR' },
+
+    // East Asia
+    { name: 'Japan', currency: 'JPY' },
+    { name: 'South Korea', currency: 'KRW' },
+    { name: 'China', currency: 'CNY' },
+    { name: 'Hong Kong', currency: 'HKD' },
+
+    // South Asia
+    { name: 'India', currency: 'INR' }
 ];
 
 // All available currencies
 const CURRENCIES = [
-    'USD', 'GBP', 'EUR', 'CAD', 'AUD', 'NZD', 'SGD', 'JPY', 'KRW',
-    'CHF', 'SEK', 'DKK', 'NOK', 'INR', 'CNY', 'HKD'
+    'USD', 'GBP', 'EUR', 'CAD', 'AUD', 'NZD',
+    'SGD', 'JPY', 'KRW', 'CHF', 'SEK',
+    'DKK', 'NOK', 'INR', 'CNY', 'HKD',
+    'AED', 'SAR', 'QAR', 'MYR'
 ];
-
 export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     onSubmit,
     initialData,
