@@ -99,6 +99,7 @@ const CreateLearningCenter = () => {
                 <LearningCenterForm
                     onSubmit={handleSubmit}
                     initialData={initialData || undefined}
+                    isSubmitting={isLoading}
                 />
             </div>
         </div>

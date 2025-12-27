@@ -1,11 +1,11 @@
 // components/LearningCenterForm.tsx
 import { useForm } from '@tanstack/react-form';
-import { useState } from 'react';
 import type { CreateLearningCenterDto, ProgramDeliveryMode, DynamicField } from '../../types/learningCenter';
 
 interface LearningCenterFormProps {
     onSubmit: (data: CreateLearningCenterDto) => Promise<void>;
     initialData?: Partial<CreateLearningCenterDto>;
+    isSubmitting?: boolean;
 }
 
 // Study abroad countries with their currencies
@@ -38,9 +38,9 @@ const CURRENCIES = [
 
 export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     onSubmit,
-    initialData
+    initialData,
+    isSubmitting
 }) => {
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const isEditMode = Boolean(initialData);
 
 
@@ -55,11 +55,10 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
             isActive: initialData?.isActive ?? true,
         } as unknown as CreateLearningCenterDto,
         onSubmit: async ({ value }) => {
-            setIsSubmitting(true);
             try {
                 await onSubmit(value);
             } finally {
-                setIsSubmitting(false);
+
             }
         },
     });

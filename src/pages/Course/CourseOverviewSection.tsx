@@ -41,7 +41,7 @@ export function CourseOverviewSection({
     });
 
     const courseName = watch('courseName');
-    const description = watch('description');
+    // const description = watch('description');
     const courseImage = watch('courseImage');
 
     // Auto-generate slug

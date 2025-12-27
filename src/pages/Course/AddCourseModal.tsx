@@ -1,5 +1,4 @@
-// pages/Course/AddCourseModal.tsx
-import { useState } from "react";
+
 import {
     Dialog,
     DialogContent,
@@ -22,7 +21,6 @@ export function AddCourseModal({
     onOpenChange,
     onSuccess,
 }: AddCourseModalProps) {
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const initialData: CourseOverview = {
         courseName: "",
@@ -42,7 +40,6 @@ export function AddCourseModal({
 
     const handleSave = async (data: CourseOverview) => {
         try {
-            setIsSubmitting(true);
 
             const response = await courseService.createCourseOverview(data);
 
@@ -55,8 +52,6 @@ export function AddCourseModal({
             console.error("Error creating course:", error);
             toast.error(error.response?.data?.message || "Failed to create course");
             throw error;
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
