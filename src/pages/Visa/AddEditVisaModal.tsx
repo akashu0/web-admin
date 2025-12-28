@@ -119,7 +119,15 @@ export function AddEditVisaModal({
     const addVisaDocument = () => {
         setFormData(prev => ({
             ...prev,
-            visaDocuments: [...prev.visaDocuments, { name: "", description: "", isMandatory: false }],
+            visaDocuments: [
+                ...prev.visaDocuments,
+                {
+                    _id: Date.now().toString(), // Add _id
+                    name: "",
+                    description: "",
+                    isMandatory: false
+                }
+            ],
         }));
     };
 
@@ -145,11 +153,16 @@ export function AddEditVisaModal({
             ...prev,
             visaSteps: [
                 ...prev.visaSteps,
-                { stepNumber: prev.visaSteps.length + 1, title: "", description: "", estimatedDays: 0 },
+                {
+                    _id: Date.now().toString(), // Add _id
+                    stepNumber: prev.visaSteps.length + 1,
+                    title: "",
+                    description: "",
+                    estimatedDays: 0
+                },
             ],
         }));
     };
-
     const updateVisaStep = (index: number, field: keyof Omit<VisaStep, 'id'>, value: any) => {
         // Validate description word count (max 5 words)
         if (field === 'description' && value) {
@@ -181,7 +194,15 @@ export function AddEditVisaModal({
     const addRenewalDocument = () => {
         setFormData(prev => ({
             ...prev,
-            renewalDocuments: [...prev.renewalDocuments, { name: "", description: "", isMandatory: false }],
+            renewalDocuments: [
+                ...prev.renewalDocuments,
+                {
+                    _id: Date.now().toString(), // Add _id
+                    name: "",
+                    description: "",
+                    isMandatory: false
+                }
+            ],
         }));
     };
 

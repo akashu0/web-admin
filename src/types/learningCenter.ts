@@ -47,7 +47,7 @@ export interface LearningCenterResponse {
 }
 
 export interface LearningCenter {
-    centerId: any;
+    centerId: string;
     id: string;
     name: string;
     location: string;

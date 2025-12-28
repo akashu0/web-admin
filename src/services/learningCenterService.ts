@@ -19,7 +19,8 @@ const transformLearningCenter = (center: LearningCenterResponse): LearningCenter
     country: center.country,
     currency: center.currency,
     programs: center.programs || [],
-    isActive: center.isActive
+    isActive: center.isActive,
+    centerId: ""
 });
 
 export const learningCenterService = {
