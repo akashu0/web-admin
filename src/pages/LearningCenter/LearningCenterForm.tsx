@@ -1,6 +1,7 @@
 // components/LearningCenterForm.tsx
 import { useForm } from '@tanstack/react-form';
-import type { CreateLearningCenterDto, ProgramDeliveryMode, DynamicField } from '../../types/learningCenter';
+import type { CreateLearningCenterDto, ProgramDeliveryMode, } from '../../types/learningCenter';
+import { DynamicFieldBuilder } from '@/components/common/DynamicFieldBuilder';
 
 interface LearningCenterFormProps {
     onSubmit: (data: CreateLearningCenterDto) => Promise<void>;
@@ -524,143 +525,16 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                 </div>
 
                                                 {/* Dynamic Fields */}
-                                                <form.Field name={`programs[${programIndex}].feeStructure.dynamicFields`} mode="array">
-                                                    {(dynamicFieldsArray) => (
-                                                        <div className="mt-6">
-                                                            <div className="flex justify-between items-center mb-4">
-                                                                <h6 className="text-sm font-semibold text-gray-900">Dynamic Fields</h6>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const newField: DynamicField = {
-                                                                            key: '',
-                                                                            value: '',
-                                                                            type: 'string',
-                                                                        };
-                                                                        dynamicFieldsArray.pushValue(newField);
-                                                                    }}
-                                                                    className="px-3 py-1 bg-gray-900 text-white text-sm rounded hover:bg-gray-800 transition-colors"
-                                                                >
-                                                                    + Add Field
-                                                                </button>
-                                                            </div>
 
-                                                            <div className="space-y-3">
-                                                                {dynamicFieldsArray.state.value.map((_, dynamicIndex) => (
-                                                                    <div key={dynamicIndex} className="flex gap-3 items-start bg-white p-3 rounded-lg border border-gray-300">
-                                                                        {/* Field Key */}
-                                                                        <form.Field name={`programs[${programIndex}].feeStructure.dynamicFields[${dynamicIndex}].key`}>
-                                                                            {(keyField) => (
-                                                                                <div className="flex-1">
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        value={keyField.state.value}
-                                                                                        onChange={(e) => keyField.handleChange(e.target.value)}
-                                                                                        placeholder="Field name"
-                                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
-                                                                                    />
-                                                                                </div>
-                                                                            )}
-                                                                        </form.Field>
 
-                                                                        {/* Field Type */}
-                                                                        <form.Field name={`programs[${programIndex}].feeStructure.dynamicFields[${dynamicIndex}].type`}>
-                                                                            {(typeField) => (
-                                                                                <div className="w-32">
-                                                                                    <select
-                                                                                        value={typeField.state.value}
-                                                                                        onChange={(e) => typeField.handleChange(e.target.value as "string" | "number" | "boolean")}
-                                                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
-                                                                                    >
-                                                                                        <option value="string">String</option>
-                                                                                        <option value="number">Number</option>
-                                                                                        <option value="boolean">Boolean</option>
-                                                                                    </select>
-                                                                                </div>
-                                                                            )}
-                                                                        </form.Field>
-
-                                                                        {/* Field Value */}
-                                                                        <form.Field name={`programs[${programIndex}].feeStructure.dynamicFields[${dynamicIndex}]`}>
-                                                                            {(dynamicFieldItem) => {
-                                                                                const currentType = dynamicFieldItem.state.value.type;
-                                                                                const currentValue = dynamicFieldItem.state.value.value;
-
-                                                                                if (currentType === 'boolean') {
-                                                                                    return (
-                                                                                        <div className="flex-1">
-                                                                                            <select
-                                                                                                value={String(currentValue)}
-                                                                                                onChange={(e) => {
-                                                                                                    dynamicFieldItem.handleChange({
-                                                                                                        ...dynamicFieldItem.state.value,
-                                                                                                        value: e.target.value === 'true'
-                                                                                                    });
-                                                                                                }}
-                                                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
-                                                                                            >
-                                                                                                <option value="true">True</option>
-                                                                                                <option value="false">False</option>
-                                                                                            </select>
-                                                                                        </div>
-                                                                                    );
-                                                                                }
-
-                                                                                if (currentType === 'number') {
-                                                                                    return (
-                                                                                        <div className="flex-1">
-                                                                                            <input
-                                                                                                type="number"
-                                                                                                value={currentValue as number}
-                                                                                                onChange={(e) => {
-                                                                                                    dynamicFieldItem.handleChange({
-                                                                                                        ...dynamicFieldItem.state.value,
-                                                                                                        value: Number(e.target.value)
-                                                                                                    });
-                                                                                                }}
-                                                                                                placeholder="Value"
-                                                                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
-                                                                                            />
-                                                                                        </div>
-                                                                                    );
-                                                                                }
-
-                                                                                return (
-                                                                                    <div className="flex-1">
-                                                                                        <input
-                                                                                            type="text"
-                                                                                            value={currentValue as string}
-                                                                                            onChange={(e) => {
-                                                                                                dynamicFieldItem.handleChange({
-                                                                                                    ...dynamicFieldItem.state.value,
-                                                                                                    value: e.target.value
-                                                                                                });
-                                                                                            }}
-                                                                                            placeholder="Value"
-                                                                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
-                                                                                        />
-                                                                                    </div>
-                                                                                );
-                                                                            }}
-                                                                        </form.Field>
-
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => dynamicFieldsArray.removeValue(dynamicIndex)}
-                                                                            className="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-                                                                        >
-                                                                            ×
-                                                                        </button>
-                                                                    </div>
-                                                                ))}
-
-                                                                {dynamicFieldsArray.state.value.length === 0 && (
-                                                                    <p className="text-gray-500 text-sm text-center py-4">
-                                                                        No dynamic fields added
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                                <form.Field name={`programs[${programIndex}].feeStructure.dynamicFields`}>
+                                                    {(dynamicFieldsField) => (
+                                                        <DynamicFieldBuilder
+                                                            fields={dynamicFieldsField.state.value || []}
+                                                            onChange={(updatedFields) => {
+                                                                dynamicFieldsField.handleChange(updatedFields);
+                                                            }}
+                                                        />
                                                     )}
                                                 </form.Field>
                                             </div>

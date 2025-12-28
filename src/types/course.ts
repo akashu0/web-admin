@@ -7,7 +7,7 @@ export type FieldType = 'text' | 'richtext' | 'media' | 'number' | 'boolean' | '
 
 export interface DynamicField {
     label: string;
-    id: string;
+    id?: string;
     fieldName: string;
     fieldValue: any;
     fieldType: FieldType;
