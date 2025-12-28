@@ -1,9 +1,7 @@
 // types/learningCenter.ts
-export interface DynamicField {
-    key: string;
-    value: string | number | boolean;
-    type: "string" | "number" | "boolean";
-}
+
+import type { DynamicField } from "./course";
+
 
 export interface FeeStructure {
     programTuitionFee: string;
@@ -49,6 +47,7 @@ export interface LearningCenterResponse {
 }
 
 export interface LearningCenter {
+    centerId: any;
     id: string;
     name: string;
     location: string;
@@ -60,11 +59,6 @@ export interface LearningCenter {
     updatedAt: string;
 }
 
-export interface DynamicField {
-    key: string;
-    value: string | number | boolean;
-    type: "string" | "number" | "boolean";
-}
 
 
 

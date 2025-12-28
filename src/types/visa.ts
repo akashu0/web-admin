@@ -1,6 +1,7 @@
 // types/visa.ts
 
 export interface VisaDocument {
+    _id: string;
     id: string;
     name: string;
     description?: string;
@@ -8,6 +9,7 @@ export interface VisaDocument {
 }
 
 export interface VisaStep {
+    _id: string;
     id: string;
     stepNumber: number;
     title: string;
@@ -16,6 +18,7 @@ export interface VisaStep {
 }
 
 export interface VisaRenewalDocument {
+    _id: string;
     id: string;
     name: string;
     description?: string;

@@ -131,10 +131,10 @@ export const courseService = {
         return response.data;
     },
 
-    uploadBrochure: async (file: File): Promise<{ url: string }> => {
+    uploadBrochure: async (file: File, slug: string): Promise<{ url: string }> => {
         const formData = new FormData();
         formData.append('file', file);
-        const response = await apiClient.post<{ url: string }>('/courses/upload/brochure', formData, {
+        const response = await apiClient.post<{ url: string }>(`/courses/courses-upload/brochure/${slug}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

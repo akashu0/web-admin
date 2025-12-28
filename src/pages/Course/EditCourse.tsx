@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
 import { courseService } from "@/services/courseService";
 import type { CourseFormData, CourseSection } from "@/types/course";
 import { CourseOverviewSection } from "./CourseOverviewSection";
+import StudyCentersSection from "./StudyCentersSection";
+import { DocumentsRequiredSection } from "./DocumentsRequiredSection";
+import { VisaProcessSection } from "./VisaProcessSection";
+import { CareerOpportunitiesSection } from "./CareerOpportunitiesSection";
+import { DynamicFieldsSection } from "./DynamicFieldsSection";
 
 
 interface SidebarItem {
@@ -31,7 +36,7 @@ const sidebarItems: SidebarItem[] = [
     { id: "documents", label: "Documents Required", icon: <FileCheck className="h-4 w-4" /> },
     { id: "visa", label: "Visa Process", icon: <Globe className="h-4 w-4" /> },
     { id: "career", label: "Career Opportunities", icon: <Briefcase className="h-4 w-4" /> },
-    { id: "brochure", label: "Brochure", icon: <Settings className="h-4 w-4" /> },
+    // { id: "brochure", label: "Brochure", icon: <Settings className="h-4 w-4" /> },
     { id: "dynamicFields", label: "Additional Fields", icon: <Settings className="h-4 w-4" /> },
 ];
 
@@ -225,18 +230,17 @@ export default function EditCourse() {
                             <CourseOverviewSection
                                 data={courseData.overview}
                                 onSave={(data) => handleSectionUpdate("overview", data)}
-                                onNext={() => setActiveSection("documents")}
-                            />
-                        )}
-                        {/* 
-                        {activeSection === "studyCenters" && (
-                            <StudyCentersSection
-                                data={courseData.studyCenters || []}
-                                onSave={(data) => handleSectionUpdate("studyCenters", data)}
-                                onNext={() => setActiveSection("brochure")}
+                                onNext={() => setActiveSection("studyCenters")}
                             />
                         )}
 
+                        {activeSection === "studyCenters" && (
+                            <StudyCentersSection
+                                data={courseData.studyCenters?.map(center => center.centerId) || []}
+                                onSave={(data) => handleSectionUpdate("studyCenters", data)}
+                                onNext={() => setActiveSection("documents")}
+                            />
+                        )}
 
                         {activeSection === "documents" && (
                             <DocumentsRequiredSection
@@ -258,11 +262,11 @@ export default function EditCourse() {
                             <CareerOpportunitiesSection
                                 data={courseData.careerOpportunities}
                                 onSave={(data) => handleSectionUpdate("career", data)}
-                                onNext={() => setActiveSection("studyCenters")}
+                                onNext={() => setActiveSection("dynamicFields")}
                             />
                         )}
 
-
+                        {/* 
                         {activeSection === "brochure" && courseData.brochure && (
                             <BrochureSection
                                 data={courseData.brochure || []}
@@ -270,14 +274,14 @@ export default function EditCourse() {
                                 onNext={() => setActiveSection("dynamicFields")}
                                 courseSlug={slug!}
                             />
-                        )}
+                        )} */}
 
                         {activeSection === "dynamicFields" && (
                             <DynamicFieldsSection
                                 data={courseData.dynamicFields || []}
                                 onSave={(data) => handleSectionUpdate("dynamicFields", data)}
                             />
-                        )} */}
+                        )}
                     </div>
                 </div>
             </main>

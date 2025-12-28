@@ -1,9 +1,12 @@
+import type { LearningCenter } from "./learningCenter";
+
 // types/course.ts
 export type DynamicFieldType = 'text' | 'textarea' | 'dropdown' | 'radio';
 
 export type FieldType = 'text' | 'richtext' | 'media' | 'number' | 'boolean' | 'dropdown';
 
 export interface DynamicField {
+    label: string;
     id: string;
     fieldName: string;
     fieldValue: any;
@@ -50,11 +53,7 @@ export interface CareerOpportunity {
     averageSalary?: string;
 }
 
-export interface StudyCenter {
-    id: string;
-    name: string;
-    location: string;
-}
+
 
 export interface Brochure {
     fileName?: string;
@@ -64,10 +63,11 @@ export interface Brochure {
     fileSize?: number;
 }
 
+
 export interface CourseFormData {
     _id?: string;
     overview: CourseOverview;
-    studyCenters?: StudyCenter[];
+    studyCenters?: LearningCenter[];
     documentsRequired: DocumentRequired[];
     visaProcess: VisaProcess[];
     careerOpportunities: CareerOpportunity[];
