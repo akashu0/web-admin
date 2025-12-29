@@ -2,6 +2,7 @@
 import { useForm } from '@tanstack/react-form';
 import type { CreateLearningCenterDto, ProgramDeliveryMode, } from '../../types/learningCenter';
 import { DynamicFieldBuilder } from '@/components/common/DynamicFieldBuilder';
+import { useState } from 'react';
 
 interface LearningCenterFormProps {
     onSubmit: (data: CreateLearningCenterDto) => Promise<void>;
@@ -11,55 +12,181 @@ interface LearningCenterFormProps {
 
 // Study abroad countries with their currencies
 const STUDY_ABROAD_COUNTRIES = [
-    // Europe
-    { name: 'United Kingdom', currency: 'GBP' },
-    { name: 'Germany', currency: 'EUR' },
-    { name: 'France', currency: 'EUR' },
-    { name: 'Ireland', currency: 'EUR' },
-    { name: 'Netherlands', currency: 'EUR' },
-    { name: 'Switzerland', currency: 'CHF' },
-    { name: 'Sweden', currency: 'SEK' },
-    { name: 'Denmark', currency: 'DKK' },
-    { name: 'Norway', currency: 'NOK' },
-    { name: 'Spain', currency: 'EUR' },
-    { name: 'Italy', currency: 'EUR' },
-    { name: 'Finland', currency: 'EUR' },
-    { name: 'Austria', currency: 'EUR' },
+    // 🌍 Africa
+    { name: "Afghanistan", currency: "AFN" },
+    { name: "Albania", currency: "ALL" },
+    { name: "Algeria", currency: "DZD" },
+    { name: "Angola", currency: "AOA" },
+    { name: "Benin", currency: "XOF" },
+    { name: "Botswana", currency: "BWP" },
+    { name: "Burkina Faso", currency: "XOF" },
+    { name: "Burundi", currency: "BIF" },
+    { name: "Cameroon", currency: "XAF" },
+    { name: "Cape Verde", currency: "CVE" },
+    { name: "Central African Republic", currency: "XAF" },
+    { name: "Chad", currency: "XAF" },
+    { name: "Comoros", currency: "KMF" },
+    { name: "Congo", currency: "XAF" },
+    { name: "DR Congo", currency: "CDF" },
+    { name: "Djibouti", currency: "DJF" },
+    { name: "Egypt", currency: "EGP" },
+    { name: "Equatorial Guinea", currency: "XAF" },
+    { name: "Eritrea", currency: "ERN" },
+    { name: "Ethiopia", currency: "ETB" },
+    { name: "Gabon", currency: "XAF" },
+    { name: "Gambia", currency: "GMD" },
+    { name: "Ghana", currency: "GHS" },
+    { name: "Guinea", currency: "GNF" },
+    { name: "Kenya", currency: "KES" },
+    { name: "Lesotho", currency: "LSL" },
+    { name: "Liberia", currency: "LRD" },
+    { name: "Libya", currency: "LYD" },
+    { name: "Madagascar", currency: "MGA" },
+    { name: "Malawi", currency: "MWK" },
+    { name: "Mali", currency: "XOF" },
+    { name: "Mauritania", currency: "MRU" },
+    { name: "Mauritius", currency: "MUR" },
+    { name: "Morocco", currency: "MAD" },
+    { name: "Mozambique", currency: "MZN" },
+    { name: "Namibia", currency: "NAD" },
+    { name: "Niger", currency: "XOF" },
+    { name: "Nigeria", currency: "NGN" },
+    { name: "Rwanda", currency: "RWF" },
+    { name: "Senegal", currency: "XOF" },
+    { name: "Sierra Leone", currency: "SLL" },
+    { name: "Somalia", currency: "SOS" },
+    { name: "South Africa", currency: "ZAR" },
+    { name: "South Sudan", currency: "SSP" },
+    { name: "Sudan", currency: "SDG" },
+    { name: "Tanzania", currency: "TZS" },
+    { name: "Togo", currency: "XOF" },
+    { name: "Tunisia", currency: "TND" },
+    { name: "Uganda", currency: "UGX" },
+    { name: "Zambia", currency: "ZMW" },
+    { name: "Zimbabwe", currency: "ZWL" },
 
-    // North America
-    { name: 'United States', currency: 'USD' },
-    { name: 'Canada', currency: 'CAD' },
+    // 🌍 Europe
+    { name: "Albania", currency: "ALL" },
+    { name: "Austria", currency: "EUR" },
+    { name: "Belgium", currency: "EUR" },
+    { name: "Bosnia and Herzegovina", currency: "BAM" },
+    { name: "Bulgaria", currency: "BGN" },
+    { name: "Croatia", currency: "EUR" },
+    { name: "Czech Republic", currency: "CZK" },
+    { name: "Denmark", currency: "DKK" },
+    { name: "Estonia", currency: "EUR" },
+    { name: "Finland", currency: "EUR" },
+    { name: "France", currency: "EUR" },
+    { name: "Germany", currency: "EUR" },
+    { name: "Greece", currency: "EUR" },
+    { name: "Hungary", currency: "HUF" },
+    { name: "Iceland", currency: "ISK" },
+    { name: "Ireland", currency: "EUR" },
+    { name: "Italy", currency: "EUR" },
+    { name: "Latvia", currency: "EUR" },
+    { name: "Lithuania", currency: "EUR" },
+    { name: "Luxembourg", currency: "EUR" },
+    { name: "Netherlands", currency: "EUR" },
+    { name: "Norway", currency: "NOK" },
+    { name: "Poland", currency: "PLN" },
+    { name: "Portugal", currency: "EUR" },
+    { name: "Romania", currency: "RON" },
+    { name: "Slovakia", currency: "EUR" },
+    { name: "Slovenia", currency: "EUR" },
+    { name: "Spain", currency: "EUR" },
+    { name: "Sweden", currency: "SEK" },
+    { name: "Switzerland", currency: "CHF" },
+    { name: "United Kingdom", currency: "GBP" },
 
-    // Oceania
-    { name: 'Australia', currency: 'AUD' },
-    { name: 'New Zealand', currency: 'NZD' },
+    // 🌏 Asia
+    { name: "India", currency: "INR" },
+    { name: "China", currency: "CNY" },
+    { name: "Japan", currency: "JPY" },
+    { name: "South Korea", currency: "KRW" },
+    { name: "Pakistan", currency: "PKR" },
+    { name: "Bangladesh", currency: "BDT" },
+    { name: "Sri Lanka", currency: "LKR" },
+    { name: "Nepal", currency: "NPR" },
+    { name: "Bhutan", currency: "BTN" },
+    { name: "Myanmar", currency: "MMK" },
+    { name: "Thailand", currency: "THB" },
+    { name: "Vietnam", currency: "VND" },
+    { name: "Malaysia", currency: "MYR" },
+    { name: "Singapore", currency: "SGD" },
+    { name: "Indonesia", currency: "IDR" },
+    { name: "Philippines", currency: "PHP" },
+    { name: "Cambodia", currency: "KHR" },
+    { name: "Laos", currency: "LAK" },
+    { name: "Mongolia", currency: "MNT" },
+    { name: "Saudi Arabia", currency: "SAR" },
+    { name: "United Arab Emirates", currency: "AED" },
+    { name: "Qatar", currency: "QAR" },
+    { name: "Kuwait", currency: "KWD" },
+    { name: "Oman", currency: "OMR" },
+    { name: "Israel", currency: "ILS" },
+    { name: "Turkey", currency: "TRY" },
 
-    // Middle East
-    { name: 'United Arab Emirates', currency: 'AED' },
-    { name: 'Saudi Arabia', currency: 'SAR' },
-    { name: 'Qatar', currency: 'QAR' },
+    // 🌎 Americas
+    { name: "United States", currency: "USD" },
+    { name: "Canada", currency: "CAD" },
+    { name: "Mexico", currency: "MXN" },
+    { name: "Brazil", currency: "BRL" },
+    { name: "Argentina", currency: "ARS" },
+    { name: "Chile", currency: "CLP" },
+    { name: "Colombia", currency: "COP" },
+    { name: "Peru", currency: "PEN" },
+    { name: "Venezuela", currency: "VES" },
 
-    // Southeast Asia
-    { name: 'Singapore', currency: 'SGD' },
-    { name: 'Malaysia', currency: 'MYR' },
-
-    // East Asia
-    { name: 'Japan', currency: 'JPY' },
-    { name: 'South Korea', currency: 'KRW' },
-    { name: 'China', currency: 'CNY' },
-    { name: 'Hong Kong', currency: 'HKD' },
-
-    // South Asia
-    { name: 'India', currency: 'INR' }
+    // 🌏 Oceania
+    { name: "Australia", currency: "AUD" },
+    { name: "New Zealand", currency: "NZD" },
+    { name: "Fiji", currency: "FJD" },
+    { name: "Papua New Guinea", currency: "PGK" }
 ];
 
 // All available currencies
+// All available currencies (ISO 4217)
 const CURRENCIES = [
-    'USD', 'GBP', 'EUR', 'CAD', 'AUD', 'NZD',
-    'SGD', 'JPY', 'KRW', 'CHF', 'SEK',
-    'DKK', 'NOK', 'INR', 'CNY', 'HKD',
-    'AED', 'SAR', 'QAR', 'MYR'
+    // Major
+    "USD", "EUR", "GBP", "JPY", "CNY", "CHF", "CAD", "AUD", "NZD",
+
+    // Asia
+    "INR", "PKR", "BDT", "LKR", "NPR", "BTN",
+    "MMK", "THB", "VND", "MYR", "SGD", "IDR",
+    "PHP", "KHR", "LAK", "MNT", "KRW", "HKD",
+    "TWD", "JPY",
+
+    // Middle East
+    "AED", "SAR", "QAR", "KWD", "OMR", "BHD",
+    "ILS", "TRY", "IRR", "IQD", "JOD", "LBP",
+    "YER",
+
+    // Europe (non-EUR)
+    "SEK", "NOK", "DKK", "ISK", "PLN", "CZK",
+    "HUF", "RON", "BGN", "ALL", "BAM", "MKD",
+    "RSD", "UAH", "BYN", "MDL", "GEL", "AMD",
+    "AZN", "RUB",
+
+    // Africa
+    "ZAR", "NGN", "EGP", "KES", "UGX", "TZS",
+    "GHS", "ETB", "MAD", "DZD", "TND", "LYD",
+    "SDG", "SSP", "ZMW", "ZWL", "MWK", "MUR",
+    "NAD", "BWP", "XOF", "XAF", "CDF", "RWF",
+    "BIF", "SLL", "SOS", "DJF", "KMF", "CVE",
+
+    // Americas
+    "MXN", "BRL", "ARS", "CLP", "COP", "PEN",
+    "UYU", "PYG", "BOB", "VES", "CRC", "GTQ",
+    "HNL", "NIO", "PAB", "DOP", "HTG", "JMD",
+    "TTD", "BBD", "BSD", "XCD", "GYD", "SRD",
+
+    // Oceania
+    "FJD", "PGK", "SBD", "VUV", "WST", "TOP",
+
+    // Special / shared
+    "XPF", "XAF", "XOF", "XCD"
 ];
+
 export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     onSubmit,
     initialData,
@@ -148,35 +275,52 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 
                         {/* Country Field - Dropdown */}
                         <form.Field name="country">
-                            {(field) => (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                                        Country
-                                    </label>
-                                    <select
-                                        value={field.state.value}
-                                        onChange={(e) => {
-                                            field.handleChange(e.target.value);
-                                            // Auto-populate currency based on country
-                                            const selectedCountry = STUDY_ABROAD_COUNTRIES.find(
-                                                c => c.name === e.target.value
-                                            );
-                                            if (selectedCountry) {
-                                                form.setFieldValue('currency', selectedCountry.currency);
-                                            }
-                                        }}
-                                        onBlur={field.handleBlur}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900"
-                                    >
-                                        <option value="">Select country</option>
-                                        {STUDY_ABROAD_COUNTRIES.map((country) => (
-                                            <option key={country.name} value={country.name}>
-                                                {country.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                            {(field) => {
+                                const [search, setSearch] = useState<string>("");
+                                const filteredCountries = STUDY_ABROAD_COUNTRIES.filter(c =>
+                                    c.name.toLowerCase().includes(search.toLowerCase())
+                                );
+
+                                return (
+                                    <div className="relative">
+                                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                                            Country
+                                        </label>
+
+                                        {/* Search Input */}
+                                        <input
+                                            type="text"
+                                            placeholder="Search country..."
+                                            value={search}
+                                            onChange={(e) => setSearch(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-1 focus:ring-2 focus:ring-gray-900"
+                                        />
+
+                                        {/* Dropdown List */}
+                                        <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white">
+                                            {filteredCountries.map((country) => (
+                                                <div
+                                                    key={country.name}
+                                                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => {
+                                                        field.handleChange(country.name);
+                                                        form.setFieldValue("currency", country.currency);
+                                                        setSearch(country.name);
+                                                    }}
+                                                >
+                                                    {country.name}
+                                                </div>
+                                            ))}
+
+                                            {filteredCountries.length === 0 && (
+                                                <div className="px-4 py-2 text-gray-500">
+                                                    No country found
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            }}
                         </form.Field>
 
                         {/* Currency Field - Dropdown */}
