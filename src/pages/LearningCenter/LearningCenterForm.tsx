@@ -46,6 +46,7 @@ const STUDY_ABROAD_COUNTRIES = [
     { name: "Mali", currency: "XOF" },
     { name: "Mauritania", currency: "MRU" },
     { name: "Mauritius", currency: "MUR" },
+    { name: "Malta", currency: "EUR" },
     { name: "Morocco", currency: "MAD" },
     { name: "Mozambique", currency: "MZN" },
     { name: "Namibia", currency: "NAD" },
@@ -144,7 +145,6 @@ const STUDY_ABROAD_COUNTRIES = [
     { name: "Papua New Guinea", currency: "PGK" }
 ];
 
-// All available currencies
 // All available currencies (ISO 4217)
 const CURRENCIES = [
     // Major
@@ -194,7 +194,9 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 }) => {
     const isEditMode = Boolean(initialData);
 
-
+    // ✅ Move useState to top level of component
+    const [countrySearch, setCountrySearch] = useState<string>("");
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const form = useForm({
         defaultValues: {
@@ -213,6 +215,11 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
             }
         },
     });
+
+    // ✅ Filter countries at component level
+    const filteredCountries = STUDY_ABROAD_COUNTRIES.filter(c =>
+        c.name.toLowerCase().includes(countrySearch.toLowerCase())
+    );
 
     return (
         <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg border border-gray-200">
@@ -275,28 +282,27 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 
                         {/* Country Field - Dropdown */}
                         <form.Field name="country">
-                            {(field) => {
-                                const [search, setSearch] = useState<string>("");
-                                const filteredCountries = STUDY_ABROAD_COUNTRIES.filter(c =>
-                                    c.name.toLowerCase().includes(search.toLowerCase())
-                                );
+                            {(field) => (
+                                <div className="relative">
+                                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                                        Country
+                                    </label>
 
-                                return (
-                                    <div className="relative">
-                                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                                            Country
-                                        </label>
+                                    {/* Search Input */}
+                                    <input
+                                        type="text"
+                                        placeholder="Search country..."
+                                        value={countrySearch}
+                                        onChange={(e) => {
+                                            setCountrySearch(e.target.value);
+                                            setIsDropdownOpen(true);
+                                        }}
+                                        onFocus={() => setIsDropdownOpen(true)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-1 focus:ring-2 focus:ring-gray-900"
+                                    />
 
-                                        {/* Search Input */}
-                                        <input
-                                            type="text"
-                                            placeholder="Search country..."
-                                            value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-1 focus:ring-2 focus:ring-gray-900"
-                                        />
-
-                                        {/* Dropdown List */}
+                                    {/* Dropdown List */}
+                                    {isDropdownOpen && (
                                         <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white">
                                             {filteredCountries.map((country) => (
                                                 <div
@@ -305,7 +311,8 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                     onClick={() => {
                                                         field.handleChange(country.name);
                                                         form.setFieldValue("currency", country.currency);
-                                                        setSearch(country.name);
+                                                        setCountrySearch(country.name);
+                                                        setIsDropdownOpen(false); // ✅ Close dropdown
                                                     }}
                                                 >
                                                     {country.name}
@@ -318,11 +325,10 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
-                                );
-                            }}
+                                    )}
+                                </div>
+                            )}
                         </form.Field>
-
                         {/* Currency Field - Dropdown */}
                         <form.Field name="currency">
                             {(field) => (
@@ -477,8 +483,6 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 
                                             {/* Study Hours, Mode, Support */}
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-
                                                 <form.Field name={`programs[${programIndex}].mode`}>
                                                     {(fieldItem) => (
                                                         <div>
@@ -652,8 +656,6 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                 </div>
 
                                                 {/* Dynamic Fields */}
-
-
                                                 <form.Field name={`programs[${programIndex}].feeStructure.dynamicFields`}>
                                                     {(dynamicFieldsField) => (
                                                         <DynamicFieldBuilder
