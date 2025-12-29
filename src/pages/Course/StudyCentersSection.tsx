@@ -303,10 +303,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                         {program.durationYears}Y {program.durationMonths}M
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <div className="text-xs text-gray-500">Study Hours</div>
-                                                    <div className="font-medium">{program.studyHours}</div>
-                                                </div>
+
                                                 <div className="col-span-2">
                                                     <div className="text-xs text-gray-500">Support</div>
                                                     <div className="font-medium">{program.support}</div>
@@ -345,9 +342,9 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <div className="text-gray-500">VAT</div>
+                                                        <div className="text-gray-500">Tax</div>
                                                         <div className="font-medium">
-                                                            {program.feeStructure.vat}
+                                                            {program.feeStructure.tax}
                                                         </div>
                                                     </div>
                                                     <div>
