@@ -8,7 +8,7 @@ export interface FeeStructure {
     studentVisaFee: string;
     accommodation: string;
     airportTransfer: string;
-    vat: string;
+    tax: string;
     applicationFee: string;
     dynamicFields: DynamicField[];
 }
@@ -17,7 +17,7 @@ export interface ProgramDeliveryMode {
     modeType: "Express" | "Regular" | "Fast Track";
     durationYears: string;
     durationMonths: string;
-    studyHours: string;
+
     mode: string; // Online | Onsite | Hybrid
     support: string;
     feeStructure: FeeStructure;

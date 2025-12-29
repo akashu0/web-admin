@@ -237,7 +237,6 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                             modeType: 'Regular',
                                             durationYears: '',
                                             durationMonths: '',
-                                            studyHours: '',
                                             mode: '',
                                             support: '',
                                             feeStructure: {
@@ -245,7 +244,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                 studentVisaFee: '',
                                                 accommodation: '',
                                                 airportTransfer: '',
-                                                vat: '',
+                                                tax: '',
                                                 applicationFee: '',
                                                 dynamicFields: [],
                                             },
@@ -334,23 +333,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 
                                             {/* Study Hours, Mode, Support */}
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <form.Field name={`programs[${programIndex}].studyHours`}>
-                                                    {(fieldItem) => (
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                                                Study Hours *
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={fieldItem.state.value}
-                                                                onChange={(e) => fieldItem.handleChange(e.target.value)}
-                                                                placeholder="e.g., 20hrs/week"
-                                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
-                                                                required
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </form.Field>
+
 
                                                 <form.Field name={`programs[${programIndex}].mode`}>
                                                     {(fieldItem) => (
@@ -366,7 +349,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                             >
                                                                 <option value="">Select mode</option>
                                                                 <option value="Online">Online</option>
-                                                                <option value="Onsite">Onsite</option>
+                                                                <option value="OnCampus">On Campus</option>
                                                                 <option value="Hybrid">Hybrid</option>
                                                             </select>
                                                         </div>
@@ -419,7 +402,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                         {(fieldItem) => (
                                                             <div>
                                                                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                                                                    Program Tuition Fee
+                                                                    Annual Tuition Fee *
                                                                 </label>
                                                                 <input
                                                                     type="text"
@@ -487,12 +470,12 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                         )}
                                                     </form.Field>
 
-                                                    {/* VAT */}
-                                                    <form.Field name={`programs[${programIndex}].feeStructure.vat`}>
+                                                    {/* Tax */}
+                                                    <form.Field name={`programs[${programIndex}].feeStructure.tax`}>
                                                         {(fieldItem) => (
                                                             <div>
                                                                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                                                                    VAT
+                                                                    Tax
                                                                 </label>
                                                                 <input
                                                                     type="text"
