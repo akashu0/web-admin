@@ -1,16 +1,14 @@
 // types/visa.ts
 
 export interface VisaDocument {
-    _id: string;
-    id: string;
+    _id?: string;
     name: string;
     description?: string;
     isMandatory: boolean;
 }
 
 export interface VisaStep {
-    _id: string;
-    id: string;
+    _id?: string;
     stepNumber: number;
     title: string;
     description: string;
@@ -18,8 +16,7 @@ export interface VisaStep {
 }
 
 export interface VisaRenewalDocument {
-    _id: string;
-    id: string;
+    _id?: string;
     name: string;
     description?: string;
     isMandatory: boolean;
@@ -27,7 +24,6 @@ export interface VisaRenewalDocument {
 
 export interface Visa {
     _id: string;
-    id: string;
     country: string;
     visaDocuments: VisaDocument[];
     visaFee: string;
@@ -35,22 +31,23 @@ export interface Visa {
     visaSteps: VisaStep[];
     visaRenewalCost: string;
     renewalDocuments: VisaRenewalDocument[];
-    visaSuccessRate: string; // Percentage (0-100)
-    visaProcessingTime: string; // In days
+    visaSuccessRate: string;
+    visaProcessingTime: string;
     visaProcessingTimeUnit: 'days' | 'weeks' | 'months';
     status: 'active' | 'inactive';
     createdAt: string;
     updatedAt: string;
 }
 
+// Changed: Allow optional _id in nested documents for both create and update
 export interface CreateVisaDto {
     country: string;
-    visaDocuments: Omit<VisaDocument, 'id'>[];
+    visaDocuments: VisaDocument[]; // Now includes optional _id
     visaFee: string;
     currency?: string;
-    visaSteps: Omit<VisaStep, 'id'>[];
+    visaSteps: VisaStep[]; // Now includes optional _id
     visaRenewalCost: string;
-    renewalDocuments: Omit<VisaRenewalDocument, 'id'>[];
+    renewalDocuments: VisaRenewalDocument[]; // Now includes optional _id
     visaSuccessRate: string;
     visaProcessingTime: string;
     visaProcessingTimeUnit?: 'days' | 'weeks' | 'months';

@@ -58,12 +58,31 @@ export function AddEditVisaModal({
         if (visa) {
             setFormData({
                 country: visa.country,
-                visaDocuments: visa.visaDocuments.map(({ id, ...rest }) => rest),
+                // Keep MongoDB _ids when editing
+                visaDocuments: visa.visaDocuments.map(doc => ({
+                    ...(doc._id && { _id: doc._id }), // Include _id only if it exists
+                    name: doc.name,
+                    description: doc.description,
+                    isMandatory: doc.isMandatory
+                })),
                 visaFee: visa.visaFee,
                 currency: visa.currency,
-                visaSteps: visa.visaSteps.map(({ id, ...rest }) => rest),
+                // Keep MongoDB _ids when editing
+                visaSteps: visa.visaSteps.map(step => ({
+                    ...(step._id && { _id: step._id }), // Include _id only if it exists
+                    stepNumber: step.stepNumber,
+                    title: step.title,
+                    description: step.description,
+                    estimatedDays: step.estimatedDays
+                })),
                 visaRenewalCost: visa.visaRenewalCost,
-                renewalDocuments: visa.renewalDocuments.map(({ id, ...rest }) => rest),
+                // Keep MongoDB _ids when editing
+                renewalDocuments: visa.renewalDocuments.map(doc => ({
+                    ...(doc._id && { _id: doc._id }), // Include _id only if it exists
+                    name: doc.name,
+                    description: doc.description,
+                    isMandatory: doc.isMandatory
+                })),
                 visaSuccessRate: visa.visaSuccessRate,
                 visaProcessingTime: visa.visaProcessingTime,
                 visaProcessingTimeUnit: visa.visaProcessingTimeUnit,
@@ -97,14 +116,12 @@ export function AddEditVisaModal({
             } else {
                 await visaService.createVisa(formData);
                 toast.success("Visa created successfully");
-
             }
             onSuccess();
             onClose();
         } catch (error: any) {
             console.error("Error saving visa:", error);
 
-            // Extract error message from backend response
             const errorMessage = error?.response?.data?.message ||
                 error?.message ||
                 "Failed to save visa";
@@ -122,7 +139,6 @@ export function AddEditVisaModal({
             visaDocuments: [
                 ...prev.visaDocuments,
                 {
-                    _id: Date.now().toString(), // Add _id
                     name: "",
                     description: "",
                     isMandatory: false
@@ -131,7 +147,7 @@ export function AddEditVisaModal({
         }));
     };
 
-    const updateVisaDocument = (index: number, field: keyof Omit<VisaDocument, 'id'>, value: any) => {
+    const updateVisaDocument = (index: number, field: keyof Omit<VisaDocument, '_id'>, value: any) => {
         setFormData(prev => ({
             ...prev,
             visaDocuments: prev.visaDocuments.map((doc, i) =>
@@ -154,7 +170,6 @@ export function AddEditVisaModal({
             visaSteps: [
                 ...prev.visaSteps,
                 {
-                    _id: Date.now().toString(), // Add _id
                     stepNumber: prev.visaSteps.length + 1,
                     title: "",
                     description: "",
@@ -163,8 +178,8 @@ export function AddEditVisaModal({
             ],
         }));
     };
-    const updateVisaStep = (index: number, field: keyof Omit<VisaStep, 'id'>, value: any) => {
-        // Validate description word count (max 5 words)
+
+    const updateVisaStep = (index: number, field: keyof Omit<VisaStep, '_id'>, value: any) => {
         if (field === 'description' && value) {
             const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
             if (wordCount > 5) {
@@ -197,7 +212,6 @@ export function AddEditVisaModal({
             renewalDocuments: [
                 ...prev.renewalDocuments,
                 {
-                    _id: Date.now().toString(), // Add _id
                     name: "",
                     description: "",
                     isMandatory: false
@@ -206,7 +220,7 @@ export function AddEditVisaModal({
         }));
     };
 
-    const updateRenewalDocument = (index: number, field: keyof Omit<VisaRenewalDocument, 'id'>, value: any) => {
+    const updateRenewalDocument = (index: number, field: keyof Omit<VisaRenewalDocument, '_id'>, value: any) => {
         setFormData(prev => ({
             ...prev,
             renewalDocuments: prev.renewalDocuments.map((doc, i) =>
@@ -222,7 +236,6 @@ export function AddEditVisaModal({
         }));
     };
 
-    // Helper function to count words
     const getWordCount = (text: string) => {
         return text.trim().split(/\s+/).filter(Boolean).length;
     };
@@ -401,7 +414,7 @@ export function AddEditVisaModal({
                             </div>
                         ) : (
                             formData.visaDocuments.map((doc, index) => (
-                                <div key={index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
+                                <div key={doc._id || index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
@@ -462,7 +475,7 @@ export function AddEditVisaModal({
                             </div>
                         ) : (
                             formData.visaSteps.map((step, index) => (
-                                <div key={index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
+                                <div key={step._id || index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 space-y-3">
                                             <div className="grid grid-cols-2 gap-4">
@@ -531,7 +544,7 @@ export function AddEditVisaModal({
                             </div>
                         ) : (
                             formData.renewalDocuments.map((doc, index) => (
-                                <div key={index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
+                                <div key={doc._id || index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
