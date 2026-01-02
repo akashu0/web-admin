@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X, MapPin, Globe, DollarSign, BookOpen } from "lucide-react";
-import { learningCenterService } from "@/services/learningCenterService"; // Adjust path as needed
+import { X, MapPin, Globe, DollarSign, BookOpen, Plane, FileText } from "lucide-react";
+import { learningCenterService } from "@/services/learningCenterService";
 import type { LearningCenter } from "@/types/learningCenter";
-// import type { EGLearningCenter } from "../LearningCenter/LearningCenterList";
+import type { Visa } from "@/types/visa";
 
 interface StudyCentersSectionProps {
-    data: string[]; // Already selected center IDs
+    data: string[];
     onSave: (data: string[]) => void;
     onNext: () => void;
 }
@@ -15,20 +15,16 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     onSave,
     onNext,
 }) => {
-
-
     const [selectedCenterIds, setSelectedCenterIds] = useState<string[]>(data || []);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [modalCenter, setModalCenter] = useState<LearningCenter | null>(null);
     const [centers, setCenters] = useState<LearningCenter[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch all learning centers on mount
     useEffect(() => {
         fetchCenters();
     }, []);
 
-    // Initialize selected centers from props
     useEffect(() => {
         if (data && data.length > 0) {
             setSelectedCenterIds(data);
@@ -39,6 +35,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         try {
             setIsLoading(true);
             const fetchedCenters = await learningCenterService.getAllLearningCenters();
+
             setCenters(fetchedCenters);
         } catch (error) {
             console.error("Error fetching learning centers:", error);
@@ -71,10 +68,11 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
 
     const getModeIcon = (mode: string) => {
         if (mode.toLowerCase().includes("online")) return "🌐";
-        if (mode.toLowerCase().includes("onsite")) return "🏢";
+        if (mode.toLowerCase().includes("oncampus")) return "🏢";
         if (mode.toLowerCase().includes("hybrid")) return "🔄";
         return "📚";
     };
+
 
     return (
         <div className="space-y-6">
@@ -146,6 +144,12 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                     <Globe className="w-3 h-3" />
                                                     {center.country}
                                                 </span>
+                                                {center.visa && (
+                                                    <span className="flex items-center gap-1 text-purple-600">
+                                                        <Plane className="w-3 h-3" />
+                                                        Visa Available
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </label>
@@ -197,10 +201,14 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                         <DollarSign className="w-4 h-4 text-purple-600" />
                                         <span>{center.currency}</span>
                                     </div>
-                                    {/* <div className="flex items-center gap-2">
-                                        <BookOpen className="w-4 h-4 text-purple-600" />
-                                        <span>{center.programs.length} Programs</span>
-                                    </div> */}
+                                    {center.visa && (
+                                        <div className="flex items-center gap-2">
+                                            <Plane className="w-4 h-4 text-purple-600" />
+                                            <span className="text-purple-600 font-medium">
+                                                {(center.visa as any).country} Visa
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mt-3 text-xs text-purple-600 font-medium">
@@ -215,8 +223,8 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
             {/* Modal */}
             {modalCenter && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                    <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
                             <h3 className="text-xl font-bold text-gray-900">
                                 {modalCenter.name}
                             </h3>
@@ -228,9 +236,9 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                             </button>
                         </div>
 
-                        <div className="p-6">
+                        <div className="p-6 space-y-6">
                             {/* Basic Info */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="flex items-center gap-2">
                                     <MapPin className="w-5 h-5 text-purple-600" />
                                     <div>
@@ -262,6 +270,103 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Visa Information Section */}
+                            {modalCenter.visa && (
+                                <div className="border border-purple-200 rounded-lg p-6 bg-purple-50">
+                                    <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                        <Plane className="w-5 h-5 text-purple-600" />
+                                        Visa Information
+                                    </h4>
+
+                                    <div className="bg-white rounded-lg p-4 mb-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                            <div>
+                                                <div className="text-xs text-gray-500">Country</div>
+                                                <div className="font-semibold text-gray-900">
+                                                    {(modalCenter.visa as Visa).country}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-gray-500">Visa Fee</div>
+                                                <div className="font-semibold text-gray-900">
+                                                    {(modalCenter.visa as Visa).visaFee} {(modalCenter.visa as Visa).currency}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-gray-500">Processing Time</div>
+                                                <div className="font-semibold text-gray-900">
+                                                    {(modalCenter.visa as Visa).visaProcessingTime} {(modalCenter.visa as Visa).visaProcessingTimeUnit}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-gray-500">Success Rate</div>
+                                                <div className="font-semibold text-gray-900">
+                                                    {(modalCenter.visa as Visa).visaSuccessRate}%
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Visa Steps */}
+                                        {(modalCenter.visa as Visa).visaSteps && (modalCenter.visa as Visa).visaSteps.length > 0 && (
+                                            <div className="mb-4">
+                                                <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                    <FileText className="w-4 h-4 text-purple-600" />
+                                                    Visa Process Steps ({(modalCenter.visa as Visa).visaSteps.length})
+                                                </h5>
+                                                <div className="space-y-2">
+                                                    {(modalCenter.visa as Visa).visaSteps.map((step) => (
+                                                        <div key={step._id} className="flex items-start gap-3 bg-gray-50 p-3 rounded">
+                                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex-shrink-0">
+                                                                {step.stepNumber}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center justify-between">
+                                                                    <p className="font-medium text-gray-900 text-sm">{step.title}</p>
+                                                                    {step.estimatedDays && (
+                                                                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                                                            ~{step.estimatedDays} days
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 mt-1">{step.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Visa Documents */}
+                                        {(modalCenter.visa as Visa).visaDocuments && (modalCenter.visa as Visa).visaDocuments.length > 0 && (
+                                            <div>
+                                                <h5 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                                    <FileText className="w-4 h-4 text-purple-600" />
+                                                    Required Documents ({(modalCenter.visa as Visa).visaDocuments.length})
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    {(modalCenter.visa as Visa).visaDocuments.map((doc) => (
+                                                        <div key={doc._id} className="flex items-start gap-2 bg-gray-50 p-2 rounded text-sm">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${doc.isMandatory
+                                                                ? 'bg-red-100 text-red-800'
+                                                                : 'bg-blue-100 text-blue-800'
+                                                                }`}>
+                                                                {doc.isMandatory ? 'Required' : 'Optional'}
+                                                            </span>
+                                                            <div>
+                                                                <p className="font-medium text-gray-900">{doc.name}</p>
+                                                                {doc.description && (
+                                                                    <p className="text-xs text-gray-600">{doc.description}</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Programs */}
                             <div>
@@ -303,7 +408,6 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                         {program.durationYears}Y {program.durationMonths}M
                                                     </div>
                                                 </div>
-
                                                 <div className="col-span-2">
                                                     <div className="text-xs text-gray-500">Support</div>
                                                     <div className="font-medium">{program.support}</div>

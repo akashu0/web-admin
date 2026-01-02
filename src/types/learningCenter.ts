@@ -1,6 +1,7 @@
 // types/learningCenter.ts
 
 import type { DynamicField } from "./course";
+import type { Visa } from "./visa";
 
 
 export interface FeeStructure {
@@ -31,6 +32,7 @@ export interface CreateLearningCenterDto {
     currency: string;
     programs: ProgramDeliveryMode[];
     isActive: boolean;
+    visa?: string;
 }
 
 export interface LearningCenterResponse {
@@ -44,6 +46,7 @@ export interface LearningCenterResponse {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    visa?: Visa
 }
 
 export interface LearningCenter {
@@ -57,6 +60,7 @@ export interface LearningCenter {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    visa?: Visa
 }
 
 

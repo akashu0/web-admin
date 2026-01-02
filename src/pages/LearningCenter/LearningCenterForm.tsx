@@ -2,13 +2,19 @@
 import { useForm } from '@tanstack/react-form';
 import type { CreateLearningCenterDto, ProgramDeliveryMode, } from '../../types/learningCenter';
 import { DynamicFieldBuilder } from '@/components/common/DynamicFieldBuilder';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { visaService } from '@/services/visaService';
+import type { Visa } from '@/types/visa';
+import { Loader2 } from 'lucide-react';
 
 interface LearningCenterFormProps {
     onSubmit: (data: CreateLearningCenterDto) => Promise<void>;
     initialData?: Partial<CreateLearningCenterDto>;
     isSubmitting?: boolean;
 }
+
+
+
 
 // Study abroad countries with their currencies
 const STUDY_ABROAD_COUNTRIES = [
@@ -194,9 +200,10 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 }) => {
     const isEditMode = Boolean(initialData);
 
-    // ✅ Move useState to top level of component
     const [countrySearch, setCountrySearch] = useState<string>("");
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [visas, setVisas] = useState<Visa[]>([]);
+    const [isLoadingVisas, setIsLoadingVisas] = useState(true);
 
     const form = useForm({
         defaultValues: {
@@ -206,21 +213,39 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
             currency: initialData?.currency || '',
             programs: initialData?.programs || [],
             isActive: initialData?.isActive ?? true,
+            visa: initialData?.visa || '',
         } as unknown as CreateLearningCenterDto,
         onSubmit: async ({ value }) => {
             try {
                 await onSubmit(value);
             } finally {
-
+                // Handle completion
             }
         },
     });
 
-    // ✅ Filter countries at component level
+    // ✅ Fetch all visas on mount
+    useEffect(() => {
+        fetchVisas();
+    }, []);
+
+    const fetchVisas = async () => {
+        try {
+            setIsLoadingVisas(true);
+            const response = await visaService.getAllVisas({ status: 'active' });
+            const visaData = Array.isArray(response) ? response : (response as any)?.data || [];
+            setVisas(visaData);
+        } catch (error) {
+            console.error('Error fetching visas:', error);
+            setVisas([]);
+        } finally {
+            setIsLoadingVisas(false);
+        }
+    };
+
     const filteredCountries = STUDY_ABROAD_COUNTRIES.filter(c =>
         c.name.toLowerCase().includes(countrySearch.toLowerCase())
     );
-
     return (
         <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -260,7 +285,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                             )}
                         </form.Field>
 
-                        {/* Code Field */}
+                        {/* Location Field */}
                         <form.Field name="location">
                             {(field) => (
                                 <div>
@@ -285,7 +310,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                             {(field) => (
                                 <div className="relative">
                                     <label className="block text-sm font-medium text-gray-900 mb-2">
-                                        Country
+                                        Country *
                                     </label>
 
                                     {/* Search Input */}
@@ -303,7 +328,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
 
                                     {/* Dropdown List */}
                                     {isDropdownOpen && (
-                                        <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white">
+                                        <div className="absolute z-10 w-full max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-lg">
                                             {filteredCountries.map((country) => (
                                                 <div
                                                     key={country.name}
@@ -312,7 +337,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                                         field.handleChange(country.name);
                                                         form.setFieldValue("currency", country.currency);
                                                         setCountrySearch(country.name);
-                                                        setIsDropdownOpen(false); // ✅ Close dropdown
+                                                        setIsDropdownOpen(false);
                                                     }}
                                                 >
                                                     {country.name}
@@ -329,6 +354,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                 </div>
                             )}
                         </form.Field>
+
                         {/* Currency Field - Dropdown */}
                         <form.Field name="currency">
                             {(field) => (
@@ -350,6 +376,48 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                            )}
+                        </form.Field>
+
+                        {/* ✅ Visa Selection Field - Shows ALL visas */}
+                        <form.Field name="visa">
+                            {(field) => (
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                                        Visa Process (Optional)
+                                    </label>
+
+                                    {isLoadingVisas ? (
+                                        <div className="flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                                            <Loader2 className="h-4 w-4 animate-spin text-gray-400 mr-2" />
+                                            <span className="text-sm text-gray-600">Loading visas...</span>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            value={field.state.value}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            onBlur={field.handleBlur}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900"
+                                        >
+                                            <option value="">Select visa process (optional)</option>
+                                            {visas.map((visa) => (
+                                                <option key={visa._id} value={visa._id}>
+                                                    {visa.country} - {visa.visaFee} {visa.currency} ({visa.visaProcessingTime} {visa.visaProcessingTimeUnit})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+
+                                    {visas.length === 0 && !isLoadingVisas && (
+                                        <p className="text-sm text-amber-600 mt-1">
+                                            ⚠️ No visa processes available. You may need to create one first.
+                                        </p>
+                                    )}
+
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Choose a visa process that applies to this learning center
+                                    </p>
                                 </div>
                             )}
                         </form.Field>

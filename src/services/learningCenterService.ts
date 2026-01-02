@@ -20,7 +20,8 @@ const transformLearningCenter = (center: LearningCenterResponse): LearningCenter
     currency: center.currency,
     programs: center.programs || [],
     isActive: center.isActive,
-    centerId: ""
+    centerId: "",
+    visa: center.visa
 });
 
 export const learningCenterService = {

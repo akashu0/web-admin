@@ -13,6 +13,16 @@ const CreateLearningCenter = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
 
+
+    const mappedInitialData: Partial<CreateLearningCenterDto> | undefined =
+        initialData
+            ? {
+                ...initialData,
+                visa: initialData.visa?._id
+            }
+            : undefined;
+
+
     const isEditMode = Boolean(id);
 
     // Fetch learning center data if in edit mode
@@ -98,7 +108,7 @@ const CreateLearningCenter = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <LearningCenterForm
                     onSubmit={handleSubmit}
-                    initialData={initialData || undefined}
+                    initialData={mappedInitialData}
                     isSubmitting={isLoading}
                 />
             </div>
