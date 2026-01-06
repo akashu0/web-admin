@@ -24,6 +24,10 @@ interface FAQTableProps {
     onDelete: (id: string) => void;
     onView: (faq: IFAQ) => void;
     onSelectionChange?: (selectedIds: string[]) => void;
+    page: number;
+    setPage: (page: number) => void;
+    totalPages: number;
+    setTotalPages: (totalPages: number) => void;
 }
 
 export const FAQTable = ({

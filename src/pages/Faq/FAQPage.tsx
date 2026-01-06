@@ -265,6 +265,10 @@ export const FAQPage = () => {
                     onDelete={(id) => setDeleteId(id)}
                     onView={handleView}
                     onSelectionChange={setSelectedIds}
+                    page={page}
+                    setPage={setPage}
+                    totalPages={totalPages}
+                    setTotalPages={setTotalPages}
                 />
             )}
 
