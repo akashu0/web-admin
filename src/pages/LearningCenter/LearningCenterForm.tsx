@@ -1,197 +1,18 @@
 // components/LearningCenterForm.tsx
 import { useForm } from '@tanstack/react-form';
-import type { CreateLearningCenterDto, ProgramDeliveryMode, } from '../../types/learningCenter';
+import type { CreateLearningCenterDto, ProgramDeliveryMode, DocumentRequired } from '../../types/learningCenter';
 import { DynamicFieldBuilder } from '@/components/common/DynamicFieldBuilder';
 import { useEffect, useState } from 'react';
 import { visaService } from '@/services/visaService';
 import type { Visa } from '@/types/visa';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2, Plus } from 'lucide-react';
+import { STUDY_ABROAD_COUNTRIES, CURRENCIES } from '@/lib/countryList';
 
 interface LearningCenterFormProps {
     onSubmit: (data: CreateLearningCenterDto) => Promise<void>;
     initialData?: Partial<CreateLearningCenterDto>;
     isSubmitting?: boolean;
 }
-
-
-
-
-// Study abroad countries with their currencies
-const STUDY_ABROAD_COUNTRIES = [
-    // 🌍 Africa
-    { name: "Afghanistan", currency: "AFN" },
-    { name: "Albania", currency: "ALL" },
-    { name: "Algeria", currency: "DZD" },
-    { name: "Angola", currency: "AOA" },
-    { name: "Benin", currency: "XOF" },
-    { name: "Botswana", currency: "BWP" },
-    { name: "Burkina Faso", currency: "XOF" },
-    { name: "Burundi", currency: "BIF" },
-    { name: "Cameroon", currency: "XAF" },
-    { name: "Cape Verde", currency: "CVE" },
-    { name: "Central African Republic", currency: "XAF" },
-    { name: "Chad", currency: "XAF" },
-    { name: "Comoros", currency: "KMF" },
-    { name: "Congo", currency: "XAF" },
-    { name: "DR Congo", currency: "CDF" },
-    { name: "Djibouti", currency: "DJF" },
-    { name: "Egypt", currency: "EGP" },
-    { name: "Equatorial Guinea", currency: "XAF" },
-    { name: "Eritrea", currency: "ERN" },
-    { name: "Ethiopia", currency: "ETB" },
-    { name: "Gabon", currency: "XAF" },
-    { name: "Gambia", currency: "GMD" },
-    { name: "Ghana", currency: "GHS" },
-    { name: "Guinea", currency: "GNF" },
-    { name: "Kenya", currency: "KES" },
-    { name: "Lesotho", currency: "LSL" },
-    { name: "Liberia", currency: "LRD" },
-    { name: "Libya", currency: "LYD" },
-    { name: "Madagascar", currency: "MGA" },
-    { name: "Malawi", currency: "MWK" },
-    { name: "Mali", currency: "XOF" },
-    { name: "Mauritania", currency: "MRU" },
-    { name: "Mauritius", currency: "MUR" },
-    { name: "Malta", currency: "EUR" },
-    { name: "Morocco", currency: "MAD" },
-    { name: "Mozambique", currency: "MZN" },
-    { name: "Namibia", currency: "NAD" },
-    { name: "Niger", currency: "XOF" },
-    { name: "Nigeria", currency: "NGN" },
-    { name: "Rwanda", currency: "RWF" },
-    { name: "Senegal", currency: "XOF" },
-    { name: "Sierra Leone", currency: "SLL" },
-    { name: "Somalia", currency: "SOS" },
-    { name: "South Africa", currency: "ZAR" },
-    { name: "South Sudan", currency: "SSP" },
-    { name: "Sudan", currency: "SDG" },
-    { name: "Tanzania", currency: "TZS" },
-    { name: "Togo", currency: "XOF" },
-    { name: "Tunisia", currency: "TND" },
-    { name: "Uganda", currency: "UGX" },
-    { name: "Zambia", currency: "ZMW" },
-    { name: "Zimbabwe", currency: "ZWL" },
-
-    // 🌍 Europe
-    { name: "Albania", currency: "ALL" },
-    { name: "Austria", currency: "EUR" },
-    { name: "Belgium", currency: "EUR" },
-    { name: "Bosnia and Herzegovina", currency: "BAM" },
-    { name: "Bulgaria", currency: "BGN" },
-    { name: "Croatia", currency: "EUR" },
-    { name: "Czech Republic", currency: "CZK" },
-    { name: "Denmark", currency: "DKK" },
-    { name: "Estonia", currency: "EUR" },
-    { name: "Finland", currency: "EUR" },
-    { name: "France", currency: "EUR" },
-    { name: "Germany", currency: "EUR" },
-    { name: "Greece", currency: "EUR" },
-    { name: "Hungary", currency: "HUF" },
-    { name: "Iceland", currency: "ISK" },
-    { name: "Ireland", currency: "EUR" },
-    { name: "Italy", currency: "EUR" },
-    { name: "Latvia", currency: "EUR" },
-    { name: "Lithuania", currency: "EUR" },
-    { name: "Luxembourg", currency: "EUR" },
-    { name: "Netherlands", currency: "EUR" },
-    { name: "Norway", currency: "NOK" },
-    { name: "Poland", currency: "PLN" },
-    { name: "Portugal", currency: "EUR" },
-    { name: "Romania", currency: "RON" },
-    { name: "Slovakia", currency: "EUR" },
-    { name: "Slovenia", currency: "EUR" },
-    { name: "Spain", currency: "EUR" },
-    { name: "Sweden", currency: "SEK" },
-    { name: "Switzerland", currency: "CHF" },
-    { name: "United Kingdom", currency: "GBP" },
-
-    // 🌏 Asia
-    { name: "India", currency: "INR" },
-    { name: "China", currency: "CNY" },
-    { name: "Japan", currency: "JPY" },
-    { name: "South Korea", currency: "KRW" },
-    { name: "Pakistan", currency: "PKR" },
-    { name: "Bangladesh", currency: "BDT" },
-    { name: "Sri Lanka", currency: "LKR" },
-    { name: "Nepal", currency: "NPR" },
-    { name: "Bhutan", currency: "BTN" },
-    { name: "Myanmar", currency: "MMK" },
-    { name: "Thailand", currency: "THB" },
-    { name: "Vietnam", currency: "VND" },
-    { name: "Malaysia", currency: "MYR" },
-    { name: "Singapore", currency: "SGD" },
-    { name: "Indonesia", currency: "IDR" },
-    { name: "Philippines", currency: "PHP" },
-    { name: "Cambodia", currency: "KHR" },
-    { name: "Laos", currency: "LAK" },
-    { name: "Mongolia", currency: "MNT" },
-    { name: "Saudi Arabia", currency: "SAR" },
-    { name: "United Arab Emirates", currency: "AED" },
-    { name: "Qatar", currency: "QAR" },
-    { name: "Kuwait", currency: "KWD" },
-    { name: "Oman", currency: "OMR" },
-    { name: "Israel", currency: "ILS" },
-    { name: "Turkey", currency: "TRY" },
-
-    // 🌎 Americas
-    { name: "United States", currency: "USD" },
-    { name: "Canada", currency: "CAD" },
-    { name: "Mexico", currency: "MXN" },
-    { name: "Brazil", currency: "BRL" },
-    { name: "Argentina", currency: "ARS" },
-    { name: "Chile", currency: "CLP" },
-    { name: "Colombia", currency: "COP" },
-    { name: "Peru", currency: "PEN" },
-    { name: "Venezuela", currency: "VES" },
-
-    // 🌏 Oceania
-    { name: "Australia", currency: "AUD" },
-    { name: "New Zealand", currency: "NZD" },
-    { name: "Fiji", currency: "FJD" },
-    { name: "Papua New Guinea", currency: "PGK" }
-];
-
-// All available currencies (ISO 4217)
-const CURRENCIES = [
-    // Major
-    "USD", "EUR", "GBP", "JPY", "CNY", "CHF", "CAD", "AUD", "NZD",
-
-    // Asia
-    "INR", "PKR", "BDT", "LKR", "NPR", "BTN",
-    "MMK", "THB", "VND", "MYR", "SGD", "IDR",
-    "PHP", "KHR", "LAK", "MNT", "KRW", "HKD",
-    "TWD", "JPY",
-
-    // Middle East
-    "AED", "SAR", "QAR", "KWD", "OMR", "BHD",
-    "ILS", "TRY", "IRR", "IQD", "JOD", "LBP",
-    "YER",
-
-    // Europe (non-EUR)
-    "SEK", "NOK", "DKK", "ISK", "PLN", "CZK",
-    "HUF", "RON", "BGN", "ALL", "BAM", "MKD",
-    "RSD", "UAH", "BYN", "MDL", "GEL", "AMD",
-    "AZN", "RUB",
-
-    // Africa
-    "ZAR", "NGN", "EGP", "KES", "UGX", "TZS",
-    "GHS", "ETB", "MAD", "DZD", "TND", "LYD",
-    "SDG", "SSP", "ZMW", "ZWL", "MWK", "MUR",
-    "NAD", "BWP", "XOF", "XAF", "CDF", "RWF",
-    "BIF", "SLL", "SOS", "DJF", "KMF", "CVE",
-
-    // Americas
-    "MXN", "BRL", "ARS", "CLP", "COP", "PEN",
-    "UYU", "PYG", "BOB", "VES", "CRC", "GTQ",
-    "HNL", "NIO", "PAB", "DOP", "HTG", "JMD",
-    "TTD", "BBD", "BSD", "XCD", "GYD", "SRD",
-
-    // Oceania
-    "FJD", "PGK", "SBD", "VUV", "WST", "TOP",
-
-    // Special / shared
-    "XPF", "XAF", "XOF", "XCD"
-];
 
 export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     onSubmit,
@@ -208,16 +29,25 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     const form = useForm({
         defaultValues: {
             name: initialData?.name || '',
+            level: initialData?.level || '',
             location: initialData?.location || '',
             country: initialData?.country || '',
             currency: initialData?.currency || '',
             programs: initialData?.programs || [],
             isActive: initialData?.isActive ?? true,
             visa: initialData?.visa || '',
+            documentRequired: initialData?.documentRequired || [],
         } as unknown as CreateLearningCenterDto,
         onSubmit: async ({ value }) => {
             try {
-                await onSubmit(value);
+                // ✅ Handle visa field - remove if empty
+                const submitData: any = { ...value };
+
+                if (!submitData.visa || submitData.visa.trim() === '') {
+                    delete submitData.visa; // Remove visa field if empty
+                }
+
+                await onSubmit(submitData);
             } finally {
                 // Handle completion
             }
@@ -246,6 +76,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     const filteredCountries = STUDY_ABROAD_COUNTRIES.filter(c =>
         c.name.toLowerCase().includes(countrySearch.toLowerCase())
     );
+
     return (
         <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg border border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -278,6 +109,26 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                         onChange={(e) => field.handleChange(e.target.value)}
                                         onBlur={field.handleBlur}
                                         placeholder="Enter learning center name"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900"
+                                        required
+                                    />
+                                </div>
+                            )}
+                        </form.Field>
+
+                        {/* ✅ Level Field */}
+                        <form.Field name="level">
+                            {(field) => (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                                        Level *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={field.state.value}
+                                        onChange={(e) => field.handleChange(e.target.value)}
+                                        onBlur={field.handleBlur}
+                                        placeholder="e.g., Undergraduate, Graduate, Diploma"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900"
                                         required
                                     />
@@ -380,10 +231,10 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                             )}
                         </form.Field>
 
-                        {/* ✅ Visa Selection Field - Shows ALL visas */}
+                        {/* ✅ Visa Selection Field */}
                         <form.Field name="visa">
                             {(field) => (
-                                <div className="md:col-span-2">
+                                <div>
                                     <label className="block text-sm font-medium text-gray-900 mb-2">
                                         Visa Process (Optional)
                                     </label>
@@ -400,7 +251,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                             onBlur={field.handleBlur}
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900"
                                         >
-                                            <option value="">Select visa process (optional)</option>
+                                            <option value="">-- No Visa Selected --</option>
                                             {visas.map((visa) => (
                                                 <option key={visa._id} value={visa._id}>
                                                     {visa.country} - {visa.visaFee} {visa.currency} ({visa.visaProcessingTime} {visa.visaProcessingTimeUnit})
@@ -416,7 +267,9 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                                     )}
 
                                     <p className="text-sm text-gray-500 mt-1">
-                                        Choose a visa process that applies to this learning center
+                                        {field.state.value && field.state.value.trim() !== ''
+                                            ? '✓ Visa selected'
+                                            : 'Optional - Leave blank if not applicable'}
                                     </p>
                                 </div>
                             )}
@@ -441,6 +294,120 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                         )}
                     </form.Field>
                 </div>
+
+                {/* ✅ Documents Required Section */}
+                <form.Field name="documentRequired" mode="array">
+                    {(field) => (
+                        <div className="border border-gray-300 rounded-lg p-6 bg-gray-50">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-semibold text-gray-900">Documents Required</h3>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const newDocument: DocumentRequired = {
+                                            id: crypto.randomUUID(),
+                                            documentName: '',
+                                            description: '',
+                                            isMandatory: false,
+                                        };
+                                        field.pushValue(newDocument);
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Add Document
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {field.state.value.map((_, docIndex: number) => (
+                                    <div key={docIndex} className="border border-gray-400 rounded-lg p-4 bg-white">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <h4 className="text-md font-semibold text-gray-900">Document {docIndex + 1}</h4>
+                                            <button
+                                                type="button"
+                                                onClick={() => field.removeValue(docIndex)}
+                                                className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {/* Document Name */}
+                                            <form.Field name={`documentRequired[${docIndex}].documentName`}>
+                                                {(fieldItem) => (
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                                                            Document Name *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={fieldItem.state.value}
+                                                            onChange={(e) => fieldItem.handleChange(e.target.value)}
+                                                            placeholder="e.g., Passport, Birth Certificate"
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
+                                                            required
+                                                        />
+                                                    </div>
+                                                )}
+                                            </form.Field>
+
+                                            {/* Description */}
+                                            <form.Field name={`documentRequired[${docIndex}].description`}>
+                                                {(fieldItem) => (
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                                                            Description
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={fieldItem.state.value}
+                                                            onChange={(e) => fieldItem.handleChange(e.target.value)}
+                                                            placeholder="Brief description"
+                                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </form.Field>
+                                        </div>
+
+                                        {/* Is Mandatory Checkbox */}
+                                        <form.Field name={`documentRequired[${docIndex}].isMandatory`}>
+                                            {(fieldItem) => (
+                                                <div className="flex items-center mt-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        id={`doc-mandatory-${docIndex}`}
+                                                        checked={fieldItem.state.value}
+                                                        onChange={(e) => fieldItem.handleChange(e.target.checked)}
+                                                        className="h-4 w-4 text-gray-900 focus:ring-gray-900 border-gray-300 rounded"
+                                                    />
+                                                    <label htmlFor={`doc-mandatory-${docIndex}`} className="ml-2 block text-sm text-gray-900">
+                                                        Mandatory Document
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </form.Field>
+
+                                        {/* Hidden ID field */}
+                                        <form.Field name={`documentRequired[${docIndex}].id`}>
+                                            {(fieldItem) => (
+                                                <input type="hidden" value={fieldItem.state.value} />
+                                            )}
+                                        </form.Field>
+                                    </div>
+                                ))}
+
+                                {field.state.value.length === 0 && (
+                                    <p className="text-gray-600 text-center py-8">
+                                        No documents added yet. Click "Add Document" to get started.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </form.Field>
 
                 {/* Programs Section */}
                 <form.Field name="programs" mode="array">

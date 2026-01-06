@@ -5,7 +5,9 @@ import {
     GraduationCap,
     FileText,
     School,
-    LogOut
+    LogOut,
+    HelpCircle,
+    Globe
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -15,8 +17,10 @@ const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
     { icon: BookOpen, label: 'Courses', href: '/courses' },
     { icon: GraduationCap, label: 'Universities', href: '/universities' },
+    { icon: Globe, label: 'Countries', href: '/countries' },
     { icon: FileText, label: 'Visas', href: '/visas' },
     { icon: School, label: 'Learning Centers', href: '/learning-centers' },
+    { icon: HelpCircle, label: 'FAQs', href: '/faqs' },
 ];
 
 export const Sidebar = () => {

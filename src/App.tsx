@@ -14,6 +14,8 @@ import LearningCenterList from './pages/LearningCenter/LearningCenterList';
 import CreateLearningCenter from './pages/LearningCenter/CreateLearningCenter';
 import { AddCourseModal } from './pages/Course/AddCourseModal';
 import EditCourse from './pages/Course/EditCourse';
+import { FAQPage } from './pages/Faq/FAQPage';
+import { CountryList } from './pages/Countries/CountryList';
 
 function App() {
     return (
@@ -45,6 +47,19 @@ function App() {
                         <Route path="/learning-centers" element={<LearningCenterList />} />
                         <Route path="/learning-centers/new" element={<CreateLearningCenter />} />
                         <Route path="/learning-centers/edit/:id" element={<CreateLearningCenter />} />
+
+                        {/* FAQ Routes */}
+                        <Route path="/faqs" element={<FAQPage />} />
+                        {/* <Route path="/faqs/new" element={<FAQFormDialog />} />
+                        <Route path="/faqs/:id" element={<FAQFormDialog />} /> */}
+
+                        {/* Country Routes */}
+                        <Route path="/countries" element={<CountryList />} />
+                        {/* <Route path="/countries/new" element={<CountryForm />} />
+                        <Route path="/countries/:id" element={<CountryForm />} /> */}
+
+
+
                     </Route>
                 </Route>
             </Routes>

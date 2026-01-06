@@ -13,6 +13,7 @@ import { apiClient } from "./api";
 const transformLearningCenter = (center: LearningCenterResponse): LearningCenter => ({
     id: center._id,
     name: center.name,
+    level: center.level,
     location: center.location,
     createdAt: center.createdAt,
     updatedAt: center.updatedAt,
@@ -20,6 +21,7 @@ const transformLearningCenter = (center: LearningCenterResponse): LearningCenter
     currency: center.currency,
     programs: center.programs || [],
     isActive: center.isActive,
+    documentRequired: center.documentRequired || [],
     centerId: "",
     visa: center.visa
 });

@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { CourseOverview } from '@/types/course';
 import { ImageUpload } from '@/components/common/ImageUpload';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CourseOverviewSectionProps {
     data: CourseOverview;
@@ -135,11 +136,14 @@ export function CourseOverviewSection({
                     <div>
                         <Label>Description *</Label>
                         <div className="mt-2">
-                            {/* <RichTextEditor
-                content={description}
-                onChange={(content) => setValue('description', content)}
-                placeholder="Detailed course description..."
-              /> */}
+                            <Textarea
+                                id="description"
+                                {...register('description', { required: 'Description is required' })}
+                                placeholder="Detailed course description..."
+                                className="mt-2"
+                                disabled={isSubmitting}
+                                rows={5}
+                            />
                         </div>
                     </div>
 
@@ -194,22 +198,7 @@ export function CourseOverviewSection({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div>
-                            <Label htmlFor="studyModeType">Study Mode Type *</Label>
-                            <Select
-                                value={watch('studyModeType')}
-                                onValueChange={(value) => setValue('studyModeType', value as 'fast-track' | 'regular')}
-                                disabled={isSubmitting}
-                            >
-                                <SelectTrigger className="mt-2">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white">
-                                    <SelectItem value="fast-track">Fast Track</SelectItem>
-                                    <SelectItem value="regular">Regular</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+
                     </div>
 
                     {/* Awarded By */}

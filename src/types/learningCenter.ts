@@ -25,20 +25,31 @@ export interface ProgramDeliveryMode {
     isActive: boolean;
 }
 
+
+export interface DocumentRequired {
+    id: string;
+    documentName: string;
+    description: string;
+    isMandatory: boolean;
+}
+
 export interface CreateLearningCenterDto {
     name: string;
+    level: string;
     location: string;
     country: string;
     currency: string;
     programs: ProgramDeliveryMode[];
     isActive: boolean;
     visa?: string;
+    documentRequired: DocumentRequired[];
 }
 
 export interface LearningCenterResponse {
     id: string;
     _id: string;
     name: string;
+    level: string;
     location: string;
     country: string;
     currency: string;
@@ -47,12 +58,14 @@ export interface LearningCenterResponse {
     createdAt: string;
     updatedAt: string;
     visa?: Visa
+    documentRequired: DocumentRequired[];
 }
 
 export interface LearningCenter {
     centerId: string;
     id: string;
     name: string;
+    level: string;
     location: string;
     country: string;
     currency: string;
@@ -61,6 +74,7 @@ export interface LearningCenter {
     createdAt: string;
     updatedAt: string;
     visa?: Visa
+    documentRequired: DocumentRequired[];
 }
 
 
