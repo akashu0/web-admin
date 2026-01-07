@@ -77,10 +77,26 @@ export interface LearningCenter {
     documentRequired: DocumentRequired[];
 }
 
+export interface GetAllCentersParams {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+    hasNextPage?: boolean;
+    hasPrevPage?: boolean;
+
+}
 
 
 
-
+export interface PaginationResponse {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
 
 
 
@@ -88,6 +104,7 @@ export interface LearningCenterListResponse {
     success: boolean;
     message: string;
     data: LearningCenterResponse[];
+    pagination: PaginationResponse;
 }
 
 export interface LearningCenterMutationResponse {

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
     type ColumnDef,
@@ -27,6 +26,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 import {
     Plus,
@@ -35,6 +41,10 @@ import {
     Trash2,
     Search,
     Loader2,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
 } from "lucide-react";
 
 import { DeleteCenterDialog } from "./DeleteCenterDialog";
@@ -46,10 +56,21 @@ import { learningCenterService } from "@/services/learningCenterService";
 export interface EGLearningCenter {
     id: string;
     name: string;
+    level: string;
     location: string;
     country: string;
     currency: string;
     createdAt: string;
+    isActive?: boolean;
+}
+
+interface PaginationData {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
 }
 
 /* ================= COMPONENT ================= */
@@ -60,6 +81,14 @@ export default function LearningCenterList() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [pagination, setPagination] = useState<PaginationData>({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
+    });
     const [deletingCenter, setDeletingCenter] =
         useState<EGLearningCenter | null>(null);
 
@@ -67,13 +96,24 @@ export default function LearningCenterList() {
 
     useEffect(() => {
         fetchCenters();
-    }, []);
+    }, [pagination.page, pagination.limit]); // ✅ Refetch when page or limit changes
 
     const fetchCenters = async () => {
         try {
             setIsLoading(true);
-            const data = await learningCenterService.getAllLearningCenters();
-            setCenters(data);
+            const params = {
+                page: pagination.page,
+                limit: pagination.limit,
+            };
+            const data = await learningCenterService.getAllLearningCenters(params);
+            setCenters(data.data);
+            setPagination(prev => ({
+                ...prev,
+                total: data.pagination.total,
+                totalPages: data.pagination.totalPages,
+                hasNextPage: data.pagination.hasNextPage,
+                hasPrevPage: data.pagination.hasPrevPage,
+            }));
         } catch (error) {
             console.error("Error fetching learning centers:", error);
         } finally {
@@ -89,11 +129,23 @@ export default function LearningCenterList() {
 
     const columns: ColumnDef<EGLearningCenter>[] = [
         {
+            id: "serialNo",
+            header: "S.No",
+            cell: ({ row }) => {
+                const serialNo = (pagination.page - 1) * pagination.limit + row.index + 1;
+                return <div className="font-medium">{serialNo}</div>;
+            },
+        },
+        {
             accessorKey: "name",
             header: "Center Name",
             cell: ({ row }) => (
                 <div className="font-medium">{row.getValue("name")}</div>
             ),
+        },
+        {
+            accessorKey: "level",
+            header: "Level",
         },
         {
             accessorKey: "location",
@@ -160,7 +212,12 @@ export default function LearningCenterList() {
     const table = useReactTable({
         data: centers,
         columns,
-        state: { sorting, columnFilters },
+        manualPagination: true,
+        pageCount: pagination.totalPages,
+        state: {
+            sorting,
+            columnFilters,
+        },
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
@@ -168,12 +225,44 @@ export default function LearningCenterList() {
         getFilteredRowModel: getFilteredRowModel(),
     });
 
-    /* ================= UI ================= */
+    /* ================= PAGINATION HANDLERS ================= */
 
+    const goToFirstPage = () => {
+        setPagination(prev => ({ ...prev, page: 1 }));
+    };
+
+    const goToLastPage = () => {
+        setPagination(prev => ({ ...prev, page: prev.totalPages }));
+    };
+
+    const goToPreviousPage = () => {
+        setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }));
+    };
+
+    const goToNextPage = () => {
+        setPagination(prev => ({
+            ...prev,
+            page: Math.min(prev.totalPages, prev.page + 1)
+        }));
+    };
+
+    const changePageSize = (newLimit: number) => {
+        setPagination(prev => ({
+            ...prev,
+            page: 1, // Reset to first page when changing page size
+            limit: newLimit
+        }));
+    };
+
+    /* ================= UI ================= */
 
     const handleAddCenter = () => {
         navigate("/learning-centers/new");
     };
+
+    // Calculate display range
+    const startIndex = (pagination.page - 1) * pagination.limit + 1;
+    const endIndex = Math.min(pagination.page * pagination.limit, pagination.total);
 
     return (
         <div className="container mx-auto py-8 px-4">
@@ -256,9 +345,87 @@ export default function LearningCenterList() {
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between border-t px-6 py-4">
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-gray-700">
+                                    Rows per page
+                                </p>
+                                <Select
+                                    value={pagination.limit.toString()}
+                                    onValueChange={(value) => changePageSize(Number(value))}
+                                >
+                                    <SelectTrigger className="h-8 w-[70px]">
+                                        <SelectValue placeholder={pagination.limit.toString()} />
+                                    </SelectTrigger>
+                                    <SelectContent side="top">
+                                        {[10, 20, 30, 40, 50].map((pageSize) => (
+                                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                                                {pageSize}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="text-sm text-gray-700">
+                                {pagination.total > 0 ? (
+                                    <>
+                                        Showing{" "}
+                                        <span className="font-medium">{startIndex}</span> to{" "}
+                                        <span className="font-medium">{endIndex}</span> of{" "}
+                                        <span className="font-medium">{pagination.total}</span>{" "}
+                                        results
+                                    </>
+                                ) : (
+                                    "No results"
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={goToFirstPage}
+                                disabled={!pagination.hasPrevPage}
+                            >
+                                <ChevronsLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={goToPreviousPage}
+                                disabled={!pagination.hasPrevPage}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <div className="flex items-center gap-1">
+                                <div className="text-sm font-medium">
+                                    Page {pagination.page} of {pagination.totalPages || 1}
+                                </div>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={goToNextPage}
+                                disabled={!pagination.hasNextPage}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={goToLastPage}
+                                disabled={!pagination.hasNextPage}
+                            >
+                                <ChevronsRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
-
 
             {/* Delete */}
             <DeleteCenterDialog

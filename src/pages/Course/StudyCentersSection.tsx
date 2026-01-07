@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, MapPin, Globe, DollarSign, BookOpen, Plane, FileText } from "lucide-react";
+import { X, MapPin, Globe, DollarSign, BookOpen, Plane, FileText, Search } from "lucide-react";
 import { learningCenterService } from "@/services/learningCenterService";
 import type { LearningCenter } from "@/types/learningCenter";
 import type { Visa } from "@/types/visa";
@@ -9,6 +9,9 @@ interface StudyCentersSectionProps {
     onSave: (data: string[]) => void;
     onNext: () => void;
 }
+
+
+
 
 const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     data,
@@ -20,6 +23,9 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     const [modalCenter, setModalCenter] = useState<LearningCenter | null>(null);
     const [centers, setCenters] = useState<LearningCenter[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         fetchCenters();
@@ -34,12 +40,15 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     const fetchCenters = async () => {
         try {
             setIsLoading(true);
-            const fetchedCenters = await learningCenterService.getAllLearningCenters();
+            const params = {
 
-            console.log(fetchedCenters);
+                limit: 100,
+            };
+            const fetchedCenters = await learningCenterService.getAllLearningCenters(params);
 
 
-            setCenters(fetchedCenters);
+
+            setCenters(fetchedCenters.data);
         } catch (error) {
             console.error("Error fetching learning centers:", error);
         } finally {
@@ -75,6 +84,16 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         if (mode.toLowerCase().includes("hybrid")) return "🔄";
         return "📚";
     };
+
+    const filteredCenters = centers.filter((center) => {
+        const query = searchQuery?.toLowerCase();
+        return (
+            center.name?.toLowerCase().includes(query) ||
+            center.country?.toLowerCase().includes(query) ||
+            center.level?.toLowerCase().includes(query) ||
+            center.location?.toLowerCase().includes(query)
+        );
+    });
 
 
     return (
@@ -113,62 +132,95 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                     </button>
 
                     {dropdownOpen && (
-                        <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                            {isLoading ? (
-                                <div className="px-4 py-3 text-gray-500 text-center">
-                                    Loading learning centers...
+                        <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+                            {/* Search Input */}
+                            <div className="sticky top-0 bg-white border-b border-gray-200 p-3">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, country, or level..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                        autoFocus
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => setSearchQuery("")}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
                                 </div>
-                            ) : centers.length === 0 ? (
-                                <div className="px-4 py-3 text-gray-500 text-center">
-                                    No learning centers available
+                            </div>
+
+                            {/* Scrollable List */}
+                            <div className="overflow-y-auto max-h-64">
+                                {isLoading ? (
+                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                        Loading learning centers...
+                                    </div>
+                                ) : filteredCenters.length === 0 ? (
+                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                        {searchQuery ? "No matching centers found" : "No learning centers available"}
+                                    </div>
+                                ) : (
+                                    filteredCenters.map((center) => (
+                                        <label
+                                            key={center.id}
+                                            className="flex items-start px-4 py-3 hover:bg-purple-50 cursor-pointer border-b last:border-b-0"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedCenterIds.includes(center.id)}
+                                                onChange={() => handleCenterToggle(center.id)}
+                                                className="mt-1 mr-3 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-900">
+                                                    {center.name}
+                                                </div>
+                                                <div className="text-sm text-gray-500 flex items-center gap-3 mt-1">
+                                                    <span className="flex items-center gap-1">
+                                                        <MapPin className="w-3 h-3" />
+                                                        {center.location}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Globe className="w-3 h-3" />
+                                                        {center.country}
+                                                    </span>
+                                                    {center.level && (
+                                                        <span className="flex items-center gap-1 text-purple-600">
+                                                            <BookOpen className="w-3 h-3" />
+                                                            {center.level}
+                                                        </span>
+                                                    )}
+                                                    {center.currency && (
+                                                        <span className="flex items-center gap-1 text-purple-600">
+                                                            <DollarSign className="w-3 h-3" />
+                                                            {center.currency}
+                                                        </span>
+                                                    )}
+                                                    {center.visa && (
+                                                        <span className="flex items-center gap-1 text-purple-600">
+                                                            <Plane className="w-3 h-3" />
+                                                            Visa Available
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </label>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Results Count */}
+                            {!isLoading && filteredCenters.length > 0 && (
+                                <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-2 text-xs text-gray-600">
+                                    Showing {filteredCenters.length} of {centers.length} centers
                                 </div>
-                            ) : (
-                                centers.map((center) => (
-                                    <label
-                                        key={center.id}
-                                        className="flex items-start px-4 py-3 hover:bg-purple-50 cursor-pointer border-b last:border-b-0"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedCenterIds.includes(center.id)}
-                                            onChange={() => handleCenterToggle(center.id)}
-                                            className="mt-1 mr-3 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="font-medium text-gray-900">
-                                                {center.name}
-                                            </div>
-                                            <div className="text-sm text-gray-500 flex items-center gap-3 mt-1">
-                                                <span className="flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3" />
-                                                    {center.location}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Globe className="w-3 h-3" />
-                                                    {center.country}
-                                                </span>
-                                                {center.level && (
-                                                    <span className="flex items-center gap-1 text-purple-600">
-                                                        <BookOpen className="w-3 h-3" />
-                                                        {center.level}
-                                                    </span>
-                                                )}
-                                                {center.currency && (
-                                                    <span className="flex items-center gap-1 text-purple-600">
-                                                        <DollarSign className="w-3 h-3" />
-                                                        {center.currency}
-                                                    </span>
-                                                )}
-                                                {center.visa && (
-                                                    <span className="flex items-center gap-1 text-purple-600">
-                                                        <Plane className="w-3 h-3" />
-                                                        Visa Available
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </label>
-                                ))
                             )}
                         </div>
                     )}

@@ -5,7 +5,9 @@ import type {
     LearningCenterResponse,
     CreateLearningCenterDto,
     LearningCenterListResponse,
-    LearningCenterMutationResponse
+    LearningCenterMutationResponse,
+    GetAllCentersParams,
+    PaginationResponse
 } from "../types/learningCenter";
 import { apiClient } from "./api";
 
@@ -26,11 +28,12 @@ const transformLearningCenter = (center: LearningCenterResponse): LearningCenter
     visa: center.visa
 });
 
+
 export const learningCenterService = {
-    async getAllLearningCenters(): Promise<LearningCenter[]> {
+    async getAllLearningCenters(params?: GetAllCentersParams): Promise<{ data: LearningCenter[]; pagination: PaginationResponse; }> {
         try {
-            const response = await apiClient.get<LearningCenterListResponse>("/study-centers/get-studycenters");
-            return response.data.data.map(transformLearningCenter);
+            const response = await apiClient.get<LearningCenterListResponse>("/study-centers/get-studycenters", { params });
+            return { data: response.data.data.map(transformLearningCenter), pagination: response.data.pagination };
         } catch (error) {
             console.error("Error fetching learning centers:", error);
             throw error;
