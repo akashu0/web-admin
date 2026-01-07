@@ -240,6 +240,7 @@ export function CourseOverviewSection({
                                 <SelectItem value="undergraduate">Undergraduate</SelectItem>
                                 <SelectItem value="postgraduate">Postgraduate</SelectItem>
                                 <SelectItem value="diploma">Diploma</SelectItem>
+                                <SelectItem value="pg diploma">PG Diploma</SelectItem>
                                 <SelectItem value="certificate">Certificate</SelectItem>
                                 <SelectItem value="doctorate">Doctorate</SelectItem>
                             </SelectContent>

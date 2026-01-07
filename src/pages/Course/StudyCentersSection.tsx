@@ -36,6 +36,9 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
             setIsLoading(true);
             const fetchedCenters = await learningCenterService.getAllLearningCenters();
 
+            console.log(fetchedCenters);
+
+
             setCenters(fetchedCenters);
         } catch (error) {
             console.error("Error fetching learning centers:", error);
@@ -144,6 +147,18 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                     <Globe className="w-3 h-3" />
                                                     {center.country}
                                                 </span>
+                                                {center.level && (
+                                                    <span className="flex items-center gap-1 text-purple-600">
+                                                        <BookOpen className="w-3 h-3" />
+                                                        {center.level}
+                                                    </span>
+                                                )}
+                                                {center.currency && (
+                                                    <span className="flex items-center gap-1 text-purple-600">
+                                                        <DollarSign className="w-3 h-3" />
+                                                        {center.currency}
+                                                    </span>
+                                                )}
                                                 {center.visa && (
                                                     <span className="flex items-center gap-1 text-purple-600">
                                                         <Plane className="w-3 h-3" />
@@ -201,6 +216,12 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                         <DollarSign className="w-4 h-4 text-purple-600" />
                                         <span>{center.currency}</span>
                                     </div>
+                                    {center.level && (
+                                        <div className="flex items-center gap-2">
+                                            <BookOpen className="w-4 h-4 text-purple-600" />
+                                            <span>{center.level}</span>
+                                        </div>
+                                    )}
                                     {center.visa && (
                                         <div className="flex items-center gap-2">
                                             <Plane className="w-4 h-4 text-purple-600" />
@@ -317,7 +338,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                 <div className="space-y-2">
                                                     {(modalCenter.visa as Visa).visaSteps.map((step) => (
                                                         <div key={step._id} className="flex items-start gap-3 bg-gray-50 p-3 rounded">
-                                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex-shrink-0">
+                                                            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold shrink-0">
                                                                 {step.stepNumber}
                                                             </div>
                                                             <div className="flex-1">
@@ -347,7 +368,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                     {(modalCenter.visa as Visa).visaDocuments.map((doc) => (
                                                         <div key={doc._id} className="flex items-start gap-2 bg-gray-50 p-2 rounded text-sm">
-                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${doc.isMandatory
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${doc.isMandatory
                                                                 ? 'bg-red-100 text-red-800'
                                                                 : 'bg-blue-100 text-blue-800'
                                                                 }`}>

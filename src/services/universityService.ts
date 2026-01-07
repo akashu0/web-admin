@@ -10,7 +10,7 @@ export const universityService = {
     },
     createUniversity: async (data: FormData): Promise<UniversityResponse> => {
         const response = await apiClient.post<UniversityResponse>(
-            `/universities`,
+            `/universities/create-universities`,
             data,
             {
                 headers: {
