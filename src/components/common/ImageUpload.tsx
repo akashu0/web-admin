@@ -148,7 +148,7 @@ export function ImageUpload({
                     {/* Folder-style preview */}
                     <div className="flex items-start gap-4">
                         {/* Thumbnail */}
-                        <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                        <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
                             {displayUrl && (
                                 <img
                                     src={displayUrl}
@@ -163,7 +163,7 @@ export function ImageUpload({
                             <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <FileImage className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                        <FileImage className="h-4 w-4 text-gray-400 shrink-0" />
                                         <p className="text-sm font-medium text-gray-900 truncate">
                                             {fileInfo.name}
                                         </p>
@@ -174,7 +174,7 @@ export function ImageUpload({
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                <div className="flex items-center gap-1 shrink-0">
                                     {showPreview && displayUrl && (
                                         <Button
                                             type="button"

@@ -15,7 +15,7 @@ import CreateLearningCenter from './pages/LearningCenter/CreateLearningCenter';
 import { AddCourseModal } from './pages/Course/AddCourseModal';
 import EditCourse from './pages/Course/EditCourse';
 import { FAQPage } from './pages/Faq/FAQPage';
-import { CountryList } from './pages/Countries/CountryList';
+import CountryList from './pages/Countries/CountryList';
 
 function App() {
     return (
