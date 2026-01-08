@@ -9,7 +9,8 @@ import {
     ChevronRight,
     Loader2,
     Globe,
-    MapPin
+    MapPin,
+    Eye
 } from 'lucide-react';
 import { countryService } from '@/services/countryService';
 import type { ICountry } from '@/types/country';
@@ -61,6 +62,10 @@ export default function CountryList() {
 
     const handleEdit = (country: ICountry) => {
         navigate(`/countries/edit/${country._id}`);
+    };
+
+    const handleView = (country: ICountry) => {
+        navigate(`/countries/view/${country._id}`);
     };
 
     const handleDelete = async (id: string) => {
@@ -118,7 +123,7 @@ export default function CountryList() {
             header: 'Continent',
             cell: (info) => <span className="text-gray-900">{info.getValue()}</span>,
         }),
-        columnHelper.accessor('language', {
+        columnHelper.accessor('spokenLanguages', {
             header: 'Language',
             cell: (info) => <span className="text-gray-600">{info.getValue()}</span>,
         }),
@@ -145,15 +150,22 @@ export default function CountryList() {
             cell: (info) => (
                 <div className="flex items-center gap-2">
                     <button
+                        onClick={() => handleView(info.row.original)}
+                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg cursor-pointer transition-colors"
+                        title="View"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
+                    <button
                         onClick={() => handleEdit(info.row.original)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        className="p-2 text-purple-600 hover:bg-purple-50 cursor-pointer rounded-lg transition-colors"
                         title="Edit"
                     >
                         <Edit className="w-4 h-4" />
                     </button>
                     <button
                         onClick={() => handleDelete(info.row.original._id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-red-600 hover:bg-red-50 cursor-pointer rounded-lg transition-colors"
                         title="Delete"
                     >
                         <Trash2 className="w-4 h-4" />

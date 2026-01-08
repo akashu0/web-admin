@@ -33,17 +33,7 @@ export function ReferencesTab({ form }: ReferencesTabProps) {
         fetchCourses();
     }, []);
 
-    // useEffect(() => {
-    //     if (universitySearch || showUniversityDropdown) {
-    //         fetchUniversities();
-    //     }
-    // }, [universitySearch]);
 
-    // useEffect(() => {
-    //     if (courseSearch || showCourseDropdown) {
-    //         fetchCourses();
-    //     }
-    // }, [courseSearch]);
 
     const fetchUniversities = async () => {
         try {

@@ -28,7 +28,6 @@ export interface IIntakePeriod {
     period: string;
     description: string;
     bestFor: string;
-    order: number;
 }
 
 export interface IWorkOpportunity {
@@ -60,7 +59,7 @@ export interface ICountry {
     capital: string;
     continent: string;
     currency: string;
-    language: string;
+    spokenLanguages: string;
     population: string;
     about: string;
     logo?: string;
@@ -89,7 +88,7 @@ export interface CreateCountryDto {
     capital: string;
     continent: string;
     currency: string;
-    language: string;
+    spokenLanguages: string;
     population: string;
     about: string;
     logo?: string;
@@ -109,7 +108,7 @@ export interface UpdateCountryDto {
     capital?: string;
     continent?: string;
     currency?: string;
-    language?: string;
+    spokenLanguages?: string;
     population?: string;
     about?: string;
     logo?: string;

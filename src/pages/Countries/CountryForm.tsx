@@ -28,7 +28,7 @@ export function CountryForm({ onClose, onSuccess }: CountryFormProps) {
             capital: '',
             continent: '',
             currency: '',
-            language: '',
+            spokenLanguages: '',
             population: '',
             about: '',
             status: 'draft' as 'draft' | 'published',

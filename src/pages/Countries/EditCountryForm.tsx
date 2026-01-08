@@ -1,9 +1,9 @@
-// components/CountryForm/EditCountryForm.tsx
+// pages/CountryEdit/EditCountryPage.tsx
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from '@tanstack/react-form';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { ICountry } from '@/types/country';
 import { countryService } from '@/services/countryService';
-import { FormHeader } from './FormHeader';
 import { FormTabs } from './FormTabs';
 import { BasicInfoTab } from './BasicInfoTab';
 import { IntakePeriodsTab } from './IntakePeriodsTab';
@@ -12,17 +12,16 @@ import { CostOfLivingTab } from './CostOfLivingTab';
 import { ExamsTab } from './ExamsTab';
 import { WorkOpportunitiesTab } from './WorkOpportunitiesTab';
 import { ReferencesTab } from './ReferencesTab';
-import { Loader2 } from 'lucide-react';
-
-interface EditCountryFormProps {
-    countryId: string;
-    onClose: () => void;
-    onSuccess: () => void;
-}
+import { Loader2, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 export type TabType = 'basic' | 'intakes' | 'scholarships' | 'costs' | 'exams' | 'work' | 'references';
 
-export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
+export function EditCountryForm() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const countryId = id as string;
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [country, setCountry] = useState<ICountry | null>(null);
@@ -48,8 +47,7 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
             setBannerPreview(response.data.banner || '');
         } catch (error) {
             console.error('Error fetching country:', error);
-            alert('Failed to load country data');
-            onClose();
+            toast.error('Failed to load country data');
         } finally {
             setIsLoading(false);
         }
@@ -62,7 +60,7 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
             capital: country?.capital || '',
             continent: country?.continent || '',
             currency: country?.currency || '',
-            language: country?.language || '',
+            spokenLanguages: country?.spokenLanguages || '',
             population: country?.population || '',
             about: country?.about || '',
             status: country?.status || 'draft',
@@ -86,7 +84,7 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
             form.setFieldValue('capital', country.capital);
             form.setFieldValue('continent', country.continent);
             form.setFieldValue('currency', country.currency);
-            form.setFieldValue('language', country.language);
+            form.setFieldValue('spokenLanguages', country.spokenLanguages);
             form.setFieldValue('population', country.population);
             form.setFieldValue('about', country.about);
             form.setFieldValue('status', country.status);
@@ -142,6 +140,10 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
         }
     };
 
+    const handleClose = () => {
+        navigate('/countries'); // Navigate back to countries list
+    };
+
     const handleSaveSection = async () => {
         try {
             setIsSubmitting(true);
@@ -156,7 +158,7 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
                         capital: values.capital,
                         continent: values.continent,
                         currency: values.currency,
-                        language: values.language,
+                        spokenLanguages: values.spokenLanguages,
                         population: values.population,
                         about: values.about,
                         status: values.status,
@@ -198,11 +200,11 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
                     break;
             }
 
-            alert('Section saved successfully!');
+            toast.success('Section saved successfully!');
             await fetchCountry(); // Refresh data
         } catch (error) {
             console.error('Error saving section:', error);
-            alert('Failed to save section. Please try again.');
+            toast.error('Failed to save section. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -243,8 +245,8 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
 
     if (isLoading) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white rounded-lg p-8">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="bg-white rounded-lg p-8 shadow-lg">
                     <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
                     <p className="mt-4 text-gray-600">Loading country data...</p>
                 </div>
@@ -253,48 +255,62 @@ export function EditCountryForm({ countryId, onClose }: EditCountryFormProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
-                <FormHeader
-                    title={`Edit Country - ${country?.name}`}
-                    onClose={onClose}
-                />
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                {/* Page Header */}
+                <div className="mb-6">
+                    <button
+                        onClick={handleClose}
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span>Back to Countries</span>
+                    </button>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Edit Country - {country?.name}
+                    </h1>
+                    <p className="mt-2 text-gray-600">
+                        Update country information and settings
+                    </p>
+                </div>
 
-                <FormTabs
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                />
+                {/* Main Content Card */}
+                <div className="bg-white rounded-lg shadow-sm">
+                    <FormTabs
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                    />
 
-                <div className="flex-1 overflow-y-auto">
                     <div className="p-6">
                         {renderTabContent()}
                     </div>
-                </div>
 
-                <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-600">
-                        Save changes for <span className="font-medium">{activeTab}</span> section
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={isSubmitting}
-                            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                        >
-                            Close
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSaveSection}
-                            disabled={isSubmitting}
-                            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                            {isSubmitting && (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            )}
-                            {isSubmitting ? 'Saving...' : 'Save Section'}
-                        </button>
+                    {/* Action Buttons */}
+                    <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-between items-center rounded-b-lg">
+                        <div className="text-sm text-gray-600">
+                            Save changes for <span className="font-medium capitalize">{activeTab}</span> section
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={handleClose}
+                                disabled={isSubmitting}
+                                className="px-6 py-2 border border-gray-300 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveSection}
+                                disabled={isSubmitting}
+                                className="px-6 py-2 bg-gray-900 text-white cursor-pointer rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {isSubmitting && (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                )}
+                                {isSubmitting ? 'Saving...' : 'Save Section'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -16,6 +16,7 @@ import { AddCourseModal } from './pages/Course/AddCourseModal';
 import EditCourse from './pages/Course/EditCourse';
 import { FAQPage } from './pages/Faq/FAQPage';
 import CountryList from './pages/Countries/CountryList';
+import { EditCountryForm } from './pages/Countries/EditCountryForm';
 
 function App() {
     return (
@@ -55,8 +56,8 @@ function App() {
 
                         {/* Country Routes */}
                         <Route path="/countries" element={<CountryList />} />
-                        {/* <Route path="/countries/new" element={<CountryForm />} />
-                        <Route path="/countries/:id" element={<CountryForm />} /> */}
+                        <Route path="/countries/edit/:id" element={<EditCountryForm />} />
+                        {/* <Route path="/countries/:id" element={<CountryForm />} /> */}
 
 
 

@@ -243,11 +243,11 @@ export function BasicInfoTab({
                     )}
                 </form.Field>
 
-                <form.Field name="language">
+                <form.Field name="spokenLanguages">
                     {(field: any) => (
                         <div>
                             <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Language <span className="text-red-500">*</span>
+                                Spoken Languages <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"

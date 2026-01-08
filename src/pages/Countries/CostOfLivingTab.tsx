@@ -23,7 +23,7 @@ export function CostOfLivingTab({ form }: CostOfLivingTabProps) {
                                 };
                                 field.pushValue(newCost);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Add Cost Section
@@ -53,8 +53,6 @@ export function CostOfLivingTab({ form }: CostOfLivingTabProps) {
                                             const currentCost = form.getFieldValue(`costOfLiving[${costIndex}]`);
                                             const newTuition: CostItem = {
                                                 label: '',
-                                                min: 0,
-                                                max: 0,
                                                 currency: 'USD',
                                             };
                                             form.setFieldValue(`costOfLiving[${costIndex}].tuition`, [
@@ -154,8 +152,6 @@ export function CostOfLivingTab({ form }: CostOfLivingTabProps) {
                                             const currentCost = form.getFieldValue(`costOfLiving[${costIndex}]`);
                                             const newLiving: CostItem = {
                                                 label: '',
-                                                min: 0,
-                                                max: 0,
                                                 currency: 'USD',
                                             };
                                             form.setFieldValue(`costOfLiving[${costIndex}].living`, [

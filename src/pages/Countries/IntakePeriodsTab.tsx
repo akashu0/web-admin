@@ -21,11 +21,11 @@ export function IntakePeriodsTab({ form }: IntakePeriodsTabProps) {
                                     period: '',
                                     description: '',
                                     bestFor: '',
-                                    order: field.state.value.length + 1,
+                                    // order: field.state.value.length + 1,
                                 };
                                 field.pushValue(newIntake);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Add Intake Period
@@ -116,7 +116,7 @@ export function IntakePeriodsTab({ form }: IntakePeriodsTabProps) {
                                     )}
                                 </form.Field>
 
-                                <form.Field name={`intakePeriods[${index}].order`}>
+                                {/* <form.Field name={`intakePeriods[${index}].order`}>
                                     {(fieldItem: any) => (
                                         <div>
                                             <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -130,7 +130,7 @@ export function IntakePeriodsTab({ form }: IntakePeriodsTabProps) {
                                             />
                                         </div>
                                     )}
-                                </form.Field>
+                                </form.Field> */}
                             </div>
                         </div>
                     ))}

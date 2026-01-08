@@ -28,7 +28,7 @@ export function ScholarshipsTab({ form }: ScholarshipsTabProps) {
                                 };
                                 field.pushValue(newScholarship);
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Add Scholarship

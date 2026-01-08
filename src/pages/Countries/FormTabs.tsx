@@ -33,7 +33,7 @@ export function FormTabs({ activeTab, onTabChange }: FormTabsProps) {
                         key={tab.id}
                         type="button"
                         onClick={() => onTabChange(tab.id)}
-                        className={`px-4 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${activeTab === tab.id
+                        className={`px-4 py-3 font-medium text-sm cursor-pointer whitespace-nowrap border-b-2 transition-colors ${activeTab === tab.id
                             ? 'border-gray-900 text-gray-900'
                             : 'border-transparent text-gray-600 hover:text-gray-900'
                             }`}
