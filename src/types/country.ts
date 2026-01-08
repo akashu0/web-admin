@@ -52,6 +52,80 @@ export interface IScholarship {
     isGovernmentFunded: boolean;
 }
 
+
+export interface IVisaStep {
+    title: string;
+    description: string;
+}
+
+export interface IVisaDocument {
+    name: string;
+    description: string;
+}
+
+export interface IVisa {
+    _id: string;
+    country: string;
+    visaFee?: number;
+    currency?: string;
+    visaSteps?: IVisaStep[];
+    visaDocuments?: IVisaDocument[];
+    renewalDocuments?: IVisaDocument[];
+    visaProcessingTime?: number;
+    visaProcessingTimeUnit?: string;
+    visaSuccessRate?: string;
+}
+
+export interface IUniversityLite {
+    _id: string;
+    name: string;
+    city?: string;
+    rank?: string;
+    logoUrl?: string;
+    slug: string;
+}
+
+export interface ICourseOverview {
+    title?: string;
+    description?: string;
+}
+
+export interface ICourseLite {
+    _id: string;
+    overview?: ICourseOverview;
+    slug: string;
+}
+
+export interface CountryResponse {
+    _id: string;
+    name: string;
+    code: string;
+    capital: string;
+    continent: string;
+    currency: string;
+    spokenLanguages: string;
+    population: string;
+    about: string;
+    logo?: string;
+    banner?: string;
+    status: "published" | "draft";
+    slug: string;
+
+    // Related sections
+    intakePeriods: IIntakePeriod[];
+    scholarships: IScholarship[];
+    visaProcessDocuments?: IVisa | null;
+    topUniversities?: IUniversityLite[];
+    topCourses?: ICourseLite[];
+    costOfLiving: Cost[];
+    examsEligibility: IExamEligibility[];
+    workOpportunities: IWorkOpportunity[];
+
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+
 export interface ICountry {
     _id: string;
     name: string;
