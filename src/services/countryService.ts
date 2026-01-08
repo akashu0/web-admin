@@ -57,7 +57,7 @@ export const countryService = {
 
     async getCountryBySlug(slug: string): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.get<CountryResponseData>(`/countries/slug/${slug}`);
+            const response = await apiClient.get<CountryResponseData>(`/country/get-country-slug/${slug}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching country by slug:', error);

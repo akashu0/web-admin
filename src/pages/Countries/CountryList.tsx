@@ -65,7 +65,7 @@ export default function CountryList() {
     };
 
     const handleView = (country: ICountry) => {
-        navigate(`/countries/view/${country._id}`);
+        navigate(`/countries/view/${country.slug}`);
     };
 
     const handleDelete = async (id: string) => {

@@ -58,7 +58,7 @@ function App() {
                         {/* Country Routes */}
                         <Route path="/countries" element={<CountryList />} />
                         <Route path="/countries/edit/:id" element={<EditCountryForm />} />
-                        <Route path="/countries/view/:id" element={<CountryViewModal />} />
+                        <Route path="/countries/view/:slug" element={<CountryViewModal />} />
 
 
 

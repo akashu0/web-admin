@@ -21,17 +21,17 @@ import type { CountryResponse } from '@/types/country';
 import { countryService } from '@/services/countryService';
 
 export function CountryViewModal() {
-    const { id } = useParams();
+    const { slug } = useParams();
     const navigate = useNavigate();
     const [country, setCountry] = useState<CountryResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<string>('overview');
 
     useEffect(() => {
-        if (id) {
-            fetchCountry(id);
+        if (slug) {
+            fetchCountry(slug);
         }
-    }, [id]);
+    }, [slug]);
 
     const fetchCountry = async (identifier: string) => {
         try {
@@ -52,7 +52,7 @@ export function CountryViewModal() {
     };
 
     const handleEdit = () => {
-        navigate(`/countries/edit/${id}`);
+        navigate(`/countries/edit/${country?._id}`);
     };
 
     if (isLoading) {
