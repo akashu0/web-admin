@@ -16,6 +16,11 @@ interface CountryListResponse {
     data: ICountry[];
     pagination: PaginationResponse;
 }
+interface CountryByIdResponse {
+    success: boolean;
+    data: ICountry;
+    message?: string;
+}
 
 interface CountryResponseData {
     success: boolean;
@@ -40,9 +45,9 @@ export const countryService = {
         }
     },
 
-    async getCountryById(id: string): Promise<CountryResponseData> {
+    async getCountryById(id: string): Promise<CountryByIdResponse> {
         try {
-            const response = await apiClient.get<CountryResponseData>(`/country/get-country/${id}`);
+            const response = await apiClient.get<CountryByIdResponse>(`/country/get-country/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching country:', error);

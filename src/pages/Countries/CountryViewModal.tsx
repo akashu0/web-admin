@@ -36,7 +36,7 @@ export function CountryViewModal() {
     const fetchCountry = async (identifier: string) => {
         try {
             setIsLoading(true);
-            const response = await countryService.getCountryById(identifier);
+            const response = await countryService.getCountryBySlug(identifier);
             setCountry(response.data);
         } catch (error) {
             console.error('Error fetching country:', error);
