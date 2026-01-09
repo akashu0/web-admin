@@ -96,7 +96,7 @@ export interface Admissions {
  * Main University Type (matches IUniversity interface + Document)
  */
 export interface University {
-    _id?: string; // MongoDB ObjectId as string
+    _id: string;
     name: string;
     fullName: string;
     country: string;

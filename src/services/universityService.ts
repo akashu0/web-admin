@@ -43,13 +43,13 @@ export const universityService = {
 
     // Delete university
     deleteUniversity: async (id: string): Promise<{ success: boolean; message: string }> => {
-        const response = await apiClient.delete(`/universities/${id}`);
+        const response = await apiClient.delete(`/universities/delete-universities/${id}`);
         return response.data;
     },
 
     // Get university by slug
     getUniversityBySlug: async (slug: string): Promise<UniversityResponse> => {
-        const response = await apiClient.get<UniversityResponse>(`/universities/slug/${slug}`);
+        const response = await apiClient.get<UniversityResponse>(`/universities/get-universities-slug/${slug}`);
         return response.data;
     },
 };

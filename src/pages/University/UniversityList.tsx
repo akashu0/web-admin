@@ -1,4 +1,5 @@
 import { useState, useEffect, useTransition, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCcw, Loader2, FileQuestion, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import { AddUniversityModal } from "./AddUniversityModal";
 import { ViewUniversityModal } from "./ViewUniversityModal";
 
 export function UniversityList() {
+    const navigate = useNavigate();
     const [isPending, startTransition] = useTransition();
 
     const [universities, setUniversities] = useState<University[]>([]);
@@ -73,7 +75,8 @@ export function UniversityList() {
     }, [queryParams.page, queryParams.limit, queryParams.status, queryParams.search, queryParams.sortBy, queryParams.sortOrder]);
 
     const handleEdit = (university: University) => {
-        window.location.href = `/universities/edit/${university.slug}`;
+        // Navigate to edit page using slug
+        navigate(`/universities/edit/${university.slug}`);
     };
 
     const handleView = (university: University) => {
@@ -85,6 +88,7 @@ export function UniversityList() {
         if (!window.confirm("Are you sure you want to delete this university?")) {
             return;
         }
+
 
         try {
             await universityService.deleteUniversity(id);
@@ -146,10 +150,10 @@ export function UniversityList() {
             enableHiding: false,
         },
         {
-            accessorKey: "logoUrl",
+            accessorKey: "logo",
             header: "Logo",
             cell: ({ row }) => {
-                const logoUrl = row.getValue("logoUrl") as string;
+                const logoUrl = row.getValue("logo") as string;
                 return (
                     <div className="flex items-center justify-center">
                         {logoUrl ? (
@@ -283,7 +287,7 @@ export function UniversityList() {
                                     Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onSelect={() => handleDelete(university.slug)}
+                                    onSelect={() => handleDelete(university._id)}
                                     className="text-red-600"
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />

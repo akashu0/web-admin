@@ -46,7 +46,7 @@ export const createColumns = ({
             accessorKey: "logoUrl",
             header: "Logo",
             cell: ({ row }) => {
-                const logoUrl = row.getValue("logoUrl") as string;
+                const logoUrl = row.getValue("logo") as string;
                 return (
                     <div className="flex items-center justify-center">
                         {logoUrl ? (
@@ -188,7 +188,7 @@ export const createColumns = ({
                             <DropdownMenuItem
                                 onSelect={(e) => {
                                     e.preventDefault();
-                                    onDelete(university.slug);
+                                    onDelete(university._id);
                                 }}
                                 className="text-red-600"
                             >

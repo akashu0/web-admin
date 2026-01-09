@@ -7,7 +7,6 @@ import { Toaster } from './components/ui/sonner';
 
 import { CourseList } from './pages/Course/CourseList';
 import { UniversityList } from './pages/University/UniversityList';
-import { UniversityForm } from './pages/University/UniversityForm';
 import { VisaForm } from './pages/Visa/VisaForm';
 import VisaList from './pages/Visa/VisaList';
 import LearningCenterList from './pages/LearningCenter/LearningCenterList';
@@ -18,6 +17,7 @@ import { FAQPage } from './pages/Faq/FAQPage';
 import CountryList from './pages/Countries/CountryList';
 import { EditCountryForm } from './pages/Countries/EditCountryForm';
 import { CountryViewModal } from './pages/Countries/CountryViewModal';
+import { EditUniversity } from './pages/University/EditUniversity';
 
 function App() {
     return (
@@ -37,8 +37,8 @@ function App() {
 
                         {/* University Routes */}
                         <Route path="/universities" element={<UniversityList />} />
-                        <Route path="/universities/new" element={<UniversityForm />} />
-                        <Route path="/universities/:id" element={<UniversityForm />} />
+                        {/* <Route path="/universities/new" element={<AddUniversityModal open={true} onOpenChange={() => { }} onSuccess={() => { }} />} /> */}
+                        <Route path="/universities/edit/:slug" element={<EditUniversity />} />
 
                         {/* Visa Routes */}
                         <Route path="/visas" element={<VisaList />} />

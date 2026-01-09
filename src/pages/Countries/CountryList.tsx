@@ -123,10 +123,10 @@ export default function CountryList() {
             header: 'Continent',
             cell: (info) => <span className="text-gray-900">{info.getValue()}</span>,
         }),
-        columnHelper.accessor('spokenLanguages', {
-            header: 'Language',
-            cell: (info) => <span className="text-gray-600">{info.getValue()}</span>,
-        }),
+        // columnHelper.accessor('spokenLanguages', {
+        //     header: 'Language',
+        //     cell: (info) => <span className="text-gray-600">{info.getValue()}</span>,
+        // }),
         columnHelper.accessor('currency', {
             header: 'Currency',
             cell: (info) => <span className="font-mono text-gray-900">{info.getValue()}</span>,
