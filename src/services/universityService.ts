@@ -52,4 +52,44 @@ export const universityService = {
         const response = await apiClient.get<UniversityResponse>(`/universities/get-universities-slug/${slug}`);
         return response.data;
     },
+
+    // Update Basic Information
+    updateBasicInfo: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/basic-info/${slug}`, data);
+        return response.data;
+    },
+
+    // Update Fee Structure
+    updateFees: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/fees/${slug}`, data);
+        return response.data;
+    },
+
+    // Update Admissions
+    updateAdmissions: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/admissions/${slug}`, data);
+        return response.data;
+    },
+
+    // Update Student Life
+    updateStudentLife: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/student-life/${slug}`, data);
+        return response.data;
+    },
+
+    // Update Images (with FormData for file uploads)
+    updateImages: async (slug: string, data: FormData) => {
+        const response = await apiClient.patch(`/universities/images/${slug}`, data, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return response.data;
+    },
+
+    // Update Media (YouTube video link)
+    updateMedia: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/media/${slug}`, data);
+        return response.data;
+    },
 };
