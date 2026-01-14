@@ -35,6 +35,8 @@ import {
     Trash2,
     Search,
     Loader2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
 import { visaService } from "../../services/visaService";
@@ -43,6 +45,14 @@ import { DeleteVisaDialog } from "./DeleteVisaDialog";
 import { AddEditVisaModal } from "./AddEditVisaModal";
 import type { Visa } from "@/types/visa";
 
+interface PaginationInfo {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}
 
 const VisaList: React.FC = () => {
     const [visas, setVisas] = useState<Visa[]>([]);
@@ -53,20 +63,47 @@ const VisaList: React.FC = () => {
     const [editingVisa, setEditingVisa] = useState<Visa | null>(null);
     const [deletingVisa, setDeletingVisa] = useState<Visa | null>(null);
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [pagination, setPagination] = useState<PaginationInfo>({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
+    });
+
     useEffect(() => {
         fetchVisas();
-    }, []);
+    }, [currentPage]);
 
     const fetchVisas = async () => {
         try {
             setIsLoading(true);
-            const response = await visaService.getAllVisas();
+            const response = await visaService.getAllVisas({
+                page: currentPage,
+                limit: 10,
+            });
             setVisas(response.data);
+            setPagination(response.pagination);
         } catch (error) {
             console.error("Error fetching visas:", error);
             toast.error("Failed to fetch visas");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (pagination.hasPrevPage) {
+            setCurrentPage((prev) => prev - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (pagination.hasNextPage) {
+            setCurrentPage((prev) => prev + 1);
         }
     };
 
@@ -175,6 +212,8 @@ const VisaList: React.FC = () => {
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
+        manualPagination: true, // Tell React Table we're handling pagination
+        pageCount: pagination.totalPages,
     });
 
     return (
@@ -255,6 +294,74 @@ const VisaList: React.FC = () => {
                             )}
                         </TableBody>
                     </Table>
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-500">
+                        Showing {visas.length > 0 ? (currentPage - 1) * pagination.limit + 1 : 0} to{" "}
+                        {Math.min(currentPage * pagination.limit, pagination.total)} of{" "}
+                        {pagination.total} entries
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handlePreviousPage}
+                            disabled={!pagination.hasPrevPage || isLoading}
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            Previous
+                        </Button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
+                                (page) => {
+                                    // Show current page, first page, last page, and pages around current
+                                    const showPage =
+                                        page === 1 ||
+                                        page === pagination.totalPages ||
+                                        (page >= currentPage - 1 && page <= currentPage + 1);
+
+                                    if (!showPage) {
+                                        // Show ellipsis
+                                        if (
+                                            page === currentPage - 2 ||
+                                            page === currentPage + 2
+                                        ) {
+                                            return (
+                                                <span key={page} className="px-2">
+                                                    ...
+                                                </span>
+                                            );
+                                        }
+                                        return null;
+                                    }
+
+                                    return (
+                                        <Button
+                                            key={page}
+                                            variant={currentPage === page ? "default" : "outline"}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(page)}
+                                            disabled={isLoading}
+                                            className="min-w-10"
+                                        >
+                                            {page}
+                                        </Button>
+                                    );
+                                }
+                            )}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleNextPage}
+                            disabled={!pagination.hasNextPage || isLoading}
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
