@@ -26,6 +26,14 @@ class FAQService {
         return response.data;
     }
 
+    // Get all FAQs with filters
+    async getFAQDropdown(): Promise<PaginationResponse<IFAQ[]>> {
+        const response = await apiClient.get(
+            `/faqs/get-all-faqs-dropdown`,
+        );
+        return response.data;
+    }
+
     // Get FAQ by ID
     async getFAQById(id: string): Promise<{ success: boolean; data: IFAQ }> {
         const response = await apiClient.get(

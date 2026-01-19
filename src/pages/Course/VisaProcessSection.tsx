@@ -71,7 +71,7 @@ export function VisaProcessSection({
     const fetchVisas = async () => {
         try {
             setIsLoading(true);
-            const response = await visaService.getAllVisas({ status: 'active' });
+            const response = await visaService.getAllVisas({ status: 'active', limit: 100 });
             const visaData = Array.isArray(response) ? response : (response as any)?.data || [];
             setVisas(visaData);
         } catch (error) {
@@ -330,7 +330,7 @@ export function VisaProcessSection({
                                         {modalVisa.visaSteps.map((step) => (
                                             <Card key={step._id} className="p-4 bg-gray-50">
                                                 <div className="flex items-start gap-3">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm font-bold flex-shrink-0">
+                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm font-bold shrink-0">
                                                         {step.stepNumber}
                                                     </div>
                                                     <div className="flex-1">
@@ -362,7 +362,7 @@ export function VisaProcessSection({
                                         {modalVisa.visaDocuments.map((doc) => (
                                             <Card key={doc._id} className="p-4 bg-gray-50">
                                                 <div className="flex items-start gap-3">
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium flex-shrink-0 ${doc.isMandatory
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium shrink-0 ${doc.isMandatory
                                                         ? 'bg-red-100 text-red-800'
                                                         : 'bg-blue-100 text-blue-800'
                                                         }`}>
@@ -392,7 +392,7 @@ export function VisaProcessSection({
                                         {modalVisa.renewalDocuments.map((doc) => (
                                             <Card key={doc._id} className="p-4 bg-gray-50">
                                                 <div className="flex items-start gap-3">
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium flex-shrink-0 ${doc.isMandatory
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium shrink-0 ${doc.isMandatory
                                                         ? 'bg-red-100 text-red-800'
                                                         : 'bg-blue-100 text-blue-800'
                                                         }`}>

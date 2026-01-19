@@ -11,6 +11,7 @@ import { AdmissionsSection } from "./AdmissionsSection";
 import { StudentLifeSection } from "./StudentLifeSection";
 import { ImagesSection } from "./ImagesSection";
 import { MediaSection } from "./Mediasection";
+import { UniversityReferencesTab } from "./UniversityReferencesTab";
 
 
 export function EditUniversity() {
@@ -80,13 +81,14 @@ export function EditUniversity() {
             </div>
 
             <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-6">
+                <TabsList className="grid w-full grid-cols-7">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="fees">Fees</TabsTrigger>
                     <TabsTrigger value="admissions">Admissions</TabsTrigger>
                     <TabsTrigger value="studentLife">Student Life</TabsTrigger>
                     <TabsTrigger value="images">Images</TabsTrigger>
                     <TabsTrigger value="media">Media</TabsTrigger>
+                    <TabsTrigger value="refrences">Refrences</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="basic" className="space-y-4 mt-4">
@@ -138,6 +140,16 @@ export function EditUniversity() {
                         slug={slug!}
                         initialData={{
                             youtubeVideoUrl: universityData.youtubeVideoUrl || "",
+                        }}
+                        onSuccess={() => handleSectionUpdate("Media")}
+                    />
+                </TabsContent>
+                <TabsContent value="refrences" className="space-y-4 mt-4">
+                    <UniversityReferencesTab
+                        slug={slug!}
+                        initialData={{
+                            visa: universityData.visa || "",
+                            courses: universityData.courses || "",
                         }}
                         onSuccess={() => handleSectionUpdate("Media")}
                     />

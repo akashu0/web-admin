@@ -92,4 +92,10 @@ export const universityService = {
         const response = await apiClient.patch(`/universities/media/${slug}`, data);
         return response.data;
     },
+
+    // Update Refrences
+    updateReferences: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/references/${slug}`, data);
+        return response.data;
+    },
 };
