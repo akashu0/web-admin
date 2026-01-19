@@ -97,7 +97,24 @@ export const courseService = {
 
     // Step 2: Update individual sections by slug
     updateCourseOverview: async (slug: string, data: CourseFormData['overview']) => {
-        const response = await apiClient.put(`/courses/courses-overview/${slug}`, data);
+        const formData = new FormData();
+
+        Object.entries(data).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                if (typeof value === 'object' && !(value instanceof File)) {
+                    formData.append(key, JSON.stringify(value));
+                } else {
+                    formData.append(key, value as any);
+                }
+            }
+        });
+
+        const response = await apiClient.put(
+            `/courses/courses-overview/${slug}`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
         return response.data;
     },
 
