@@ -70,7 +70,6 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                 limit: 100,
             };
             const fetchedUniversities = await universityService.getAllUniversities(params);
-            console.log(fetchedUniversities.data, "uni");
 
             setUniversities(fetchedUniversities.data);
         } catch (error) {
@@ -99,7 +98,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     };
 
     const handleSave = () => {
-        console.log(selectedCenterIds, selectedUniversityId, "univ");
+
         onSave(selectedCenterIds, selectedUniversityId);
         onNext();
     };
