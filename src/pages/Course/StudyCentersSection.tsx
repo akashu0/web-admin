@@ -1,34 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { X, MapPin, Globe, DollarSign, BookOpen, Plane, FileText, Search } from "lucide-react";
+import { X, MapPin, Globe, DollarSign, BookOpen, Plane, FileText, Search, GraduationCap } from "lucide-react";
 import { learningCenterService } from "@/services/learningCenterService";
 import type { LearningCenter } from "@/types/learningCenter";
+import type { University } from "@/types/university";
+import { universityService } from "@/services/universityService";
 import type { Visa } from "@/types/visa";
 
 interface StudyCentersSectionProps {
     data: string[];
-    onSave: (data: string[]) => void;
+    universityId?: string;
+    onSave: (data: string[], universityId?: string) => void;
     onNext: () => void;
 }
 
-
-
-
 const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     data,
+    universityId,
     onSave,
     onNext,
 }) => {
     const [selectedCenterIds, setSelectedCenterIds] = useState<string[]>(data || []);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [selectedUniversityId, setSelectedUniversityId] = useState<string>(universityId || "");
+    const [centersDropdownOpen, setCentersDropdownOpen] = useState(false);
+    const [universityDropdownOpen, setUniversityDropdownOpen] = useState(false);
     const [modalCenter, setModalCenter] = useState<LearningCenter | null>(null);
     const [centers, setCenters] = useState<LearningCenter[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-
-
-    const [searchQuery, setSearchQuery] = useState("");
+    const [universities, setUniversities] = useState<University[]>([]);
+    const [isCentersLoading, setIsCentersLoading] = useState(false);
+    const [isUniversitiesLoading, setIsUniversitiesLoading] = useState(false);
+    const [centersSearchQuery, setCentersSearchQuery] = useState("");
+    const [universitySearchQuery, setUniversitySearchQuery] = useState("");
 
     useEffect(() => {
         fetchCenters();
+        fetchUniversities();
     }, []);
 
     useEffect(() => {
@@ -37,22 +42,41 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         }
     }, [data]);
 
+    useEffect(() => {
+        if (universityId) {
+            setSelectedUniversityId(universityId);
+        }
+    }, [universityId]);
+
     const fetchCenters = async () => {
         try {
-            setIsLoading(true);
+            setIsCentersLoading(true);
             const params = {
-
                 limit: 100,
             };
             const fetchedCenters = await learningCenterService.getAllLearningCenters(params);
-
-
-
             setCenters(fetchedCenters.data);
         } catch (error) {
             console.error("Error fetching learning centers:", error);
         } finally {
-            setIsLoading(false);
+            setIsCentersLoading(false);
+        }
+    };
+
+    const fetchUniversities = async () => {
+        try {
+            setIsUniversitiesLoading(true);
+            const params = {
+                limit: 100,
+            };
+            const fetchedUniversities = await universityService.getAllUniversities(params);
+            console.log(fetchedUniversities.data, "uni");
+
+            setUniversities(fetchedUniversities.data);
+        } catch (error) {
+            console.error("Error fetching universities:", error);
+        } finally {
+            setIsUniversitiesLoading(false);
         }
     };
 
@@ -69,14 +93,22 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         setSelectedCenterIds((prev) => prev.filter((id) => id !== centerId));
     };
 
+    const handleUniversitySelect = (universityId: string) => {
+        setSelectedUniversityId(universityId);
+        setUniversityDropdownOpen(false);
+    };
+
     const handleSave = () => {
-        onSave(selectedCenterIds);
+        console.log(selectedCenterIds, selectedUniversityId, "univ");
+        onSave(selectedCenterIds, selectedUniversityId);
         onNext();
     };
 
     const selectedCenters = centers.filter((center) =>
         selectedCenterIds.includes(center.id)
     );
+
+    const selectedUniversity = universities.find((uni) => uni._id === selectedUniversityId);
 
     const getModeIcon = (mode: string) => {
         if (mode.toLowerCase().includes("online")) return "🌐";
@@ -86,7 +118,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     };
 
     const filteredCenters = centers.filter((center) => {
-        const query = searchQuery?.toLowerCase();
+        const query = centersSearchQuery?.toLowerCase();
         return (
             center.name?.toLowerCase().includes(query) ||
             center.country?.toLowerCase().includes(query) ||
@@ -95,29 +127,39 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         );
     });
 
+    const filteredUniversities = universities.filter((university) => {
+        const query = universitySearchQuery?.toLowerCase();
+        return (
+            university.name?.toLowerCase().includes(query) ||
+            university.country?.toLowerCase().includes(query) ||
+            university.city?.toLowerCase().includes(query) ||
+            university.state?.toLowerCase().includes(query)
+        );
+    });
 
     return (
         <div className="space-y-6">
+            {/* University Selection */}
             <div>
-                <h3 className="text-lg font-semibold mb-4">Select Study Centers</h3>
+                <h3 className="text-lg font-semibold mb-4">Select University (Optional)</h3>
 
-                {/* Dropdown Selection */}
                 <div className="relative">
                     <button
                         type="button"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
-                        disabled={isLoading}
+                        onClick={() => setUniversityDropdownOpen(!universityDropdownOpen)}
+                        disabled={isUniversitiesLoading}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <span className="text-gray-700">
-                            {isLoading
-                                ? "Loading centers..."
-                                : selectedCenterIds.length > 0
-                                    ? `${selectedCenterIds.length} center(s) selected`
-                                    : "Choose learning centers"}
+                        <span className="text-gray-700 flex items-center gap-2">
+                            <GraduationCap className="w-5 h-5 text-purple-600" />
+                            {isUniversitiesLoading
+                                ? "Loading universities..."
+                                : selectedUniversity
+                                    ? selectedUniversity.name
+                                    : "Choose a university"}
                         </span>
                         <svg
-                            className={`w-5 h-5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                            className={`w-5 h-5 transition-transform ${universityDropdownOpen ? "rotate-180" : ""}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -131,7 +173,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                         </svg>
                     </button>
 
-                    {dropdownOpen && (
+                    {universityDropdownOpen && (
                         <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
                             {/* Search Input */}
                             <div className="sticky top-0 bg-white border-b border-gray-200 p-3">
@@ -139,15 +181,15 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                                     <input
                                         type="text"
-                                        placeholder="Search by name, country, or level..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search by name, country, or city..."
+                                        value={universitySearchQuery}
+                                        onChange={(e) => setUniversitySearchQuery(e.target.value)}
                                         className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                                         autoFocus
                                     />
-                                    {searchQuery && (
+                                    {universitySearchQuery && (
                                         <button
-                                            onClick={() => setSearchQuery("")}
+                                            onClick={() => setUniversitySearchQuery("")}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                         >
                                             <X className="h-4 w-4" />
@@ -158,13 +200,177 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
 
                             {/* Scrollable List */}
                             <div className="overflow-y-auto max-h-64">
-                                {isLoading ? (
+                                {/* Clear Selection Option */}
+                                {selectedUniversityId && (
+                                    <button
+                                        onClick={() => handleUniversitySelect("")}
+                                        className="w-full px-4 py-3 hover:bg-gray-50 text-left border-b text-sm text-gray-600 italic"
+                                    >
+                                        Clear selection
+                                    </button>
+                                )}
+
+                                {isUniversitiesLoading ? (
+                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                        Loading universities...
+                                    </div>
+                                ) : filteredUniversities.length === 0 ? (
+                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                        {universitySearchQuery ? "No matching universities found" : "No universities available"}
+                                    </div>
+                                ) : (
+                                    filteredUniversities.map((university) => (
+                                        <button
+                                            key={university._id}
+                                            onClick={() => handleUniversitySelect(university._id)}
+                                            className={`w-full flex items-start px-4 py-3 hover:bg-purple-50 cursor-pointer border-b last:border-b-0 text-left ${selectedUniversityId === university._id ? 'bg-purple-50' : ''
+                                                }`}
+                                        >
+                                            <div className="flex-1">
+                                                <div
+                                                    className={`font-medium ${selectedUniversityId === university._id
+                                                        ? 'text-purple-700'
+                                                        : 'text-gray-900'
+                                                        }`}
+                                                >
+                                                    {university.name}
+                                                </div>
+
+                                                <div className="text-sm text-gray-500 flex items-center gap-3 mt-1">
+                                                    {university.city && (
+                                                        <span className="flex items-center gap-1">
+                                                            <MapPin className="w-3 h-3" />
+                                                            {university.city}
+                                                        </span>
+                                                    )}
+                                                    {university.country && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Globe className="w-3 h-3" />
+                                                            {university.country}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {selectedUniversityId === university._id && (
+                                                <div className="ml-2 text-purple-600">
+                                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))
+
+                                )}
+                            </div>
+
+                            {/* Results Count */}
+                            {!isUniversitiesLoading && filteredUniversities.length > 0 && (
+                                <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-2 text-xs text-gray-600">
+                                    Showing {filteredUniversities.length} of {universities.length} universities
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Selected University Display */}
+                {selectedUniversity && (
+                    <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <GraduationCap className="w-5 h-5 text-purple-600" />
+                            <div>
+                                <div className="font-semibold text-gray-900">{selectedUniversity.name}</div>
+                                <div className="text-sm text-gray-600">
+                                    {selectedUniversity.city && selectedUniversity.country && (
+                                        <span>{selectedUniversity.city}, {selectedUniversity.country}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setSelectedUniversityId("")}
+                            className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Study Centers Selection */}
+            <div>
+                <h3 className="text-lg font-semibold mb-4">Select Study Centers</h3>
+
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => setCentersDropdownOpen(!centersDropdownOpen)}
+                        disabled={isCentersLoading}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span className="text-gray-700">
+                            {isCentersLoading
+                                ? "Loading centers..."
+                                : selectedCenterIds.length > 0
+                                    ? `${selectedCenterIds.length} center(s) selected`
+                                    : "Choose learning centers"}
+                        </span>
+                        <svg
+                            className={`w-5 h-5 transition-transform ${centersDropdownOpen ? "rotate-180" : ""}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                            />
+                        </svg>
+                    </button>
+
+                    {centersDropdownOpen && (
+                        <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+                            {/* Search Input */}
+                            <div className="sticky top-0 bg-white border-b border-gray-200 p-3">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, country, or level..."
+                                        value={centersSearchQuery}
+                                        onChange={(e) => setCentersSearchQuery(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                        autoFocus
+                                    />
+                                    {centersSearchQuery && (
+                                        <button
+                                            onClick={() => setCentersSearchQuery("")}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Scrollable List */}
+                            <div className="overflow-y-auto max-h-64">
+                                {isCentersLoading ? (
                                     <div className="px-4 py-3 text-gray-500 text-center">
                                         Loading learning centers...
                                     </div>
                                 ) : filteredCenters.length === 0 ? (
                                     <div className="px-4 py-3 text-gray-500 text-center">
-                                        {searchQuery ? "No matching centers found" : "No learning centers available"}
+                                        {centersSearchQuery ? "No matching centers found" : "No learning centers available"}
                                     </div>
                                 ) : (
                                     filteredCenters.map((center) => (
@@ -217,7 +423,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                             </div>
 
                             {/* Results Count */}
-                            {!isLoading && filteredCenters.length > 0 && (
+                            {!isCentersLoading && filteredCenters.length > 0 && (
                                 <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-2 text-xs text-gray-600">
                                     Showing {filteredCenters.length} of {centers.length} centers
                                 </div>
@@ -293,7 +499,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                 </div>
             )}
 
-            {/* Modal */}
+            {/* Modal - keeping your existing modal code */}
             {modalCenter && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">

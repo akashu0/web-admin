@@ -76,7 +76,8 @@ export default function EditCourse() {
                     durationYears: response.overview.durationYears || 0,
                     durationMonths: response.overview.durationMonths || 0,
                     dynamicFields: response.overview.dynamicFields || [],
-                }
+                },
+                universityId: response.universityId || ""
             };
 
             setCourseData(normalizedData);
@@ -233,11 +234,31 @@ export default function EditCourse() {
                                 onNext={() => setActiveSection("studyCenters")}
                             />
                         )}
-
                         {activeSection === "studyCenters" && (
                             <StudyCentersSection
                                 data={courseData.studyCenters?.map(center => center.centerId) || []}
-                                onSave={(data) => handleSectionUpdate("studyCenters", data)}
+                                universityId={courseData.universityId || ""}
+                                onSave={(centerIds, universityId) => {
+                                    // Prepare payload with only non-empty values
+                                    const payload: any = {};
+
+                                    if (centerIds && centerIds.length > 0) {
+                                        payload.studyCenters = centerIds;
+                                    }
+
+                                    if (universityId && universityId.trim() !== "") {
+                                        payload.universityId = universityId;
+                                    }
+
+                                    // Only call handleSectionUpdate if there's data to send
+                                    if (Object.keys(payload).length > 0) {
+                                        handleSectionUpdate("studyCenters", payload);
+                                    } else {
+                                        // If nothing selected, show a message or just proceed
+                                        console.log("No study centers or university selected");
+                                        setActiveSection("documents"); // or show validation message
+                                    }
+                                }}
                                 onNext={() => setActiveSection("documents")}
                             />
                         )}

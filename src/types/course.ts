@@ -65,6 +65,7 @@ export interface Brochure {
 
 
 export interface CourseFormData {
+    universityId: string;
     _id?: string;
     overview: CourseOverview;
     studyCenters?: LearningCenter[];
@@ -90,6 +91,7 @@ export interface PaginationMeta {
 }
 
 export interface Course {
+    universityId: string;
     studyCenters: never[];
     dynamicFields: never[];
     brochure: never[];

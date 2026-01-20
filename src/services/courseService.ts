@@ -133,7 +133,8 @@ export const courseService = {
         return response.data;
     },
 
-    updateStudyCenters: async (slug: string, data: CourseFormData['studyCenters']) => {
+    updateStudyCenters: async (slug: string, data: { studyCenters?: string[], universityId?: string }) => {
+        console.log("Updating with data:", data);
         const response = await apiClient.put(`/courses/courses-study-centers/${slug}`, data);
         return response.data;
     },
