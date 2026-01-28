@@ -177,8 +177,17 @@ export function UniversityList() {
             header: "University Name",
             cell: ({ row }) => (
                 <div className="max-w-xs">
-                    <div className="font-medium text-gray-900">{row.getValue("name")}</div>
-                    <div className="text-sm text-gray-500 truncate">
+                    <div
+                        className="font-medium text-gray-900 truncate max-w-[140px]"
+                        title={row.getValue("name")}
+                    >
+                        {row.getValue("name")}
+                    </div>
+
+                    <div
+                        className="text-sm text-gray-500 truncate max-w-[100px]"
+                        title={row.original.fullName}
+                    >
                         {row.original.fullName}
                     </div>
                 </div>
@@ -189,43 +198,17 @@ export function UniversityList() {
             header: "Location",
             cell: ({ row }) => (
                 <div className="text-sm">
-                    <div className="font-medium text-gray-900">{row.original.city}</div>
-                    <div className="text-gray-500">{row.original.country}</div>
+                    <div className="font-medium text-gray-900 truncate max-w-[150px]">
+                        {row.original.city}
+                    </div>
+                    <div className="text-gray-500 truncate max-w-[150px]">
+                        {row.original.country}
+                    </div>
                 </div>
             ),
         },
-        {
-            accessorKey: "rank",
-            header: "Ranking",
-            cell: ({ row }) => {
-                const rank = row.getValue("rank") as string;
-                return rank ? (
-                    <Badge variant="secondary" className="font-mono">
-                        #{rank}
-                    </Badge>
-                ) : (
-                    <span className="text-gray-400 text-sm">N/A</span>
-                );
-            },
-        },
-        {
-            accessorKey: "totalStudents",
-            header: "Students",
-            cell: ({ row }) => {
-                const total = row.getValue("totalStudents") as string;
-                const international = row.original.internationalStudents;
-                return (
-                    <div className="text-sm">
-                        <div className="font-medium text-gray-900">{total || "N/A"}</div>
-                        {international && (
-                            <div className="text-gray-500 text-xs">
-                                {international} international
-                            </div>
-                        )}
-                    </div>
-                );
-            },
-        },
+
+
         {
             accessorKey: "founded",
             header: "Founded",
