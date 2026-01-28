@@ -287,7 +287,7 @@ export function UniversityList() {
                                     Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onSelect={() => handleDelete(university._id)}
+                                    onSelect={() => handleDelete(university.slug)}
                                     className="text-red-600"
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />

@@ -22,6 +22,7 @@ import { DocumentsRequiredSection } from "./DocumentsRequiredSection";
 import { VisaProcessSection } from "./VisaProcessSection";
 import { CareerOpportunitiesSection } from "./CareerOpportunitiesSection";
 import { DynamicFieldsSection } from "./DynamicFieldsSection";
+import DeliveryModeFeeStructure from "./DeliveryModeFeeStructure";
 
 
 interface SidebarItem {
@@ -33,6 +34,7 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
     { id: "overview", label: "Course Overview", icon: <FileText className="h-4 w-4" /> },
     { id: "studyCenters", label: "Study Centers", icon: <MapPin className="h-4 w-4" /> },
+    { id: "feeStructure", label: "Fee Structure", icon: <Settings className="h-4 w-4" /> },
     { id: "documents", label: "Documents Required", icon: <FileCheck className="h-4 w-4" /> },
     { id: "visa", label: "Visa Process", icon: <Globe className="h-4 w-4" /> },
     { id: "career", label: "Career Opportunities", icon: <Briefcase className="h-4 w-4" /> },
@@ -70,6 +72,7 @@ export default function EditCourse() {
                 careerOpportunities: response.careerOpportunities || [],
                 studyCenters: response.studyCenters || [],
                 dynamicFields: response.dynamicFields || [],
+                feeStructure: response.feeStructure || [],
                 brochure: response?.brochure || [],
                 overview: {
                     ...response.overview,
@@ -111,6 +114,9 @@ export default function EditCourse() {
             switch (section) {
                 case "overview":
                     await courseService.updateCourseOverview(slug!, data);
+                    break;
+                case "feeStructure":
+                    await courseService.updateFeeStructure(slug!, data);
                     break;
                 case "documents":
                     await courseService.updateDocumentsRequired(slug!, data);
@@ -259,6 +265,14 @@ export default function EditCourse() {
                                         setActiveSection("documents"); // or show validation message
                                     }
                                 }}
+                                onNext={() => setActiveSection("documents")}
+                            />
+                        )}
+
+                        {activeSection === "feeStructure" && (
+                            <DeliveryModeFeeStructure
+                                initialData={courseData.feeStructure || []}
+                                onSave={(data) => handleSectionUpdate("feeStructure", data)}
                                 onNext={() => setActiveSection("documents")}
                             />
                         )}

@@ -127,6 +127,10 @@ export const courseService = {
         const response = await apiClient.put(`/courses/courses-visa-process/${slug}`, data);
         return response.data;
     },
+    updateFeeStructure: async (slug: string, data: CourseFormData['feeStructure']) => {
+        const response = await apiClient.put(`/courses/courses-fee-structures/${slug}`, data);
+        return response.data;
+    },
 
     updateCareerOpportunities: async (slug: string, data: CourseFormData['careerOpportunities']) => {
         const response = await apiClient.put(`/courses/courses-career-opportunities/${slug}`, data);

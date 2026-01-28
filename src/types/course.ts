@@ -65,6 +65,7 @@ export interface Brochure {
 
 
 export interface CourseFormData {
+    feeStructure: never[];
     universityId: string;
     _id?: string;
     overview: CourseOverview;
@@ -91,6 +92,7 @@ export interface PaginationMeta {
 }
 
 export interface Course {
+    feeStructure: never[];
     universityId: string;
     studyCenters: never[];
     dynamicFields: never[];
@@ -119,6 +121,7 @@ export interface Course {
 export type CourseSection =
     | 'overview'
     | 'studyCenters'
+    | 'feeStructure'
     | 'documents'
     | 'visa'
     | 'career'
