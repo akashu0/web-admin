@@ -21,6 +21,7 @@ const sidebarItems = [
     { icon: FileText, label: 'Visas', href: '/visas' },
     { icon: School, label: 'Learning Centers', href: '/learning-centers' },
     { icon: HelpCircle, label: 'FAQs', href: '/faqs' },
+    { icon: FileText, label: 'Enquiries', href: '/enquiries' },
 ];
 
 export const Sidebar = () => {

@@ -18,6 +18,7 @@ import CountryList from './pages/Countries/CountryList';
 import { EditCountryForm } from './pages/Countries/EditCountryForm';
 import { CountryViewModal } from './pages/Countries/CountryViewModal';
 import { EditUniversity } from './pages/University/EditUniversity';
+import EnquiryList from './pages/Enquiry/EnquiryList';
 
 function App() {
     return (
@@ -59,6 +60,9 @@ function App() {
                         <Route path="/countries" element={<CountryList />} />
                         <Route path="/countries/edit/:id" element={<EditCountryForm />} />
                         <Route path="/countries/view/:slug" element={<CountryViewModal />} />
+
+                        {/* Enquiry Routes */}
+                        <Route path="/enquiries" element={<EnquiryList />} />
 
 
 
