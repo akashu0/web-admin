@@ -141,11 +141,9 @@ const CommissionDetailView = ({ commission }: { commission: PartnerCommission })
 // ── Bulk upload panel ─────────────────────────────────────────────────────────
 
 const BulkUploadView = ({
-    onBulkUpload,
     isSubmitting,
     onClose,
 }: {
-    onBulkUpload: (records: unknown[]) => Promise<void>;
     isSubmitting: boolean;
     onClose: () => void;
 }) => {
@@ -309,7 +307,6 @@ export const CommissionDrawer = ({
     isOpen,
     onClose,
     onSubmit,
-    onBulkUpload,
     isSubmitting = false,
 }: Props) => {
     // Close on Escape
@@ -383,9 +380,8 @@ export const CommissionDrawer = ({
                         />
                     )}
 
-                    {mode === "bulk" && onBulkUpload && (
+                    {mode === "bulk" && (
                         <BulkUploadView
-                            onBulkUpload={onBulkUpload}
                             isSubmitting={isSubmitting}
                             onClose={onClose}
                         />
