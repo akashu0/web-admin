@@ -124,7 +124,7 @@ export default function EnquiryList() {
             <Dialog.Root open={!!selectedEnquiry} onOpenChange={() => setSelectedEnquiry(null)}>
                 <Dialog.Portal>
                     <Dialog.Overlay className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white border-4 border-black p-8 z-[51] shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]">
+                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white border-4 border-black p-8 z-51 shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]">
                         <div className="flex justify-between items-start mb-6">
                             <Dialog.Title className="text-2xl font-black uppercase">Enquiry Details</Dialog.Title>
                             <Dialog.Close className="text-2xl hover:scale-125 transition-transform">✕</Dialog.Close>

@@ -19,6 +19,7 @@ import { EditCountryForm } from './pages/Countries/EditCountryForm';
 import { CountryViewModal } from './pages/Countries/CountryViewModal';
 import { EditUniversity } from './pages/University/EditUniversity';
 import EnquiryList from './pages/Enquiry/EnquiryList';
+import { CommissionList } from './pages/University/Commission/CommissionList';
 
 function App() {
     return (
@@ -38,6 +39,7 @@ function App() {
 
                         {/* University Routes */}
                         <Route path="/universities" element={<UniversityList />} />
+                        <Route path="/universities/commission" element={<CommissionList />} />
                         {/* <Route path="/universities/new" element={<AddUniversityModal open={true} onOpenChange={() => { }} onSuccess={() => { }} />} /> */}
                         <Route path="/universities/edit/:slug" element={<EditUniversity />} />
 
@@ -63,6 +65,10 @@ function App() {
 
                         {/* Enquiry Routes */}
                         <Route path="/enquiries" element={<EnquiryList />} />
+
+
+
+
 
 
 
