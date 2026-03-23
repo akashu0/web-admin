@@ -148,7 +148,7 @@ const BulkUploadView = ({
     onClose: () => void;
 }) => {
     const [file, setFile] = useState<File | null>(null);
-    const [parsed, setParsed] = useState<unknown[] | null>(null);
+    // const [parsed, setParsed] = useState<unknown[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -157,7 +157,7 @@ const BulkUploadView = ({
 
     const handleFile = (f: File) => {
         setError(null);
-        setParsed(null);
+        // setParsed(null);
         setSuccess(null);
         setFile(f);
     };
