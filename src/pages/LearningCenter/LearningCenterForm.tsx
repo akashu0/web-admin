@@ -5,7 +5,7 @@ import { DynamicFieldBuilder } from '@/components/common/DynamicFieldBuilder';
 import { useEffect, useState } from 'react';
 import { visaService } from '@/services/visaService';
 import type { Visa } from '@/types/visa';
-import { Loader2, Trash2, Plus } from 'lucide-react';
+import { Loader2, Trash2, Plus, Search } from 'lucide-react';
 import { STUDY_ABROAD_COUNTRIES, CURRENCIES } from '@/lib/countryList';
 
 interface LearningCenterFormProps {
@@ -25,6 +25,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [visas, setVisas] = useState<Visa[]>([]);
     const [isLoadingVisas, setIsLoadingVisas] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const form = useForm({
         defaultValues: {
@@ -62,7 +63,7 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     const fetchVisas = async () => {
         try {
             setIsLoadingVisas(true);
-            const response = await visaService.getAllVisas({ status: 'active' });
+            const response = await visaService.getAllVisasDropdown();
             const visaData = Array.isArray(response) ? response : (response as any)?.data || [];
             setVisas(visaData);
         } catch (error) {
@@ -76,6 +77,11 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     const filteredCountries = STUDY_ABROAD_COUNTRIES.filter(c =>
         c.name.toLowerCase().includes(countrySearch.toLowerCase())
     );
+
+    // Filter visas based on search input
+const filteredVisas = visas.filter((v) =>
+    v.country.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
     return (
         <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg border border-gray-200">
@@ -232,48 +238,76 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
                         </form.Field>
 
                         {/* ✅ Visa Selection Field */}
-                        <form.Field name="visa">
-                            {(field) => (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                                        Visa Process (Optional)
-                                    </label>
+                       <form.Field name="visa">
+    {(field) => (
+        <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-900">
+                Visa Process (Optional)
+            </label>
 
-                                    {isLoadingVisas ? (
-                                        <div className="flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
-                                            <Loader2 className="h-4 w-4 animate-spin text-gray-400 mr-2" />
-                                            <span className="text-sm text-gray-600">Loading visas...</span>
-                                        </div>
-                                    ) : (
-                                        <select
-                                            value={field.state.value}
-                                            onChange={(e) => field.handleChange(e.target.value)}
-                                            onBlur={field.handleBlur}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 bg-white text-gray-900"
-                                        >
-                                            <option value="">-- No Visa Selected --</option>
-                                            {visas.map((visa) => (
-                                                <option key={visa._id} value={visa._id}>
-                                                    {visa.country} - {visa.visaFee} {visa.currency} ({visa.visaProcessingTime} {visa.visaProcessingTimeUnit})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
+            {isLoadingVisas ? (
+                <div className="flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-400 mr-2" />
+                    <span className="text-sm text-gray-600">Loading visas...</span>
+                </div>
+            ) : (
+                <div className="relative group">
+                    {/* Search Icon */}
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-gray-400" />
+                    </div>
 
-                                    {visas.length === 0 && !isLoadingVisas && (
-                                        <p className="text-sm text-amber-600 mt-1">
-                                            ⚠️ No visa processes available. You may need to create one first.
-                                        </p>
-                                    )}
+                    {/* Search Input Input */}
+                    <input
+                        type="text"
+                        placeholder="Search country..."
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-t-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
 
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        {field.state.value && field.state.value.trim() !== ''
-                                            ? '✓ Visa selected'
-                                            : 'Optional - Leave blank if not applicable'}
-                                    </p>
-                                </div>
-                            )}
-                        </form.Field>
+                    {/* Results Area */}
+                    <select
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        className="w-full px-4 py-2 border-x border-b border-gray-300 rounded-b-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 text-sm appearance-none"
+                        size={filteredVisas.length > 0 ? 4 : 1} // Shows as a list when searching
+                    >
+                        <option value="">-- No Visa Selected --</option>
+                        {filteredVisas.map((visa) => (
+                            <option key={visa._id} value={visa._id} className="py-2">
+                                {visa.country} — {visa.visaFee} {visa.currency} ({visa.visaProcessingTime} {visa.visaProcessingTimeUnit})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            {/* Validation/Feedback */}
+            <div className="flex justify-between items-center px-1">
+                {visas.length === 0 && !isLoadingVisas ? (
+                    <p className="text-xs text-amber-600">
+                        ⚠️ No visa processes available.
+                    </p>
+                ) : (
+                    <p className="text-xs text-gray-500">
+                        {field.state.value ? '✓ Selection active' : 'Type to filter by country'}
+                    </p>
+                )}
+                
+                {searchTerm && (
+                    <button 
+                        onClick={() => setSearchTerm('')}
+                        className="text-xs text-blue-600 hover:underline"
+                    >
+                        Clear Search
+                    </button>
+                )}
+            </div>
+        </div>
+    )}
+</form.Field>
                     </div>
 
                     {/* IsActive Field */}

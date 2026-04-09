@@ -128,9 +128,9 @@ export const Login = () => {
                         </Button>
                     </form>
                 </CardContent>
-                <CardFooter className="flex justify-center text-sm text-muted-foreground">
+                {/* <CardFooter className="flex justify-center text-sm text-muted-foreground">
                     <p>Demo: admin@example.com / password</p>
-                </CardFooter>
+                </CardFooter> */}
             </Card>
         </div>
     );

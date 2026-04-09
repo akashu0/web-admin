@@ -37,6 +37,22 @@ export const visaService = {
         }
     },
 
+    async getAllVisasDropdown(): Promise<GetAllVisasResponse> {
+        try {
+            const response = await apiClient.get<GetAllVisasResponse>('/visas/active-dropdown');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching visas:', error);
+            throw error;
+        }
+    },
+
+
+
+
+
+
+
     async getVisaById(id: string): Promise<Visa> {
         try {
             const response = await apiClient.get<SingleVisaResponse>(`/visas/${id}`);
