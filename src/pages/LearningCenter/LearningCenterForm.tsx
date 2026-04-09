@@ -22,8 +22,9 @@ export const LearningCenterForm: React.FC<LearningCenterFormProps> = ({
     const isEditMode = Boolean(initialData);
 
     const [countrySearch, setCountrySearch] = useState<string>("");
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [visas, setVisas] = useState<Visa[]>([]);
+ const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
+    const [visas, setVisas] = useState<Visa[]>([]);4
+    const [visaDropdownOpen, setVisaDropdownOpen] = useState(false);
     const [isLoadingVisas, setIsLoadingVisas] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -162,55 +163,63 @@ const filteredVisas = visas.filter((v) =>
                             )}
                         </form.Field>
 
-                        {/* Country Field - Dropdown */}
-                        <form.Field name="country">
-                            {(field) => (
-                                <div className="relative">
-                                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                                        Country *
-                                    </label>
+                        {/* Country Field */}
+<form.Field name="country">
+    {(field) => (
+        <div className="relative">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+                Country *
+            </label>
 
-                                    {/* Search Input */}
-                                    <input
-                                        type="text"
-                                        placeholder="Search country..."
-                                        value={countrySearch}
-                                        onChange={(e) => {
-                                            setCountrySearch(e.target.value);
-                                            setIsDropdownOpen(true);
-                                        }}
-                                        onFocus={() => setIsDropdownOpen(true)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-1 focus:ring-2 focus:ring-gray-900"
-                                    />
+            {/* Display + Search Input */}
+            <input
+                type="text"
+                placeholder="Search or select country..."
+                value={countrySearch || field.state.value}   // ← Key Fix
+                onChange={(e) => {
+                    setCountrySearch(e.target.value);
+                    setCountryDropdownOpen(true);
+                }}
+                onFocus={() => setCountryDropdownOpen(true)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 bg-white"
+            />
 
-                                    {/* Dropdown List */}
-                                    {isDropdownOpen && (
-                                        <div className="absolute z-10 w-full max-h-48 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-lg">
-                                            {filteredCountries.map((country) => (
-                                                <div
-                                                    key={country.name}
-                                                    className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => {
-                                                        field.handleChange(country.name);
-                                                        form.setFieldValue("currency", country.currency);
-                                                        setCountrySearch(country.name);
-                                                        setIsDropdownOpen(false);
-                                                    }}
-                                                >
-                                                    {country.name}
-                                                </div>
-                                            ))}
+            {/* Dropdown */}
+            {countryDropdownOpen && (
+                <div className="absolute z-20 w-full mt-1 max-h-60 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-lg">
+                    {filteredCountries.length > 0 ? (
+                        filteredCountries.map((country) => (
+                            <div
+                                key={country.name}
+                                className="px-4 py-3 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+                                onClick={() => {
+                                    field.handleChange(country.name);
+                                    form.setFieldValue("currency", country.currency);
+                                    setCountrySearch(country.name);        // ← Important
+                                    setCountryDropdownOpen(false);
+                                }}
+                            >
+                                {country.name}
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-4 py-6 text-center text-gray-500">
+                            No country found
+                        </div>
+                    )}
+                </div>
+            )}
 
-                                            {filteredCountries.length === 0 && (
-                                                <div className="px-4 py-2 text-gray-500">
-                                                    No country found
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </form.Field>
+            {/* Click outside to close */}
+            {countryDropdownOpen && (
+                <div 
+                    className="fixed inset-0 z-10"
+                    onClick={() => setCountryDropdownOpen(false)}
+                />
+            )}
+        </div>
+    )}
+</form.Field>
 
                         {/* Currency Field - Dropdown */}
                         <form.Field name="currency">
@@ -237,76 +246,119 @@ const filteredVisas = visas.filter((v) =>
                             )}
                         </form.Field>
 
-                        {/* ✅ Visa Selection Field */}
-                       <form.Field name="visa">
-    {(field) => (
-        <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">
-                Visa Process (Optional)
-            </label>
+  {/* ✅ Fixed Visa Selection Field */}
+<form.Field name="visa">
+    {(field) => {
+        const selectedVisa = visas.find(v => v._id === field.state.value);
 
-            {isLoadingVisas ? (
-                <div className="flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">Loading visas...</span>
-                </div>
-            ) : (
-                <div className="relative group">
-                    {/* Search Icon */}
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
+        return (
+            <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-900">
+                    Visa Process (Optional)
+                </label>
+
+                {isLoadingVisas ? (
+                    <div className="flex items-center px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600">Loading visas...</span>
                     </div>
-
-                    {/* Search Input Input */}
-                    <input
-                        type="text"
-                        placeholder="Search country..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-t-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-
-                    {/* Results Area */}
-                    <select
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        className="w-full px-4 py-2 border-x border-b border-gray-300 rounded-b-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 text-sm appearance-none"
-                        size={filteredVisas.length > 0 ? 4 : 1} // Shows as a list when searching
-                    >
-                        <option value="">-- No Visa Selected --</option>
-                        {filteredVisas.map((visa) => (
-                            <option key={visa._id} value={visa._id} className="py-2">
-                                {visa.country} — {visa.visaFee} {visa.currency} ({visa.visaProcessingTime} {visa.visaProcessingTimeUnit})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
-
-            {/* Validation/Feedback */}
-            <div className="flex justify-between items-center px-1">
-                {visas.length === 0 && !isLoadingVisas ? (
-                    <p className="text-xs text-amber-600">
-                        ⚠️ No visa processes available.
-                    </p>
                 ) : (
-                    <p className="text-xs text-gray-500">
-                        {field.state.value ? '✓ Selection active' : 'Type to filter by country'}
-                    </p>
+                    <div className="relative">
+                        {/* Selected Value Display */}
+                        <div
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white cursor-pointer flex items-center justify-between hover:border-gray-400"
+                            onClick={() => setVisaDropdownOpen(!visaDropdownOpen)}
+                        >
+                            <span className={field.state.value ? "text-gray-900" : "text-gray-500"}>
+                                {selectedVisa 
+                                    ? `${selectedVisa.country} `
+                                    : "-- Select Visa Process --"
+                                }
+                            </span>
+                            <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+
+                        {/* Visa Dropdown */}
+                        {visaDropdownOpen && (
+                            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+                                {/* Search Box */}
+                                <div className="p-3 border-b bg-gray-50">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search by country..."
+                                            className="w-full pl-10 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Results */}
+                                <div className="max-h-64 overflow-y-auto">
+                                    {filteredVisas.length > 0 ? (
+                                        filteredVisas.map((visa) => (
+                                            <div
+                                                key={visa._id}
+                                                className={`px-4 py-3 hover:bg-blue-50 cursor-pointer border-b last:border-none ${
+                                                    field.state.value === visa._id ? 'bg-blue-100' : ''
+                                                }`}
+                                                onClick={() => {
+                                                    field.handleChange(visa._id);
+                                                    setSearchTerm('');
+                                                    setVisaDropdownOpen(false);
+                                                }}
+                                            >
+                                                <div className="font-medium text-gray-900">{visa.country}</div>
+                                                <div className="text-sm text-gray-600">
+                                                    {visa.visaFee} {visa.currency} • {visa.visaProcessingTime} {visa.visaProcessingTimeUnit}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-6 py-8 text-center text-gray-500">
+                                            No matching visa found
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Clear Button */}
+                                {field.state.value && (
+                                    <div className="p-2 border-t bg-gray-50">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                field.handleChange('');
+                                                setSearchTerm('');
+                                                setVisaDropdownOpen(false);
+                                            }}
+                                            className="text-sm text-red-600 hover:text-red-700 w-full py-1"
+                                        >
+                                            Clear Selection
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
-                
-                {searchTerm && (
-                    <button 
-                        onClick={() => setSearchTerm('')}
-                        className="text-xs text-blue-600 hover:underline"
-                    >
-                        Clear Search
-                    </button>
+
+                {/* Click outside handler */}
+                {visaDropdownOpen && (
+                    <div 
+                        className="fixed inset-0 z-10 bg-transparent"
+                        onClick={() => setVisaDropdownOpen(false)}
+                    />
                 )}
+
+                <p className="text-xs text-gray-500 px-1">
+                    {field.state.value ? '✓ Visa selected' : 'Type to search visa by country'}
+                </p>
             </div>
-        </div>
-    )}
+        );
+    }}
 </form.Field>
                     </div>
 
