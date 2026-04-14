@@ -20,12 +20,14 @@ import { CountryViewModal } from './pages/Countries/CountryViewModal';
 import { EditUniversity } from './pages/University/EditUniversity';
 import EnquiryList from './pages/Enquiry/EnquiryList';
 import { CommissionList } from './pages/University/Commission/CommissionList';
+import PropertyViewsTable from './pages/PropertyViewsTable';
 
 function App() {
     return (
         <>
             <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/ip-view" element={<PropertyViewsTable />} />
 
                 <Route element={<ProtectedRoute />}>
                     <Route element={<MainLayout />}>
