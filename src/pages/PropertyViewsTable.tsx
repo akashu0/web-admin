@@ -15,6 +15,12 @@ interface PropertyView {
     screenResolution: string;
     timezone: string;
     timestamp: string;
+    country: string;
+    region: string;
+    city: string;
+    latitude: number;
+    longitude: number;
+    isp: string;
     createdAt: string;
 }
 
@@ -27,8 +33,6 @@ export default function PropertyViewsTable() {
         const fetch = async () => {
             try {
                 const res = await apiClient.get(`/properties/views`);
-                console.log(res.data);
-                
                 setViews(res.data.data);
             } catch (err) {
                 console.error(err);
@@ -42,7 +46,9 @@ export default function PropertyViewsTable() {
     const filtered = views?.filter(v =>
         v.ip?.includes(search) ||
         v.page?.toLowerCase().includes(search.toLowerCase()) ||
-        v.timezone?.toLowerCase().includes(search.toLowerCase())
+        v.timezone?.toLowerCase().includes(search.toLowerCase()) ||
+        v.city?.toLowerCase().includes(search.toLowerCase()) ||
+        v.country?.toLowerCase().includes(search.toLowerCase())
     );
 
     const formatDate = (iso: string) =>
@@ -77,7 +83,7 @@ export default function PropertyViewsTable() {
                 </div>
                 <input
                     type="text"
-                    placeholder="Search by IP, page, timezone..."
+                    placeholder="Search by IP, page, city, country..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="border border-gray-300 rounded-lg px-4 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -93,6 +99,9 @@ export default function PropertyViewsTable() {
                             <th className="px-4 py-3">IP Address</th>
                             <th className="px-4 py-3">Device</th>
                             <th className="px-4 py-3">Browser</th>
+                            <th className="px-4 py-3">Location</th>
+                            <th className="px-4 py-3">Coordinates</th>
+                            <th className="px-4 py-3">ISP</th>
                             <th className="px-4 py-3">Page</th>
                             <th className="px-4 py-3">Referrer</th>
                             <th className="px-4 py-3">Screen</th>
@@ -104,7 +113,7 @@ export default function PropertyViewsTable() {
                     <tbody className="divide-y divide-gray-100">
                         {filtered?.length === 0 ? (
                             <tr>
-                                <td colSpan={11} className="text-center py-10 text-gray-400">
+                                <td colSpan={14} className="text-center py-10 text-gray-400">
                                     No records found
                                 </td>
                             </tr>
@@ -118,6 +127,31 @@ export default function PropertyViewsTable() {
                                     <td className="px-4 py-3 font-mono text-blue-600">{v.ip || '—'}</td>
                                     <td className="px-4 py-3">{parseDevice(v.userAgent)}</td>
                                     <td className="px-4 py-3">{parseBrowser(v.userAgent)}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap">
+                                        {v.city || v.region || v.country ? (
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-gray-700">
+                                                    {[v.city, v.region].filter(Boolean).join(', ')}
+                                                </span>
+                                                <span className="text-xs text-gray-400">{v.country || '—'}</span>
+                                            </div>
+                                        ) : '—'}
+                                    </td>
+                                <td className="px-4 py-3 whitespace-nowrap font-mono text-xs text-gray-500">
+    {v.latitude && v.longitude ? (
+        <a
+            href={`https://maps.google.com/?q=${v.latitude},${v.longitude}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-500 hover:underline"
+        >
+            {v.latitude.toFixed(4)}, {v.longitude.toFixed(4)}
+        </a>
+    ) : '—'}
+</td>
+                                    <td className="px-4 py-3 text-gray-600 max-w-[150px] truncate" title={v.isp}>
+                                        {v.isp || '—'}
+                                    </td>
                                     <td className="px-4 py-3 text-gray-700 max-w-[150px] truncate" title={v.page}>
                                         {v.page || '—'}
                                     </td>
