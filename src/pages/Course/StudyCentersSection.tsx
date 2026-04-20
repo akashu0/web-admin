@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, MapPin, Globe, DollarSign, BookOpen, Plane, FileText, Search, GraduationCap } from "lucide-react";
 import { learningCenterService } from "@/services/learningCenterService";
 import type { LearningCenter } from "@/types/learningCenter";
@@ -19,6 +19,8 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     onSave,
     onNext,
 }) => {
+
+
     const [selectedCenterIds, setSelectedCenterIds] = useState<string[]>(data || []);
     const [selectedUniversityId, setSelectedUniversityId] = useState<string>(universityId || "");
     const [centersDropdownOpen, setCentersDropdownOpen] = useState(false);
@@ -31,9 +33,11 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
     const [centersSearchQuery, setCentersSearchQuery] = useState("");
     const [universitySearchQuery, setUniversitySearchQuery] = useState("");
 
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     useEffect(() => {
         fetchCenters();
-        fetchUniversities();
+        // fetchUniversities();
     }, []);
 
     useEffect(() => {
@@ -63,19 +67,39 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         }
     };
 
-    const fetchUniversities = async () => {
+    const searchUniversities = async (query: string) => {
         try {
             setIsUniversitiesLoading(true);
-            const params = {
-                limit: 100,
-            };
+            const params = { limit: 20, search: query }; // adjust param name to match your API
             const fetchedUniversities = await universityService.getAllUniversities(params);
-
             setUniversities(fetchedUniversities.data);
         } catch (error) {
             console.error("Error fetching universities:", error);
         } finally {
             setIsUniversitiesLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!universityDropdownOpen) return;
+
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(() => {
+            searchUniversities(universitySearchQuery);
+        }, 400);
+
+        return () => {
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+        };
+    }, [universitySearchQuery, universityDropdownOpen]);
+
+
+    const handleUniversityDropdownOpen = () => {
+        const newOpen = !universityDropdownOpen;
+        setUniversityDropdownOpen(newOpen);
+        if (newOpen && universities.length === 0) {
+            searchUniversities(""); // fetch initial list on first open
         }
     };
 
@@ -126,15 +150,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         );
     });
 
-    const filteredUniversities = universities.filter((university) => {
-        const query = universitySearchQuery?.toLowerCase();
-        return (
-            university.name?.toLowerCase().includes(query) ||
-            university.country?.toLowerCase().includes(query) ||
-            university.city?.toLowerCase().includes(query) ||
-            university.state?.toLowerCase().includes(query)
-        );
-    });
+
 
     return (
         <div className="space-y-6">
@@ -145,7 +161,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                 <div className="relative">
                     <button
                         type="button"
-                        onClick={() => setUniversityDropdownOpen(!universityDropdownOpen)}
+                        onClick={() => handleUniversityDropdownOpen()}
                         disabled={isUniversitiesLoading}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -213,12 +229,12 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                     <div className="px-4 py-3 text-gray-500 text-center">
                                         Loading universities...
                                     </div>
-                                ) : filteredUniversities.length === 0 ? (
+                                ) : universities.length === 0 ? (
                                     <div className="px-4 py-3 text-gray-500 text-center">
                                         {universitySearchQuery ? "No matching universities found" : "No universities available"}
                                     </div>
                                 ) : (
-                                    filteredUniversities.map((university) => (
+                                    universities?.map((university) => (
                                         <button
                                             key={university._id}
                                             onClick={() => handleUniversitySelect(university._id)}
@@ -269,9 +285,9 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                             </div>
 
                             {/* Results Count */}
-                            {!isUniversitiesLoading && filteredUniversities.length > 0 && (
+                            {!isUniversitiesLoading && universities.length > 0 && (
                                 <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-2 text-xs text-gray-600">
-                                    Showing {filteredUniversities.length} of {universities.length} universities
+                                    Showing {universities.length} of {universities.length} universities
                                 </div>
                             )}
                         </div>
