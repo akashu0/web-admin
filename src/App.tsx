@@ -21,6 +21,7 @@ import { EditUniversity } from './pages/University/EditUniversity';
 import EnquiryList from './pages/Enquiry/EnquiryList';
 import { CommissionList } from './pages/University/Commission/CommissionList';
 import PropertyViewsTable from './pages/PropertyViewsTable';
+import { PopupBannerPage } from './pages/PopupBanner/PopupBannerPage';
 
 function App() {
     return (
@@ -67,6 +68,9 @@ function App() {
 
                         {/* Enquiry Routes */}
                         <Route path="/enquiries" element={<EnquiryList />} />
+
+                        {/* Popup Banner Routes */}
+                        <Route path="/popup-banners" element={<PopupBannerPage />} />
 
 
 

@@ -9,7 +9,8 @@ import {
     HelpCircle,
     ChevronDown,
     Percent,
-    Globe
+    Globe,
+    Image
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -34,6 +35,7 @@ const sidebarItems = [
     { icon: School, label: 'Learning Centers', href: '/learning-centers' },
     { icon: HelpCircle, label: 'FAQs', href: '/faqs' },
     { icon: FileText, label: 'Enquiries', href: '/enquiries' },
+    { icon: Image, label: 'Popup Banners', href: '/popup-banners' },
 ];
 
 export const Sidebar = () => {
