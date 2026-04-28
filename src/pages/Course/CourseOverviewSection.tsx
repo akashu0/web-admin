@@ -127,7 +127,6 @@ export function CourseOverviewSection({
                             {...register('slug', { required: 'Slug is required' })}
                             placeholder="auto-generated-from-name"
                             className="mt-2 bg-gray-50"
-                            readOnly
                             disabled={isSubmitting}
                         />
                     </div>
