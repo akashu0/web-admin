@@ -27,6 +27,13 @@ import {
 } from "@/components/ui/select";
 import type { PaginationMeta } from "@/types/course";
 
+const SCHOLARSHIP_OPTIONS = [
+    'Public Universities',
+    'Private Universities',
+    'Tuition Fee Sponsored',
+    'Fully Funded',
+] as const;
+
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
@@ -35,6 +42,7 @@ interface DataTableProps<TData, TValue> {
     onPageSizeChange: (size: number) => void;
     onSearchChange: (search: string) => void;
     onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
+    onScholarshipChange: (scholarship: string) => void;
     isLoading?: boolean;
 }
 
@@ -46,10 +54,12 @@ export function CourseDataTable<TData, TValue>({
     onPageSizeChange,
     onSearchChange,
     onSortChange,
+    onScholarshipChange,
     isLoading = false,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [searchValue, setSearchValue] = React.useState("");
+    const [scholarshipValue, setScholarshipValue] = React.useState("");
 
     // Debounce search
     React.useEffect(() => {
@@ -85,9 +95,9 @@ export function CourseDataTable<TData, TValue>({
 
     return (
         <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1">
+            {/* Search + Filters Bar */}
+            <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative flex-1 min-w-48">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <Input
                         placeholder="Search courses..."
@@ -96,6 +106,24 @@ export function CourseDataTable<TData, TValue>({
                         className="pl-10 border-gray-200 bg-white focus:border-gray-300"
                     />
                 </div>
+                <Select
+                    value={scholarshipValue || "__all__"}
+                    onValueChange={(value) => {
+                        const v = value === "__all__" ? "" : value;
+                        setScholarshipValue(v);
+                        onScholarshipChange(v);
+                    }}
+                >
+                    <SelectTrigger className="w-[200px] bg-white border-gray-200">
+                        <SelectValue placeholder="All Scholarships" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                        <SelectItem value="__all__">All Scholarships</SelectItem>
+                        {SCHOLARSHIP_OPTIONS.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
                 <Select
                     value={pagination?.limit?.toString() || "10"}
                     onValueChange={(value) => onPageSizeChange(Number(value))}

@@ -100,6 +100,10 @@ export function CourseList() {
         setQueryParams((prev) => ({ ...prev, sortBy, sortOrder, page: 1 }));
     }, []);
 
+    const setScholarship = useCallback((scholarship: string) => {
+        setQueryParams((prev) => ({ ...prev, scholarship: scholarship || undefined, page: 1 }));
+    }, []);
+
     const handleRefresh = () => {
         fetchCourses();
     };
@@ -151,6 +155,7 @@ export function CourseList() {
                 onPageSizeChange={setPageSize}
                 onSearchChange={setSearch}
                 onSortChange={setSort}
+                onScholarshipChange={setScholarship}
                 isLoading={isFetching}
             />
 

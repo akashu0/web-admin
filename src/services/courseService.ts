@@ -9,6 +9,7 @@ export interface CourseQueryParams {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
     status?: 'draft' | 'published';
+    scholarship?: string;
 }
 
 export interface GetCoursesResponse {
