@@ -29,6 +29,7 @@ export interface CourseOverview {
     nextIntake: string;
     level: string;
     courseImage?: File | string | null;
+    scholarship?: 'Public Universities' | 'Private Universities' | 'Tuition Fee Sponsored' | 'Fully Funded';
     dynamicFields?: DynamicField[];
 }
 

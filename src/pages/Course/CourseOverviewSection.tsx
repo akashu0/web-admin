@@ -246,6 +246,28 @@ export function CourseOverviewSection({
                         </Select>
                     </div>
 
+                    {/* Scholarship */}
+                    <div>
+                        <Label htmlFor="scholarship">Scholarship Type</Label>
+                        <Select
+                            value={watch('scholarship') ?? ''}
+                            onValueChange={(value) =>
+                                setValue('scholarship', value as CourseOverview['scholarship'])
+                            }
+                            disabled={isSubmitting}
+                        >
+                            <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="Select scholarship type (optional)" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                                <SelectItem value="Public Universities">Public Universities</SelectItem>
+                                <SelectItem value="Private Universities">Private Universities</SelectItem>
+                                <SelectItem value="Tuition Fee Sponsored">Tuition Fee Sponsored</SelectItem>
+                                <SelectItem value="Fully Funded">Fully Funded</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                 </div>
             </div>
 
