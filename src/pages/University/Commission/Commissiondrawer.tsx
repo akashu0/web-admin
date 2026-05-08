@@ -6,9 +6,18 @@ import {
     COURSE_TYPE_LABELS,
     type PartnerCommission,
     type CommissionFormValues,
+    type CommissionTier,
+    type CommissionTierForm,
     type CourseType,
 } from "../../../types/commission";
 import { apiClient } from "@/services/api";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const toTierForm = (tier: CommissionTier | null | undefined): CommissionTierForm => ({
+    ranges: tier?.ranges?.map((r) => ({ label: r.label ?? "", value: r.value })) ?? [],
+    isFullyFunded: tier?.isFullyFunded ?? false,
+});
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -363,9 +372,16 @@ export const CommissionDrawer = ({
                             initialValues={
                                 mode === "edit" && commission
                                     ? {
+                                        universityRef: commission.universityRef?._id ?? "",
                                         universityName: commission.universityName,
                                         location: commission.location ?? "",
                                         country: commission.country ?? "",
+                                        bachelors: toTierForm(commission.bachelors),
+                                        masters: toTierForm(commission.masters),
+                                        certifications_ps: toTierForm(commission.certifications_ps),
+                                        diploma_fopg: toTierForm(commission.diploma_fopg),
+                                        diploma: toTierForm(commission.diploma),
+                                        phd: toTierForm(commission.phd),
                                         additionalBonus: commission.additionalBonus ?? "",
                                         importantNotes: commission.importantNotes ?? "",
                                         courseTypeRestrictions: commission.courseTypeRestrictions ?? "",
