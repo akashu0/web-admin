@@ -10,7 +10,8 @@ import {
     ChevronDown,
     Percent,
     Globe,
-    Image
+    Image,
+    BookMarked,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -20,6 +21,7 @@ import React from 'react';
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
     { icon: BookOpen, label: 'Courses', href: '/courses' },
+    { icon: BookMarked, label: 'eG Academy', href: '/eg-academy/courses' },
     {
         icon: GraduationCap,
         label: 'Universities',

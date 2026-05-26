@@ -13,24 +13,54 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Calculator,
-    Plus,
-    Trash2,
-    Edit,
-    X,
-    Check,
-    GraduationCap,
-    Loader2
-} from 'lucide-react';
+import { Plus, Trash2, Edit, Loader2 } from 'lucide-react';
+import type { FeeStructure } from '@/types/course';
 
 // ============================================================================
-// TYPES
+// CONSTANTS
 // ============================================================================
 
-export type DeliveryMode = 'online' | 'offline' | 'hybrid' | 'fast-track';
+const TUITION_FEE_TYPES = [
+    'Fully Tuition Fee Funded',
+    'Scholarships',
+    'Regular (Self-Funded Program)',
+] as const;
 
-export interface DynamicField {
+const SCHOLARSHIP_PERCENTAGES = [
+    '10%', '20%', '30%', '40%', '50%',
+    '60%', '70%', '80%', '90%', '100%',
+    'Not Applicable',
+] as const;
+
+const CURRENCY_OPTIONS = [
+    { code: 'USD', name: 'US Dollar' },
+    { code: 'GBP', name: 'British Pound' },
+    { code: 'EUR', name: 'Euro' },
+    { code: 'AUD', name: 'Australian Dollar' },
+    { code: 'CAD', name: 'Canadian Dollar' },
+    { code: 'SGD', name: 'Singapore Dollar' },
+    { code: 'AED', name: 'UAE Dirham' },
+    { code: 'MYR', name: 'Malaysian Ringgit' },
+    { code: 'INR', name: 'Indian Rupee' },
+    { code: 'PKR', name: 'Pakistani Rupee' },
+    { code: 'BDT', name: 'Bangladeshi Taka' },
+    { code: 'LKR', name: 'Sri Lankan Rupee' },
+    { code: 'NPR', name: 'Nepalese Rupee' },
+    { code: 'NZD', name: 'New Zealand Dollar' },
+    { code: 'CHF', name: 'Swiss Franc' },
+    { code: 'SAR', name: 'Saudi Riyal' },
+    { code: 'QAR', name: 'Qatari Riyal' },
+    { code: 'OMR', name: 'Omani Rial' },
+    { code: 'CNY', name: 'Chinese Yuan' },
+    { code: 'JPY', name: 'Japanese Yen' },
+    { code: 'KRW', name: 'South Korean Won' },
+];
+
+// ============================================================================
+// TYPES (local extension for dynamic "Other Fees")
+// ============================================================================
+
+interface OtherFee {
     id: string;
     fieldName: string;
     fieldValue: string;
@@ -38,90 +68,36 @@ export interface DynamicField {
     order: number;
 }
 
-export interface FeeStructure {
-    country: string;
-    mode: DeliveryMode;
-    programTuitionFee: number;
-    studentVisaFee: number;
-    accommodation: number;
-    airportTransfer: number;
-    vat: number;
-    total: number;
-    currency: string;
-    dynamicFields?: DynamicField[];
-}
-
 // ============================================================================
-// CONSTANTS
+// HELPERS
 // ============================================================================
 
-export const DELIVERY_MODES = [
-    {
-        value: 'online' as const,
-        label: 'Online',
-        icon: '💻',
-        description: 'Fully remote learning',
-        color: 'bg-blue-100 text-blue-700 border-blue-200'
-    },
-    {
-        value: 'offline' as const,
-        label: 'Offline',
-        icon: '🏫',
-        description: 'On-campus learning',
-        color: 'bg-green-100 text-green-700 border-green-200'
-    },
-    {
-        value: 'hybrid' as const,
-        label: 'Hybrid',
-        icon: '🔄',
-        description: 'Mix of online and offline',
-        color: 'bg-purple-100 text-purple-700 border-purple-200'
-    },
-    {
-        value: 'fast-track' as const,
-        label: 'Fast Track',
-        icon: '⚡',
-        description: 'Accelerated program',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
-    },
-];
+const EMPTY_FEE: FeeStructure = {
+    tuitionFeeType: undefined,
+    scholarshipPercentage: 'Not Applicable',
+    currency: '',
+    tuitionFee: 0,
+    applicationFee: 0,
+    admissionFee: 0,
+    visaFee: 0,
+    administrationFee: 0,
+    accommodationFee: 0,
+    transportationFee: 0,
+    assessmentFee: 0,
+    examFee: 0,
+    dynamicFields: [],
+};
 
-export const COUNTRIES = [
-    { code: 'US', name: 'United States', currency: 'USD', symbol: '$' },
-    { code: 'UK', name: 'United Kingdom', currency: 'GBP', symbol: '£' },
-    { code: 'CA', name: 'Canada', currency: 'CAD', symbol: 'C$' },
-    { code: 'AU', name: 'Australia', currency: 'AUD', symbol: 'A$' },
-    { code: 'NZ', name: 'New Zealand', currency: 'NZD', symbol: 'NZ$' },
-    { code: 'IE', name: 'Ireland', currency: 'EUR', symbol: '€' },
-    { code: 'DE', name: 'Germany', currency: 'EUR', symbol: '€' },
-    { code: 'FR', name: 'France', currency: 'EUR', symbol: '€' },
-    { code: 'NL', name: 'Netherlands', currency: 'EUR', symbol: '€' },
-    { code: 'IT', name: 'Italy', currency: 'EUR', symbol: '€' },
-    { code: 'ES', name: 'Spain', currency: 'EUR', symbol: '€' },
-    { code: 'SE', name: 'Sweden', currency: 'SEK', symbol: 'kr' },
-    { code: 'NO', name: 'Norway', currency: 'NOK', symbol: 'kr' },
-    { code: 'FI', name: 'Finland', currency: 'EUR', symbol: '€' },
-    { code: 'PL', name: 'Poland', currency: 'PLN', symbol: 'zł' },
-    { code: 'AT', name: 'Austria', currency: 'EUR', symbol: '€' },
-    { code: 'CH', name: 'Switzerland', currency: 'CHF', symbol: 'CHF' },
-    { code: 'IN', name: 'India', currency: 'INR', symbol: '₹' },
-    { code: 'PK', name: 'Pakistan', currency: 'PKR', symbol: '₨' },
-    { code: 'BD', name: 'Bangladesh', currency: 'BDT', symbol: '৳' },
-    { code: 'LK', name: 'Sri Lanka', currency: 'LKR', symbol: 'Rs' },
-    { code: 'NP', name: 'Nepal', currency: 'NPR', symbol: 'Rs' },
-    { code: 'CN', name: 'China', currency: 'CNY', symbol: '¥' },
-    { code: 'JP', name: 'Japan', currency: 'JPY', symbol: '¥' },
-    { code: 'KR', name: 'South Korea', currency: 'KRW', symbol: '₩' },
-    { code: 'SG', name: 'Singapore', currency: 'SGD', symbol: 'S$' },
-    { code: 'MY', name: 'Malaysia', currency: 'MYR', symbol: 'RM' },
-    { code: 'TH', name: 'Thailand', currency: 'THB', symbol: '฿' },
-    { code: 'PH', name: 'Philippines', currency: 'PHP', symbol: '₱' },
-    { code: 'VN', name: 'Vietnam', currency: 'VND', symbol: '₫' },
-    { code: 'ID', name: 'Indonesia', currency: 'IDR', symbol: 'Rp' },
-    { code: 'AE', name: 'United Arab Emirates', currency: 'AED', symbol: 'د.إ' },
-    { code: 'QA', name: 'Qatar', currency: 'QAR', symbol: '﷼' },
-    { code: 'SA', name: 'Saudi Arabia', currency: 'SAR', symbol: '﷼' },
-    { code: 'OM', name: 'Oman', currency: 'OMR', symbol: '﷼' },
+const FEE_FIELDS: { key: keyof FeeStructure; label: string }[] = [
+    { key: 'tuitionFee', label: 'Tuition Fee' },
+    { key: 'applicationFee', label: 'Application Fee' },
+    { key: 'admissionFee', label: 'Admission Fee' },
+    { key: 'visaFee', label: 'Visa Fee' },
+    { key: 'administrationFee', label: 'Administration Fee' },
+    { key: 'accommodationFee', label: 'Accommodation Fee' },
+    { key: 'transportationFee', label: 'Transportation Fee' },
+    { key: 'assessmentFee', label: 'Assessment Fee' },
+    { key: 'examFee', label: 'Exam Fee' },
 ];
 
 // ============================================================================
@@ -139,181 +115,115 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
     onSave,
     onNext,
 }) => {
-    // State
     const [savedFees, setSavedFees] = useState<FeeStructure[]>(initialData);
     const [isAddingNew, setIsAddingNew] = useState(initialData.length === 0);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    // Form state - FIXED: Now properly typed to allow zero values to be cleared
-    const [selectedCountry, setSelectedCountry] = useState('');
-    const [selectedMode, setSelectedMode] = useState<DeliveryMode>('online');
-    const [currency, setCurrency] = useState('');
-    const [programTuitionFee, setProgramTuitionFee] = useState<number>(0);
-    const [studentVisaFee, setStudentVisaFee] = useState<number>(0);
-    const [accommodation, setAccommodation] = useState<number>(0);
-    const [airportTransfer, setAirportTransfer] = useState<number>(0);
-    const [vat, setVat] = useState<number>(0);
-    const [dynamicFields, setDynamicFields] = useState<DynamicField[]>([]);
-    const [newFieldName, setNewFieldName] = useState('');
+    // Form state
+    const [formData, setFormData] = useState<FeeStructure>({ ...EMPTY_FEE });
+    const [otherFees, setOtherFees] = useState<OtherFee[]>([]);
+    const [newFeeName, setNewFeeName] = useState('');
 
-    // Helper functions
-    const getCountryInfo = (code: string) => COUNTRIES.find(c => c.code === code);
-    const getModeInfo = (mode: DeliveryMode) => DELIVERY_MODES.find(m => m.value === mode);
-    const isNumericField = (value: string) => !isNaN(parseFloat(value));
+    const setField = <K extends keyof FeeStructure>(key: K, value: FeeStructure[K]) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
+    };
 
-    // Helper to handle number input - FIXED: Properly handles empty string
     const handleNumberInput = (value: string): number => {
-        if (value === '') return 0;
-        const parsed = parseFloat(value);
-        return isNaN(parsed) ? 0 : parsed;
+        const n = parseFloat(value);
+        return isNaN(n) || n < 0 ? 0 : n;
     };
 
-    // Helper to display input value - FIXED: Shows empty string when value is 0
-    const getInputValue = (value: number): string | number => {
-        return value === 0 ? '' : value;
+    const addOtherFee = () => {
+        if (!newFeeName.trim()) return;
+        setOtherFees(prev => [
+            ...prev,
+            {
+                id: `fee_${Date.now()}`,
+                fieldName: newFeeName.trim(),
+                fieldValue: '',
+                fieldType: 'number',
+                order: prev.length,
+            },
+        ]);
+        setNewFeeName('');
     };
 
-    const calculateTotal = () => {
-        const subtotal = programTuitionFee + studentVisaFee + accommodation + airportTransfer;
-        const dynamicTotal = dynamicFields.reduce((sum, field) => {
-            const numValue = parseFloat(field.fieldValue);
-            return sum + (isNaN(numValue) ? 0 : numValue);
-        }, 0);
-        const totalBeforeVAT = subtotal + dynamicTotal;
-        return totalBeforeVAT + (totalBeforeVAT * (vat / 100));
+    const updateOtherFee = (id: string, value: string) => {
+        setOtherFees(prev => prev.map(f => f.id === id ? { ...f, fieldValue: value } : f));
+    };
+
+    const removeOtherFee = (id: string) => {
+        setOtherFees(prev => prev.filter(f => f.id !== id));
     };
 
     const resetForm = () => {
-        setSelectedCountry('');
-        setSelectedMode('online');
-        setCurrency('');
-        setProgramTuitionFee(0);
-        setStudentVisaFee(0);
-        setAccommodation(0);
-        setAirportTransfer(0);
-        setVat(0);
-        setDynamicFields([]);
-        setNewFieldName('');
-        setEditingId(null);
-    };
-
-    const handleCountryChange = (countryCode: string) => {
-        setSelectedCountry(countryCode);
-        const country = getCountryInfo(countryCode);
-        if (country) {
-            setCurrency(country.currency);
-        }
-    };
-
-    const handleModeSelect = (mode: DeliveryMode) => {
-        setSelectedMode(mode);
-    };
-
-    const handleAddDynamicField = () => {
-        if (!newFieldName.trim()) return;
-        const newField: DynamicField = {
-            id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            fieldName: newFieldName.trim(),
-            fieldValue: '',
-            fieldType: 'text',
-            order: dynamicFields.length,
-        };
-        setDynamicFields([...dynamicFields, newField]);
-        setNewFieldName('');
-    };
-
-    const handleUpdateDynamicField = (id: string, value: string) => {
-        setDynamicFields(prev =>
-            prev.map(field => field.id === id ? { ...field, fieldValue: value } : field)
-        );
-    };
-
-    const handleRemoveDynamicField = (id: string) => {
-        setDynamicFields(prev => prev.filter(field => field.id !== id));
+        setFormData({ ...EMPTY_FEE });
+        setOtherFees([]);
+        setNewFeeName('');
+        setEditingIndex(null);
     };
 
     const handleSaveFee = () => {
-        if (!selectedCountry || !selectedMode) return;
-
-        const newFee: FeeStructure = {
-            country: selectedCountry,
-            mode: selectedMode,
-            programTuitionFee,
-            studentVisaFee,
-            accommodation,
-            airportTransfer,
-            vat,
-            total: calculateTotal(),
-            currency,
-            dynamicFields,
+        const entry: FeeStructure = {
+            ...formData,
+            dynamicFields: otherFees,
         };
 
-        if (editingId) {
-            setSavedFees(prev =>
-                prev.map(fee =>
-                    fee.country === selectedCountry && fee.mode === selectedMode ? newFee : fee
-                )
-            );
+        if (editingIndex !== null) {
+            setSavedFees(prev => prev.map((f, i) => i === editingIndex ? entry : f));
         } else {
-            setSavedFees(prev => [...prev, newFee]);
+            setSavedFees(prev => [...prev, entry]);
         }
 
         resetForm();
         setIsAddingNew(false);
     };
 
-    const handleEditFee = (fee: FeeStructure) => {
-        setSelectedCountry(fee.country);
-        setSelectedMode(fee.mode);
-        setCurrency(fee.currency);
-        setProgramTuitionFee(fee.programTuitionFee);
-        setStudentVisaFee(fee.studentVisaFee);
-        setAccommodation(fee.accommodation);
-        setAirportTransfer(fee.airportTransfer);
-        setVat(fee.vat);
-        setDynamicFields(fee.dynamicFields || []);
-        setEditingId(`${fee.country}-${fee.mode}`);
+    const handleEditFee = (fee: FeeStructure, index: number) => {
+        setFormData({ ...fee, dynamicFields: [] });
+        setOtherFees((fee.dynamicFields as OtherFee[]) ?? []);
+        setEditingIndex(index);
         setIsAddingNew(true);
     };
 
-    const handleRemoveFee = (country: string, mode: DeliveryMode) => {
-        setSavedFees(prev => prev.filter(fee => !(fee.country === country && fee.mode === mode)));
+    const handleRemoveFee = (index: number) => {
+        setSavedFees(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleFinalSave = async () => {
-        if (savedFees.length === 0) return;
         try {
             setIsSubmitting(true);
-            if (onSave) {
-                await onSave(savedFees);
-            }
-            if (onNext) {
-                onNext();
-            }
+            if (onSave) await onSave(savedFees);
+            if (onNext) onNext();
         } catch (error) {
-            console.error('Error saving:', error);
+            console.error('Error saving fee structures:', error);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Group fees by country
-    const groupedFees = savedFees.reduce((acc, fee) => {
-        if (!acc[fee.country]) acc[fee.country] = [];
-        acc[fee.country].push(fee);
-        return acc;
-    }, {} as Record<string, FeeStructure[]>);
+    const calculateTotal = (fee: FeeStructure) => {
+        const numericKeys: (keyof FeeStructure)[] = [
+            'tuitionFee', 'applicationFee', 'admissionFee', 'visaFee',
+            'administrationFee', 'accommodationFee', 'transportationFee',
+            'assessmentFee', 'examFee',
+        ];
+        let total = numericKeys.reduce((sum, k) => sum + ((fee[k] as number) || 0), 0);
+        (fee.dynamicFields as OtherFee[] | undefined)?.forEach(f => {
+            const n = parseFloat(f.fieldValue);
+            if (!isNaN(n)) total += n;
+        });
+        return total;
+    };
 
     return (
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Delivery Mode & Fee Structure
-                </h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Fee Structure</h2>
                 <p className="text-sm text-gray-600">
-                    Add fee structures for different countries and delivery modes
+                    Add fee details for this course. Each fee structure entry shows all applicable fees.
                 </p>
             </div>
 
@@ -327,132 +237,84 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                         </Badge>
                     </div>
 
-                    <div className="space-y-6">
-                        {Object.entries(groupedFees).map(([countryCode, fees]) => {
-                            const countryInfo = getCountryInfo(countryCode);
-                            return (
-                                <Card key={countryCode} className="p-5 bg-gray-50 border-gray-300">
-                                    <div className="mb-4">
-                                        <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                            <GraduationCap className="h-5 w-5 text-purple-600" />
-                                            {countryInfo?.name}
-                                        </h4>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            {fees.length} delivery {fees.length === 1 ? 'mode' : 'modes'}
-                                        </p>
-                                    </div>
+                    <div className="space-y-4">
+                        {savedFees.map((fee, index) => (
+                            <Card key={index} className="p-5 bg-gray-50 border-gray-200">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {fee.tuitionFeeType && (
+                                                <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+                                                    {fee.tuitionFeeType}
+                                                </Badge>
+                                            )}
+                                            {fee.scholarshipPercentage && fee.scholarshipPercentage !== 'Not Applicable' && (
+                                                <Badge className="bg-green-100 text-green-700 border-green-200">
+                                                    {fee.scholarshipPercentage} Scholarship
+                                                </Badge>
+                                            )}
+                                            {fee.currency && (
+                                                <Badge variant="outline">{fee.currency}</Badge>
+                                            )}
+                                        </div>
 
-                                    <div className="grid gap-3">
-                                        {fees.map((fee) => {
-                                            const modeInfo = getModeInfo(fee.mode);
-                                            return (
-                                                <Card key={`${fee.country}-${fee.mode}`} className="p-4 bg-white">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            {/* Mode Badge */}
-                                                            <div className="flex items-center gap-2 mb-3">
-                                                                <Badge className={`${modeInfo?.color} font-semibold`}>
-                                                                    {modeInfo?.icon} {modeInfo?.label}
-                                                                </Badge>
-                                                                <span className="text-xs text-gray-500">
-                                                                    {modeInfo?.description}
-                                                                </span>
-                                                            </div>
-
-                                                            {/* Fee Details */}
-                                                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                                                {fee.programTuitionFee > 0 && (
-                                                                    <div>
-                                                                        <span className="text-gray-600">Program Fee:</span>
-                                                                        <span className="ml-2 font-medium">
-                                                                            {countryInfo?.symbol}{fee.programTuitionFee.toFixed(2)}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                                {fee.studentVisaFee > 0 && (
-                                                                    <div>
-                                                                        <span className="text-gray-600">Visa Fee:</span>
-                                                                        <span className="ml-2 font-medium">
-                                                                            {countryInfo?.symbol}{fee.studentVisaFee.toFixed(2)}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                                {fee.accommodation > 0 && (
-                                                                    <div>
-                                                                        <span className="text-gray-600">Accommodation:</span>
-                                                                        <span className="ml-2 font-medium">
-                                                                            {countryInfo?.symbol}{fee.accommodation.toFixed(2)}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                                {fee.airportTransfer > 0 && (
-                                                                    <div>
-                                                                        <span className="text-gray-600">Airport Transfer:</span>
-                                                                        <span className="ml-2 font-medium">
-                                                                            {countryInfo?.symbol}{fee.airportTransfer.toFixed(2)}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                                {fee.vat > 0 && (
-                                                                    <div>
-                                                                        <span className="text-gray-600">VAT:</span>
-                                                                        <span className="ml-2 font-medium">{fee.vat}%</span>
-                                                                    </div>
-                                                                )}
-                                                                {fee.dynamicFields?.map((field) => (
-                                                                    field.fieldValue && (
-                                                                        <div key={field.id}>
-                                                                            <span className="text-gray-600">{field.fieldName}:</span>
-                                                                            <span className="ml-2 font-medium">
-                                                                                {isNumericField(field.fieldValue)
-                                                                                    ? `${countryInfo?.symbol}${parseFloat(field.fieldValue).toFixed(2)}`
-                                                                                    : field.fieldValue}
-                                                                            </span>
-                                                                        </div>
-                                                                    )
-                                                                ))}
-                                                            </div>
-
-                                                            {/* Total */}
-                                                            <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                                                                <span className="text-gray-600 font-medium">Total:</span>
-                                                                <span className="text-xl font-bold text-purple-600">
-                                                                    {countryInfo?.symbol}{fee.total.toFixed(2)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Actions */}
-                                                        <div className="flex gap-2 ml-4">
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleEditFee(fee)}
-                                                                disabled={isAddingNew}
-                                                                className="text-blue-600 hover:bg-blue-50"
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleRemoveFee(fee.country, fee.mode)}
-                                                                disabled={isAddingNew}
-                                                                className="text-red-600 hover:bg-red-50"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                                            {FEE_FIELDS.map(({ key, label }) => {
+                                                const val = fee[key] as number;
+                                                return val > 0 ? (
+                                                    <div key={key}>
+                                                        <span className="text-gray-500">{label}:</span>
+                                                        <span className="ml-1 font-medium text-gray-800">
+                                                            {fee.currency} {val.toLocaleString()}
+                                                        </span>
                                                     </div>
-                                                </Card>
-                                            );
-                                        })}
+                                                ) : null;
+                                            })}
+                                            {(fee.dynamicFields as OtherFee[] | undefined)?.map(f => (
+                                                f.fieldValue ? (
+                                                    <div key={f.id}>
+                                                        <span className="text-gray-500">{f.fieldName}:</span>
+                                                        <span className="ml-1 font-medium text-gray-800">
+                                                            {fee.currency} {f.fieldValue}
+                                                        </span>
+                                                    </div>
+                                                ) : null
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                                            <span className="text-sm text-gray-600 font-medium">Total:</span>
+                                            <span className="text-lg font-bold text-purple-600">
+                                                {fee.currency} {calculateTotal(fee).toLocaleString()}
+                                            </span>
+                                        </div>
                                     </div>
-                                </Card>
-                            );
-                        })}
+
+                                    <div className="flex gap-2 ml-4">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleEditFee(fee, index)}
+                                            disabled={isAddingNew}
+                                            className="text-blue-600 hover:bg-blue-50"
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleRemoveFee(index)}
+                                            disabled={isAddingNew}
+                                            className="text-red-600 hover:bg-red-50"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
                     </div>
                 </div>
             )}
@@ -466,279 +328,176 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                     className="w-full border-dashed border-2"
                 >
                     <Plus className="h-4 w-4 mr-2" />
-                    Add New Fee Structure
+                    Add Fee Structure
                 </Button>
             )}
 
             {/* Add/Edit Form */}
             {isAddingNew && (
-                <Card className="p-6">
+                <Card className="p-6 border-2 border-gray-200">
                     <h3 className="font-semibold text-lg mb-6">
-                        {editingId ? 'Edit Fee Structure' : 'Add Fee Structure'}
+                        {editingIndex !== null ? 'Edit Fee Structure' : 'New Fee Structure'}
                     </h3>
 
-                    {/* Country & Mode Selection */}
-                    <div className="space-y-6">
-                        {/* Country Select */}
+                    <div className="space-y-5">
+                        {/* Tuition Fee Type + Scholarship */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <Label>Tuition Fee</Label>
+                                <Select
+                                    value={formData.tuitionFeeType ?? ''}
+                                    onValueChange={(v) => setField('tuitionFeeType', v as FeeStructure['tuitionFeeType'])}
+                                >
+                                    <SelectTrigger className="mt-2">
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {TUITION_FEE_TYPES.map(t => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <Label>Scholarships</Label>
+                                <Select
+                                    value={formData.scholarshipPercentage ?? 'Not Applicable'}
+                                    onValueChange={(v) => setField('scholarshipPercentage', v)}
+                                >
+                                    <SelectTrigger className="mt-2">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {SCHOLARSHIP_PERCENTAGES.map(p => (
+                                            <SelectItem key={p} value={p}>{p}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Currency */}
                         <div>
-                            <Label>Country *</Label>
+                            <Label>Currency</Label>
                             <Select
-                                value={selectedCountry}
-                                onValueChange={handleCountryChange}
-                                disabled={!!editingId}
+                                value={formData.currency ?? ''}
+                                onValueChange={(v) => setField('currency', v)}
                             >
                                 <SelectTrigger className="mt-2">
-                                    <SelectValue placeholder="Select country" />
+                                    <SelectValue placeholder="Select currency" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    {COUNTRIES.map((country) => (
-                                        <SelectItem key={country.code} value={country.code}>
-                                            {country.name} ({country.symbol})
+                                <SelectContent className="bg-white max-h-60">
+                                    {CURRENCY_OPTIONS.map(c => (
+                                        <SelectItem key={c.code} value={c.code}>
+                                            {c.code} — {c.name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        {/* Delivery Mode Selection */}
+                        {/* Standard Fee Fields */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {FEE_FIELDS.map(({ key, label }) => (
+                                <div key={key}>
+                                    <Label>{label}</Label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        className="mt-2"
+                                        placeholder="0"
+                                        value={(formData[key] as number) === 0 ? '' : (formData[key] as number)}
+                                        onChange={e => setField(key, handleNumberInput(e.target.value) as any)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Other Fees (dynamic) */}
                         <div>
-                            <Label className="mb-3 block">Delivery Mode *</Label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {DELIVERY_MODES.map((mode) => (
-                                    <button
-                                        key={mode.value}
-                                        type="button"
-                                        onClick={() => handleModeSelect(mode.value)}
-                                        disabled={!!editingId}
-                                        className={`
-                      p-4 rounded-lg border-2 text-left transition-all
-                      ${selectedMode === mode.value
-                                                ? 'border-purple-600 bg-purple-50'
-                                                : 'border-gray-200 hover:border-purple-300'}
-                      ${editingId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <span className="text-2xl">{mode.icon}</span>
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-gray-900">{mode.label}</div>
-                                                <div className="text-xs text-gray-600">{mode.description}</div>
-                                            </div>
-                                            {selectedMode === mode.value && (
-                                                <Check className="h-5 w-5 text-purple-600" />
-                                            )}
+                            <Label>Other Fees</Label>
+                            <p className="text-xs text-gray-500 mt-0.5 mb-3">Add any additional fees below</p>
+
+                            {otherFees.length > 0 && (
+                                <div className="space-y-2 mb-3">
+                                    {otherFees.map(fee => (
+                                        <div key={fee.id} className="flex items-center gap-2">
+                                            <span className="text-sm text-gray-700 w-40 shrink-0">{fee.fieldName}</span>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                placeholder="0"
+                                                className="flex-1"
+                                                value={fee.fieldValue === '' ? '' : fee.fieldValue}
+                                                onChange={e => updateOtherFee(fee.id, e.target.value)}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => removeOtherFee(fee.id)}
+                                                className="text-red-500 hover:bg-red-50 shrink-0"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                         </div>
-                                    </button>
-                                ))}
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                <Input
+                                    placeholder="Fee name (e.g. Library Fee)"
+                                    value={newFeeName}
+                                    onChange={e => setNewFeeName(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addOtherFee())}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addOtherFee}
+                                    disabled={!newFeeName.trim()}
+                                >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Add
+                                </Button>
                             </div>
                         </div>
 
-                        {selectedCountry && (
-                            <>
-                                {/* Currency */}
-                                <div>
-                                    <Label>Currency</Label>
-                                    <Input value={currency} readOnly className="bg-gray-100 mt-2" />
-                                </div>
-
-                                {/* Fee Fields - FIXED: Now properly handles zero values */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Program Tuition Fee *</Label>
-                                        <div className="relative mt-2">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                                {getCountryInfo(selectedCountry)?.symbol}
-                                            </span>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={getInputValue(programTuitionFee)}
-                                                onChange={(e) => setProgramTuitionFee(handleNumberInput(e.target.value))}
-                                                className="pl-8"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label>Student Visa Fee</Label>
-                                        <div className="relative mt-2">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                                {getCountryInfo(selectedCountry)?.symbol}
-                                            </span>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={getInputValue(studentVisaFee)}
-                                                onChange={(e) => setStudentVisaFee(handleNumberInput(e.target.value))}
-                                                className="pl-8"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label>Accommodation</Label>
-                                        <div className="relative mt-2">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                                {getCountryInfo(selectedCountry)?.symbol}
-                                            </span>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={getInputValue(accommodation)}
-                                                onChange={(e) => setAccommodation(handleNumberInput(e.target.value))}
-                                                className="pl-8"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label>Airport Transfer</Label>
-                                        <div className="relative mt-2">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                                {getCountryInfo(selectedCountry)?.symbol}
-                                            </span>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={getInputValue(airportTransfer)}
-                                                onChange={(e) => setAirportTransfer(handleNumberInput(e.target.value))}
-                                                className="pl-8"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* VAT */}
-                                <div>
-                                    <Label>VAT (%)</Label>
-                                    <div className="relative mt-2">
-                                        <Input
-                                            type="number"
-                                            step="0.01"
-                                            value={getInputValue(vat)}
-                                            onChange={(e) => setVat(handleNumberInput(e.target.value))}
-                                            placeholder="0"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                                            %
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Dynamic Fields */}
-                                <div className="pt-4 border-t">
-                                    <Label className="text-base font-semibold mb-3 block">
-                                        Additional Fees (Optional)
-                                    </Label>
-                                    <div className="flex gap-2 mb-4">
-                                        <Input
-                                            placeholder="e.g., Application Fee"
-                                            value={newFieldName}
-                                            onChange={(e) => setNewFieldName(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddDynamicField())}
-                                        />
-                                        <Button
-                                            type="button"
-                                            onClick={handleAddDynamicField}
-                                            disabled={!newFieldName.trim()}
-                                            variant="outline"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-
-                                    {dynamicFields.length > 0 && (
-                                        <div className="space-y-3">
-                                            {dynamicFields.map((field) => (
-                                                <div key={field.id} className="flex gap-2">
-                                                    <div className="flex-1">
-                                                        <Label className="text-sm mb-1">{field.fieldName}</Label>
-                                                        <Input
-                                                            value={field.fieldValue}
-                                                            onChange={(e) => handleUpdateDynamicField(field.id, e.target.value)}
-                                                            placeholder="Enter value"
-                                                        />
-                                                    </div>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleRemoveDynamicField(field.id)}
-                                                        className="text-red-600 mt-6"
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Total Display */}
-                                <div className="p-4 bg-gray-50 rounded-lg border">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Calculator className="h-5 w-5 text-gray-600" />
-                                            <Label className="text-lg font-semibold">Total Amount</Label>
-                                        </div>
-                                        <div className="text-2xl font-bold text-gray-900">
-                                            {getCountryInfo(selectedCountry)?.symbol}
-                                            {calculateTotal().toFixed(2)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
                         {/* Form Actions */}
-                        <div className="flex gap-2">
+                        <div className="flex justify-end gap-3 pt-4 border-t">
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => {
-                                    resetForm();
-                                    setIsAddingNew(false);
-                                }}
+                                onClick={() => { resetForm(); setIsAddingNew(false); }}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="button"
+                                className="bg-gray-900 hover:bg-gray-800"
                                 onClick={handleSaveFee}
-                                disabled={!selectedCountry || !selectedMode}
-                                className="bg-purple-600 hover:bg-purple-700"
                             >
-                                {editingId ? (
-                                    <>
-                                        <Check className="h-4 w-4 mr-2" />
-                                        Update
-                                    </>
-                                ) : (
-                                    <>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add
-                                    </>
-                                )}
+                                {editingIndex !== null ? 'Update' : 'Add Fee Structure'}
                             </Button>
                         </div>
                     </div>
                 </Card>
             )}
 
-            {/* Final Save Button */}
-            <div className="flex justify-end pt-6 border-t">
+            {/* Final Save */}
+            <div className="flex justify-end gap-4 pt-6 border-t">
                 <Button
-                    onClick={handleFinalSave}
-                    disabled={savedFees.length === 0 || isSubmitting}
+                    type="button"
                     className="bg-gray-900 hover:bg-gray-800"
+                    onClick={handleFinalSave}
+                    disabled={isSubmitting}
                 >
                     {isSubmitting ? (
                         <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Saving...
                         </>
                     ) : (

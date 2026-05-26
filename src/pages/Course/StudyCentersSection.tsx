@@ -319,7 +319,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                 )}
             </div>
 
-            {/* Study Centers Selection */}
+            {/* University (Study Centers) Selection */}
             <div>
                 <h3 className="text-lg font-semibold mb-4">Select Study Centers</h3>
 

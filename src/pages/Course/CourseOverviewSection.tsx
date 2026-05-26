@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,9 +12,9 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import type { CourseOverview } from '@/types/course';
+import { LEVEL_OPTIONS, INTAKE_OPTIONS, STREAM_OPTIONS } from '@/types/course';
 import { ImageUpload } from '@/components/common/ImageUpload';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -31,19 +31,16 @@ export function CourseOverviewSection({
 }: CourseOverviewSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, handleSubmit, watch, setValue, control, formState: { errors } } = useForm<CourseOverview>({
-        defaultValues: data,
-    });
-
-    // Dynamic fields array
-    useFieldArray({
-        control,
-        name: 'dynamicFields',
+    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CourseOverview>({
+        defaultValues: {
+            ...data,
+            intakes: data.intakes ?? [],
+        },
     });
 
     const courseName = watch('courseName');
-    // const description = watch('description');
     const courseImage = watch('courseImage');
+    const selectedIntakes = watch('intakes') ?? [];
 
     // Auto-generate slug
     useEffect(() => {
@@ -56,6 +53,15 @@ export function CourseOverviewSection({
         }
     }, [courseName, setValue]);
 
+    const toggleIntake = (intake: string) => {
+        const current = selectedIntakes ?? [];
+        if (current.includes(intake)) {
+            setValue('intakes', current.filter((i) => i !== intake));
+        } else {
+            setValue('intakes', [...current, intake]);
+        }
+    };
+
     const onSubmit = async (formData: CourseOverview) => {
         try {
             setIsSubmitting(true);
@@ -67,9 +73,6 @@ export function CourseOverviewSection({
             setIsSubmitting(false);
         }
     };
-
-
-
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -133,7 +136,7 @@ export function CourseOverviewSection({
 
                     {/* Description */}
                     <div>
-                        <Label>Description *</Label>
+                        <Label>Course Description *</Label>
                         <div className="mt-2">
                             <Textarea
                                 id="description"
@@ -148,9 +151,8 @@ export function CourseOverviewSection({
 
                     {/* Duration Section */}
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Years */}
                         <div>
-                            <Label htmlFor="durationYears">Years</Label>
+                            <Label htmlFor="durationYears">Duration - Years</Label>
                             <Input
                                 id="durationYears"
                                 type="number"
@@ -161,10 +163,8 @@ export function CourseOverviewSection({
                                 disabled={isSubmitting}
                             />
                         </div>
-
-                        {/* Months */}
                         <div>
-                            <Label htmlFor="durationMonths">Months</Label>
+                            <Label htmlFor="durationMonths">Duration - Months</Label>
                             <Input
                                 id="durationMonths"
                                 type="number"
@@ -178,26 +178,23 @@ export function CourseOverviewSection({
                         </div>
                     </div>
 
-                    {/* Study Mode */}
-                    <div className='grid grid-cols-2 gap-4'>
-                        <div>
-                            <Label htmlFor="studyMode">Study Mode *</Label>
-                            <Select
-                                value={watch('studyMode')}
-                                onValueChange={(value) => setValue('studyMode', value as 'online' | 'offline' | 'hybrid')}
-                                disabled={isSubmitting}
-                            >
-                                <SelectTrigger className="mt-2">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white">
-                                    <SelectItem value="online">Online</SelectItem>
-                                    <SelectItem value="offline">Offline</SelectItem>
-                                    <SelectItem value="hybrid">Hybrid</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
+                    {/* Class Delivery Mode */}
+                    <div>
+                        <Label htmlFor="studyMode">Class Delivery Mode *</Label>
+                        <Select
+                            value={watch('studyMode')}
+                            onValueChange={(value) => setValue('studyMode', value as 'online' | 'on-campus' | 'hybrid')}
+                            disabled={isSubmitting}
+                        >
+                            <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="Select delivery mode" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                                <SelectItem value="online">Online</SelectItem>
+                                <SelectItem value="on-campus">On Campus</SelectItem>
+                                <SelectItem value="hybrid">Hybrid</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Awarded By */}
@@ -212,16 +209,31 @@ export function CourseOverviewSection({
                         />
                     </div>
 
-                    {/* Next Intake */}
+                    {/* Intakes */}
                     <div>
-                        <Label htmlFor="nextIntake">Next Intake *</Label>
-                        <Input
-                            id="nextIntake"
-                            type="date"
-                            {...register('nextIntake', { required: 'Next intake is required' })}
-                            className="mt-2"
-                            disabled={isSubmitting}
-                        />
+                        <Label>Intakes</Label>
+                        <p className="text-xs text-gray-500 mt-1 mb-2">Select all applicable intake months</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {INTAKE_OPTIONS.map((intake) => {
+                                const isSelected = selectedIntakes.includes(intake);
+                                return (
+                                    <button
+                                        key={intake}
+                                        type="button"
+                                        onClick={() => toggleIntake(intake)}
+                                        disabled={isSubmitting}
+                                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                                            isSelected
+                                                ? 'bg-gray-900 text-white border-gray-900'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500'
+                                        }`}
+                                    >
+                                        {intake}
+                                        {isSelected && <X className="w-3 h-3" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {/* Level */}
@@ -236,34 +248,46 @@ export function CourseOverviewSection({
                                 <SelectValue placeholder="Select level" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
-                                <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                                <SelectItem value="postgraduate">Postgraduate</SelectItem>
-                                <SelectItem value="diploma">Diploma</SelectItem>
-                                <SelectItem value="pg diploma">PG Diploma</SelectItem>
-                                <SelectItem value="certificate">Certificate</SelectItem>
-                                <SelectItem value="doctorate">Doctorate</SelectItem>
+                                {LEVEL_OPTIONS.map((level) => (
+                                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
 
-                    {/* Scholarship */}
+                    {/* University Type */}
                     <div>
-                        <Label htmlFor="scholarship">Scholarship Type</Label>
+                        <Label htmlFor="universityType">University Type</Label>
                         <Select
-                            value={watch('scholarship') ?? ''}
-                            onValueChange={(value) =>
-                                setValue('scholarship', value as CourseOverview['scholarship'])
-                            }
+                            value={watch('universityType') ?? ''}
+                            onValueChange={(value) => setValue('universityType', value as 'Public' | 'Private')}
                             disabled={isSubmitting}
                         >
                             <SelectTrigger className="mt-2">
-                                <SelectValue placeholder="Select scholarship type (optional)" />
+                                <SelectValue placeholder="Select university type" />
                             </SelectTrigger>
                             <SelectContent className="bg-white">
-                                <SelectItem value="Public Universities">Public Universities</SelectItem>
-                                <SelectItem value="Private Universities">Private Universities</SelectItem>
-                                <SelectItem value="Tuition Fee Sponsored">Tuition Fee Sponsored</SelectItem>
-                                <SelectItem value="Fully Funded">Fully Funded</SelectItem>
+                                <SelectItem value="Public">Public</SelectItem>
+                                <SelectItem value="Private">Private</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Stream */}
+                    <div>
+                        <Label htmlFor="stream">Stream</Label>
+                        <Select
+                            value={watch('stream') ?? ''}
+                            onValueChange={(value) => setValue('stream', value)}
+                            disabled={isSubmitting}
+                        >
+                            <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="Select stream" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white max-h-60">
+                                {STREAM_OPTIONS.map((stream) => (
+                                    <SelectItem key={stream} value={stream}>{stream}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

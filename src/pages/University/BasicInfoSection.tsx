@@ -18,12 +18,24 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
 
+const CONTINENT_OPTIONS = [
+    "Africa",
+    "Antarctica",
+    "Asia",
+    "Europe",
+    "North America",
+    "Oceania",
+    "South America",
+] as const;
+
 const basicInfoSchema = z.object({
     name: z.string().min(1, "University name is required"),
     slug: z.string().min(1, "Slug is required"),
     fullName: z.string().min(1, "Full name is required"),
     country: z.string().min(1, "Country is required"),
     city: z.string().min(1, "City is required"),
+    continent: z.string().optional(),
+    universityType: z.enum(["Public", "Private"]).optional(),
     location: z.string().min(1, "Location is required"),
     founded: z.string().optional(),
     totalStudents: z.string().optional(),
@@ -58,6 +70,8 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
             fullName: initialData.fullName,
             country: initialData.country,
             city: initialData.city,
+            continent: initialData.continent || "",
+            universityType: initialData.universityType || undefined,
             location: initialData.location,
             founded: initialData.founded || "",
             totalStudents: initialData.totalStudents || "",
@@ -69,6 +83,8 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
     });
 
     const status = watch("status");
+    const continent = watch("continent");
+    const universityType = watch("universityType");
 
     const onSubmit = async (data: BasicInfoFormData) => {
         try {
@@ -127,6 +143,51 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                         </div>
 
                         <div className="space-y-2">
+                            <Label htmlFor="city">City *</Label>
+                            <Input id="city" {...register("city")} placeholder="Cambridge" />
+                            {errors.city && (
+                                <p className="text-sm text-red-500">{errors.city.message}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="continent">Continent</Label>
+                            <Select
+                                value={continent ?? ""}
+                                onValueChange={(v) => setValue("continent", v)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select continent" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    {CONTINENT_OPTIONS.map(c => (
+                                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="universityType">University Type</Label>
+                            <Select
+                                value={universityType ?? ""}
+                                onValueChange={(v) => setValue("universityType", v as "Public" | "Private")}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    <SelectItem value="Public">Public</SelectItem>
+                                    <SelectItem value="Private">Private</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
                             <Label htmlFor="slug">Slug *</Label>
                             <Input
                                 id="slug"
@@ -138,16 +199,6 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                             <p className="text-xs text-gray-500">
                                 Used in the URL (cannot be changed)
                             </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="city">City *</Label>
-                            <Input id="city" {...register("city")} placeholder="Cambridge" />
-                            {errors.city && (
-                                <p className="text-sm text-red-500">{errors.city.message}</p>
-                            )}
                         </div>
 
                         <div className="space-y-2">

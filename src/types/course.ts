@@ -15,6 +15,88 @@ export interface DynamicField {
     order: number;
 }
 
+export const LEVEL_OPTIONS = [
+    'Certification',
+    'Diploma',
+    'Foundation Diploma (Level 3 Diploma)',
+    'Level 4 Diploma',
+    'Level 5 Diploma',
+    'Higher National Diploma (Level 5 Extended Diploma)',
+    'PG Diploma (Level 7 Diploma)',
+    'Bachelors',
+    'Masters',
+    'Doctorate (PhD)',
+] as const;
+
+export const INTAKE_OPTIONS = [
+    'Every Month',
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+] as const;
+
+export const STREAM_OPTIONS = [
+    'Engineering & Technology',
+    'Business & Management Studies',
+    'Information Technology & Computing',
+    'Accounting & Finance',
+    'Education & Teaching',
+    'Social Sciences & Humanities',
+    'Medicine & Healthcare',
+    'Nursing & Allied Health Sciences',
+    'Aeronautical & Aviation Studies',
+    'Architecture & Interior Design',
+    'Artificial Intelligence & Data Science',
+    'Cyber Security & Networking',
+    'Software Engineering & Development',
+    'Hospitality & Tourism Management',
+    'Hotel & Culinary Arts',
+    'Digital Marketing & Media Studies',
+    'Graphic Design & Animation',
+    'Fashion Design & Textile Studies',
+    'Law & Legal Studies',
+    'Psychology & Behavioral Sciences',
+    'International Relations & Political Science',
+    'Economics & Development Studies',
+    'Logistics & Supply Chain Management',
+    'Human Resource Management',
+    'Entrepreneurship & Innovation',
+    'Banking & Financial Technology (FinTech)',
+    'Public Health & Healthcare Management',
+    'Pharmacy & Pharmaceutical Sciences',
+    'Dentistry & Oral Healthcare',
+    'Physiotherapy & Rehabilitation Sciences',
+    'Biomedical Sciences & Biotechnology',
+    'Environmental Science & Sustainability',
+    'Agriculture & Food Technology',
+    'Marine & Nautical Studies',
+    'Aviation Management & Pilot Training',
+    'Robotics & Mechatronics Engineering',
+    'Renewable Energy & Energy Management',
+    'Construction Management & Quantity Surveying',
+    'Media, Journalism & Communication',
+    'Film Production & Multimedia Arts',
+    'Event Management & Public Relations',
+    'Sports Science & Physical Education',
+    'Criminology & Forensic Science',
+    'Early Childhood Education',
+    'TESOL, TEFL & English Language Studies',
+    'Islamic Studies & Theology',
+    'Mathematics & Applied Sciences',
+    'Chemistry, Physics & Biological Sciences',
+    'Veterinary Science & Animal Care',
+    'Occupational Health & Safety',
+    'Project Management & Business Analytics',
+    'E-Commerce & Digital Business',
+    'Blockchain & Cloud Computing',
+    'Game Design & Interactive Media',
+    'UX/UI Design & Creative Technologies',
+    'Tourism, Travel & Airline Operations',
+    'Automotive Engineering & Electric Vehicle Technology',
+    'Civil, Mechanical & Electrical Engineering',
+    'Petroleum & Chemical Engineering',
+    'Nanotechnology & Advanced Materials Science',
+] as const;
+
 export interface CourseOverview {
     _id?: string;
     courseName: string;
@@ -23,14 +105,30 @@ export interface CourseOverview {
     description: string;
     durationYears?: number;
     durationMonths?: number;
-    studyModeType: 'fast-track' | 'regular';
-    studyMode: 'online' | 'offline' | 'hybrid';
+    studyMode: 'online' | 'on-campus' | 'hybrid';
     awardedBy: string;
-    nextIntake: string;
+    intakes: string[];
     level: string;
+    universityType?: 'Public' | 'Private';
+    stream?: string;
     courseImage?: File | string | null;
-    scholarship?: 'Public Universities' | 'Private Universities' | 'Tuition Fee Sponsored' | 'Fully Funded';
     dynamicFields?: DynamicField[];
+}
+
+export interface FeeStructure {
+    tuitionFeeType?: 'Fully Tuition Fee Funded' | 'Scholarships' | 'Regular (Self-Funded Program)';
+    scholarshipPercentage?: string;
+    currency?: string;
+    tuitionFee?: number;
+    applicationFee?: number;
+    admissionFee?: number;
+    visaFee?: number;
+    administrationFee?: number;
+    accommodationFee?: number;
+    transportationFee?: number;
+    assessmentFee?: number;
+    examFee?: number;
+    dynamicFields?: Array<{ id: string; fieldName: string; fieldValue: string; fieldType: 'text' | 'number'; order: number }>;
 }
 
 export interface DocumentRequired {
@@ -66,7 +164,7 @@ export interface Brochure {
 
 
 export interface CourseFormData {
-    feeStructure: never[];
+    feeStructures: FeeStructure[];
     universityId: string;
     _id?: string;
     overview: CourseOverview;
@@ -93,7 +191,7 @@ export interface PaginationMeta {
 }
 
 export interface Course {
-    feeStructure: never[];
+    feeStructures: FeeStructure[];
     universityId: string;
     studyCenters: never[];
     dynamicFields: never[];
@@ -110,10 +208,11 @@ export interface Course {
     level?: string;
     durationYears?: number;
     durationMonths?: number;
-    studyModeType: 'fast-track' | 'regular';
-    studyMode: 'online' | 'offline' | 'hybrid';
-    nextIntake: string;
+    studyMode: 'online' | 'on-campus' | 'hybrid';
+    intakes: string[];
     awardedBy?: string;
+    stream?: string;
+    universityType?: 'Public' | 'Private';
     status: 'draft' | 'published';
     createdAt?: string;
     updatedAt?: string;
@@ -135,6 +234,7 @@ export interface CourseQueryParams {
     search?: string;
     status?: 'draft' | 'published';
     level?: string;
+    stream?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
 }

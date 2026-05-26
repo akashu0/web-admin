@@ -100,8 +100,8 @@ export function CourseList() {
         setQueryParams((prev) => ({ ...prev, sortBy, sortOrder, page: 1 }));
     }, []);
 
-    const setScholarship = useCallback((scholarship: string) => {
-        setQueryParams((prev) => ({ ...prev, scholarship: scholarship || undefined, page: 1 }));
+    const setStream = useCallback((stream: string) => {
+        setQueryParams((prev) => ({ ...prev, stream: stream || undefined, page: 1 }));
     }, []);
 
     const handleRefresh = () => {
@@ -155,7 +155,7 @@ export function CourseList() {
                 onPageSizeChange={setPageSize}
                 onSearchChange={setSearch}
                 onSortChange={setSort}
-                onScholarshipChange={setScholarship}
+                onStreamChange={setStream}
                 isLoading={isFetching}
             />
 

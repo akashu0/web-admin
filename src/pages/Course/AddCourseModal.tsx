@@ -30,10 +30,9 @@ export function AddCourseModal({
         durationYears: 0,
         durationMonths: 0,
         studyMode: "online",
-        studyModeType: "regular",
         awardedBy: "",
-        nextIntake: "",
-        level: "undergraduate",
+        intakes: [],
+        level: "",
         courseImage: null,
         dynamicFields: [],
     };

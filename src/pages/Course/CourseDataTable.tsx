@@ -27,11 +27,25 @@ import {
 } from "@/components/ui/select";
 import type { PaginationMeta } from "@/types/course";
 
-const SCHOLARSHIP_OPTIONS = [
-    'Public Universities',
-    'Private Universities',
-    'Tuition Fee Sponsored',
-    'Fully Funded',
+const STREAM_OPTIONS = [
+    'Engineering & Technology',
+    'Business & Management Studies',
+    'Information Technology & Computing',
+    'Accounting & Finance',
+    'Education & Teaching',
+    'Social Sciences & Humanities',
+    'Medicine & Healthcare',
+    'Nursing & Allied Health Sciences',
+    'Artificial Intelligence & Data Science',
+    'Cyber Security & Networking',
+    'Software Engineering & Development',
+    'Hospitality & Tourism Management',
+    'Law & Legal Studies',
+    'Architecture & Interior Design',
+    'Aeronautical & Aviation Studies',
+    'Banking & Financial Technology (FinTech)',
+    'Public Health & Healthcare Management',
+    'Pharmacy & Pharmaceutical Sciences',
 ] as const;
 
 interface DataTableProps<TData, TValue> {
@@ -42,7 +56,7 @@ interface DataTableProps<TData, TValue> {
     onPageSizeChange: (size: number) => void;
     onSearchChange: (search: string) => void;
     onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
-    onScholarshipChange: (scholarship: string) => void;
+    onStreamChange: (stream: string) => void;
     isLoading?: boolean;
 }
 
@@ -54,12 +68,12 @@ export function CourseDataTable<TData, TValue>({
     onPageSizeChange,
     onSearchChange,
     onSortChange,
-    onScholarshipChange,
+    onStreamChange,
     isLoading = false,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [searchValue, setSearchValue] = React.useState("");
-    const [scholarshipValue, setScholarshipValue] = React.useState("");
+    const [streamValue, setStreamValue] = React.useState("");
 
     // Debounce search
     React.useEffect(() => {
@@ -107,19 +121,19 @@ export function CourseDataTable<TData, TValue>({
                     />
                 </div>
                 <Select
-                    value={scholarshipValue || "__all__"}
+                    value={streamValue || "__all__"}
                     onValueChange={(value) => {
                         const v = value === "__all__" ? "" : value;
-                        setScholarshipValue(v);
-                        onScholarshipChange(v);
+                        setStreamValue(v);
+                        onStreamChange(v);
                     }}
                 >
-                    <SelectTrigger className="w-[200px] bg-white border-gray-200">
-                        <SelectValue placeholder="All Scholarships" />
+                    <SelectTrigger className="w-[220px] bg-white border-gray-200">
+                        <SelectValue placeholder="All Streams" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white">
-                        <SelectItem value="__all__">All Scholarships</SelectItem>
-                        {SCHOLARSHIP_OPTIONS.map(s => (
+                    <SelectContent className="bg-white max-h-60">
+                        <SelectItem value="__all__">All Streams</SelectItem>
+                        {STREAM_OPTIONS.map(s => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                     </SelectContent>

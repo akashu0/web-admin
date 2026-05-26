@@ -101,6 +101,8 @@ export interface University {
     fullName: string;
     country: string;
     city: string;
+    continent?: string;
+    universityType?: 'Public' | 'Private';
     location: string;
     founded: string;
     totalStudents: string;

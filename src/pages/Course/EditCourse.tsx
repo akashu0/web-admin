@@ -33,7 +33,7 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
     { id: "overview", label: "Course Overview", icon: <FileText className="h-4 w-4" /> },
-    { id: "studyCenters", label: "Study Centers", icon: <MapPin className="h-4 w-4" /> },
+    { id: "studyCenters", label: "University", icon: <MapPin className="h-4 w-4" /> },
     { id: "feeStructure", label: "Fee Structure", icon: <Settings className="h-4 w-4" /> },
     { id: "documents", label: "Documents Required", icon: <FileCheck className="h-4 w-4" /> },
     { id: "visa", label: "Visa Process", icon: <Globe className="h-4 w-4" /> },
@@ -72,7 +72,7 @@ export default function EditCourse() {
                 careerOpportunities: response.careerOpportunities || [],
                 studyCenters: response.studyCenters || [],
                 dynamicFields: response.dynamicFields || [],
-                feeStructure: response.feeStructure || [],
+                feeStructures: response.feeStructures || [],
                 brochure: response?.brochure || [],
                 overview: {
                     ...response.overview,
@@ -271,8 +271,8 @@ export default function EditCourse() {
 
                         {activeSection === "feeStructure" && (
                             <DeliveryModeFeeStructure
-                                initialData={courseData.feeStructure || []}
-                                onSave={(data) => handleSectionUpdate("feeStructure", data)}
+                                initialData={courseData.feeStructures || []}
+                                onSave={(data) => handleSectionUpdate("feeStructures", data)}
                                 onNext={() => setActiveSection("documents")}
                             />
                         )}
