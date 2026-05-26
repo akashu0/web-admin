@@ -221,7 +221,7 @@ export interface Course {
 export type CourseSection =
     | 'overview'
     | 'studyCenters'
-    | 'feeStructure'
+    | 'feeStructures'
     | 'documents'
     | 'visa'
     | 'career'
