@@ -34,7 +34,7 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
     { id: "overview", label: "Course Overview", icon: <FileText className="h-4 w-4" /> },
     { id: "studyCenters", label: "University", icon: <MapPin className="h-4 w-4" /> },
-    { id: "feeStructure", label: "Fee Structure", icon: <Settings className="h-4 w-4" /> },
+    { id: "feeStructures", label: "Fee Structure", icon: <Settings className="h-4 w-4" /> },
     { id: "documents", label: "Documents Required", icon: <FileCheck className="h-4 w-4" /> },
     { id: "visa", label: "Visa Process", icon: <Globe className="h-4 w-4" /> },
     { id: "career", label: "Career Opportunities", icon: <Briefcase className="h-4 w-4" /> },
@@ -115,7 +115,7 @@ export default function EditCourse() {
                 case "overview":
                     await courseService.updateCourseOverview(slug!, data);
                     break;
-                case "feeStructure":
+                case "feeStructures":
                     await courseService.updateFeeStructure(slug!, data);
                     break;
                 case "documents":
@@ -269,7 +269,7 @@ export default function EditCourse() {
                             />
                         )}
 
-                        {activeSection === "feeStructure" && (
+                        {activeSection === "feeStructures" && (
                             <DeliveryModeFeeStructure
                                 initialData={courseData.feeStructures || []}
                                 onSave={(data) => handleSectionUpdate("feeStructures", data)}
