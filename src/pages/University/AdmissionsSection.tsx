@@ -15,13 +15,13 @@ import { universityService } from "@/services/universityService";
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
 const admissionEntrySchema = z.object({
-    required: z.boolean().default(false),
-    details: z.string().default(""),
+    required: z.boolean().optional(),
+    details: z.string().optional(),
 });
 
 const customRequirementSchema = z.object({
     name: z.string().min(1, "Name is required"),
-    details: z.string().default(""),
+    details: z.string().optional(),
 });
 
 const admissionsSchema = z.object({
@@ -40,7 +40,7 @@ const admissionsSchema = z.object({
     researchProposal:              admissionEntrySchema.optional(),
     atasCertificate:               admissionEntrySchema.optional(),
     financialProof:                admissionEntrySchema.optional(),
-    customRequirements:            z.array(customRequirementSchema).default([]),
+    customRequirements:            z.array(customRequirementSchema).optional(),
 });
 
 type AdmissionsFormData = z.infer<typeof admissionsSchema>;
@@ -80,7 +80,7 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
 
     const buildDefaults = (): AdmissionsFormData => {
         const base: AdmissionsFormData = {
-            customRequirements: initialData?.customRequirements || [],
+            customRequirements: initialData?.customRequirements ?? [],
         };
         FIXED_REQUIREMENTS.forEach(({ key }) => {
             (base as any)[key] = {
@@ -111,7 +111,8 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
     const onSubmit = async (data: AdmissionsFormData) => {
         try {
             setIsSubmitting(true);
-            await universityService.updateAdmissions(slug, data);
+            const payload = { ...data, customRequirements: data.customRequirements ?? [] };
+            await universityService.updateAdmissions(slug, payload);
             onSuccess();
             toast.success("Admissions requirements saved");
         } catch (error: any) {
@@ -192,7 +193,7 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => addCustom({ name: "", details: "" })}
+                            onClick={() => addCustom({ name: "", details: undefined })}
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Another
