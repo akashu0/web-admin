@@ -15,13 +15,13 @@ import { universityService } from "@/services/universityService";
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
 const admissionEntrySchema = z.object({
-    required: z.boolean().optional().default(false),
-    details: z.string().optional().default(""),
+    required: z.boolean().default(false),
+    details: z.string().default(""),
 });
 
 const customRequirementSchema = z.object({
     name: z.string().min(1, "Name is required"),
-    details: z.string().optional().default(""),
+    details: z.string().default(""),
 });
 
 const admissionsSchema = z.object({
@@ -40,7 +40,7 @@ const admissionsSchema = z.object({
     researchProposal:              admissionEntrySchema.optional(),
     atasCertificate:               admissionEntrySchema.optional(),
     financialProof:                admissionEntrySchema.optional(),
-    customRequirements:            z.array(customRequirementSchema).optional().default([]),
+    customRequirements:            z.array(customRequirementSchema).default([]),
 });
 
 type AdmissionsFormData = z.infer<typeof admissionsSchema>;
