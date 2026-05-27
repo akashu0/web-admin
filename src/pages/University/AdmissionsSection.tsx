@@ -1,48 +1,71 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Plus, X, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, Save, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
 
-const undergraduateAdmissionsSchema = z.object({
-    acceptanceRate: z.string().optional(),
-    sat: z.string().optional(),
-    act: z.string().optional(),
-    toefl: z.string().optional(),
-    ielts: z.string().optional(),
-    requirements: z.array(z.string()).optional(),
+// ── Zod schema ────────────────────────────────────────────────────────────────
+
+const admissionEntrySchema = z.object({
+    required: z.boolean().optional().default(false),
+    details: z.string().optional().default(""),
 });
 
-const postgraduateAdmissionsSchema = z.object({
-    acceptanceRate: z.string().optional(),
-    gre: z.string().optional(),
-    gpa: z.string().optional(),
-    toefl: z.string().optional(),
-    ielts: z.string().optional(),
-    requirements: z.array(z.string()).optional(),
-});
-
-const phdAdmissionsSchema = z.object({
-    gre: z.string().optional(),
-    gpa: z.string().optional(),
-    researchProposalRequired: z.boolean().optional(),
-    requirements: z.array(z.string()).optional(),
+const customRequirementSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    details: z.string().optional().default(""),
 });
 
 const admissionsSchema = z.object({
-    undergraduate: undergraduateAdmissionsSchema.optional(),
-    postgraduate: postgraduateAdmissionsSchema.optional(),
-    phd: phdAdmissionsSchema.optional(),
+    sat:                           admissionEntrySchema.optional(),
+    ielts:                         admissionEntrySchema.optional(),
+    act:                           admissionEntrySchema.optional(),
+    toefl:                         admissionEntrySchema.optional(),
+    passportCopy:                  admissionEntrySchema.optional(),
+    photograph:                    admissionEntrySchema.optional(),
+    academicCertificates:          admissionEntrySchema.optional(),
+    academicTranscripts:           admissionEntrySchema.optional(),
+    sop:                           admissionEntrySchema.optional(),
+    resume:                        admissionEntrySchema.optional(),
+    officialCertifiedTranslations: admissionEntrySchema.optional(),
+    lettersOfRecommendation:       admissionEntrySchema.optional(),
+    researchProposal:              admissionEntrySchema.optional(),
+    atasCertificate:               admissionEntrySchema.optional(),
+    financialProof:                admissionEntrySchema.optional(),
+    customRequirements:            z.array(customRequirementSchema).optional().default([]),
 });
 
 type AdmissionsFormData = z.infer<typeof admissionsSchema>;
+
+// ── Fixed requirements list ───────────────────────────────────────────────────
+
+const FIXED_REQUIREMENTS: { key: keyof Omit<AdmissionsFormData, "customRequirements">; label: string }[] = [
+    { key: "sat",                           label: "SAT" },
+    { key: "ielts",                         label: "IELTS" },
+    { key: "act",                           label: "ACT" },
+    { key: "toefl",                         label: "TOEFL" },
+    { key: "passportCopy",                  label: "Passport Copy" },
+    { key: "photograph",                    label: "Photograph" },
+    { key: "academicCertificates",          label: "Academic Certificates" },
+    { key: "academicTranscripts",           label: "Academic Transcripts" },
+    { key: "sop",                           label: "SOP (Statement of Purpose)" },
+    { key: "resume",                        label: "Resume / CV" },
+    { key: "officialCertifiedTranslations", label: "Official Certified Translations" },
+    { key: "lettersOfRecommendation",       label: "Letters of Recommendation / References" },
+    { key: "researchProposal",              label: "Research Proposal" },
+    { key: "atasCertificate",               label: "ATAS Certificate" },
+    { key: "financialProof",                label: "Financial Proof" },
+];
+
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface AdmissionsSectionProps {
     slug: string;
@@ -50,79 +73,47 @@ interface AdmissionsSectionProps {
     onSuccess: () => void;
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [ugRequirement, setUgRequirement] = useState("");
-    const [pgRequirement, setPgRequirement] = useState("");
-    const [phdRequirement, setPhdRequirement] = useState("");
+    const buildDefaults = (): AdmissionsFormData => {
+        const base: AdmissionsFormData = {
+            customRequirements: initialData?.customRequirements || [],
+        };
+        FIXED_REQUIREMENTS.forEach(({ key }) => {
+            (base as any)[key] = {
+                required: initialData?.[key]?.required ?? false,
+                details:  initialData?.[key]?.details  ?? "",
+            };
+        });
+        return base;
+    };
 
     const {
         register,
         handleSubmit,
-        formState: { errors },
-        setValue,
         watch,
+        setValue,
+        control,
+        formState: { errors },
     } = useForm<AdmissionsFormData>({
         resolver: zodResolver(admissionsSchema),
-        defaultValues: {
-            undergraduate: initialData.undergraduate || { requirements: [] },
-            postgraduate: initialData.postgraduate || { requirements: [] },
-            phd: initialData.phd || { requirements: [] },
-        },
+        defaultValues: buildDefaults(),
     });
 
-    const ugRequirements = watch("undergraduate.requirements") || [];
-    const pgRequirements = watch("postgraduate.requirements") || [];
-    const phdRequirements = watch("phd.requirements") || [];
-
-    const addUgRequirement = () => {
-        if (ugRequirement.trim()) {
-            setValue("undergraduate.requirements", [...ugRequirements, ugRequirement]);
-            setUgRequirement("");
-        }
-    };
-
-    const removeUgRequirement = (index: number) => {
-        setValue(
-            "undergraduate.requirements",
-            ugRequirements.filter((_, i) => i !== index)
-        );
-    };
-
-    const addPgRequirement = () => {
-        if (pgRequirement.trim()) {
-            setValue("postgraduate.requirements", [...pgRequirements, pgRequirement]);
-            setPgRequirement("");
-        }
-    };
-
-    const removePgRequirement = (index: number) => {
-        setValue(
-            "postgraduate.requirements",
-            pgRequirements.filter((_, i) => i !== index)
-        );
-    };
-
-    const addPhdRequirement = () => {
-        if (phdRequirement.trim()) {
-            setValue("phd.requirements", [...phdRequirements, phdRequirement]);
-            setPhdRequirement("");
-        }
-    };
-
-    const removePhdRequirement = (index: number) => {
-        setValue(
-            "phd.requirements",
-            phdRequirements.filter((_, i) => i !== index)
-        );
-    };
+    const { fields: customFields, append: addCustom, remove: removeCustom } = useFieldArray({
+        control,
+        name: "customRequirements",
+    });
 
     const onSubmit = async (data: AdmissionsFormData) => {
         try {
             setIsSubmitting(true);
             await universityService.updateAdmissions(slug, data);
             onSuccess();
+            toast.success("Admissions requirements saved");
         } catch (error: any) {
             console.error("Error updating admissions:", error);
             toast.error(error.response?.data?.message || "Failed to update admissions");
@@ -133,247 +124,127 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Undergraduate */}
+
+            {/* ── Fixed requirements ────────────────────────────────────────── */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Undergraduate Admissions</CardTitle>
-                    <CardDescription>Requirements for undergraduate programs</CardDescription>
+                    <CardTitle>Admission Requirements</CardTitle>
+                    <CardDescription>
+                        Toggle which documents are required and add details for each.
+                    </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Acceptance Rate</Label>
-                            <Input
-                                {...register("undergraduate.acceptanceRate")}
-                                placeholder="5%"
-                            />
-                            {errors.undergraduate?.acceptanceRate && (
-                                <p className="text-sm text-red-500">{errors.undergraduate?.acceptanceRate.message}</p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label>SAT</Label>
-                            <Input
-                                {...register("undergraduate.sat")}
-                                placeholder="1400-1600"
-                            />
-                            {errors.undergraduate?.sat && (
-                                <p className="text-sm text-red-500">{errors.undergraduate?.sat.message}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>ACT</Label>
-                            <Input {...register("undergraduate.act")} placeholder="32-36" />
-                            {errors.undergraduate?.act && (
-                                <p className="text-sm text-red-500">{errors.undergraduate?.act.message}</p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label>TOEFL</Label>
-                            <Input {...register("undergraduate.toefl")} placeholder="100+" />
-                            {errors.undergraduate?.toefl && (
-                                <p className="text-sm text-red-500">{errors.undergraduate?.toefl.message}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>IELTS</Label>
-                        <Input {...register("undergraduate.ielts")} placeholder="7.0+" />
-                        {errors.undergraduate?.ielts && (
-                            <p className="text-sm text-red-500">{errors.undergraduate?.ielts.message}</p>
-                        )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Requirements</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                value={ugRequirement}
-                                onChange={(e) => setUgRequirement(e.target.value)}
-                                placeholder="Enter requirement"
-                                onKeyPress={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        addUgRequirement();
-                                    }
-                                }}
-                            />
-                            <Button type="button" onClick={addUgRequirement} size="sm">
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        {errors.undergraduate?.requirements && (
-                            <p className="text-sm text-red-500">{errors.undergraduate?.requirements.message}</p>
-                        )}
-                        <div className="space-y-2 mt-2">
-                            {ugRequirements.map((req, idx) => (
+                <CardContent>
+                    <div className="divide-y divide-gray-100">
+                        {FIXED_REQUIREMENTS.map(({ key, label }) => {
+                            const isRequired = watch(`${key}.required` as any) ?? false;
+                            return (
                                 <div
-                                    key={idx}
-                                    className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                                    key={key}
+                                    className="py-4 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-start"
                                 >
-                                    <span className="text-sm">{req}</span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removeUgRequirement(idx)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
+                                    {/* Left — label + details input */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4 text-purple-500 shrink-0" />
+                                            <span className="text-sm font-semibold text-gray-800">{label}</span>
+                                            {isRequired && (
+                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                                                    Required
+                                                </span>
+                                            )}
+                                        </div>
+                                        <Textarea
+                                            {...register(`${key}.details` as any)}
+                                            placeholder={`Details / score range / notes for ${label}…`}
+                                            rows={2}
+                                            className="resize-none text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Right — toggle */}
+                                    <div className="flex flex-col items-center gap-1 pt-1 sm:pt-6 sm:pl-4">
+                                        <Switch
+                                            checked={!!isRequired}
+                                            onCheckedChange={(checked) =>
+                                                setValue(`${key}.required` as any, checked)
+                                            }
+                                        />
+                                        <span className="text-[10px] text-gray-400 font-medium">
+                                            {isRequired ? "On" : "Off"}
+                                        </span>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            );
+                        })}
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Postgraduate */}
+            {/* ── Custom requirements ───────────────────────────────────────── */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Postgraduate Admissions</CardTitle>
-                    <CardDescription>Requirements for master's programs</CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Additional Requirements</CardTitle>
+                            <CardDescription>Add any other custom admission documents.</CardDescription>
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addCustom({ name: "", details: "" })}
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Another
+                        </Button>
+                    </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Acceptance Rate</Label>
-                            <Input
-                                {...register("postgraduate.acceptanceRate")}
-                                placeholder="10%"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>GRE</Label>
-                            <Input {...register("postgraduate.gre")} placeholder="320+" />
-                        </div>
-                    </div>
+                <CardContent className="space-y-3">
+                    {customFields.length === 0 && (
+                        <p className="text-sm text-gray-400 text-center py-6">
+                            No additional requirements. Click "Add Another" to add one.
+                        </p>
+                    )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>GPA</Label>
-                            <Input {...register("postgraduate.gpa")} placeholder="3.5+" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>TOEFL</Label>
-                            <Input {...register("postgraduate.toefl")} placeholder="100+" />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>IELTS</Label>
-                        <Input {...register("postgraduate.ielts")} placeholder="7.0+" />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Requirements</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                value={pgRequirement}
-                                onChange={(e) => setPgRequirement(e.target.value)}
-                                placeholder="Enter requirement"
-                                onKeyPress={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        addPgRequirement();
-                                    }
-                                }}
-                            />
-                            <Button type="button" onClick={addPgRequirement} size="sm">
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <div className="space-y-2 mt-2">
-                            {pgRequirements.map((req, idx) => (
-                                <div
-                                    key={idx}
-                                    className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                                >
-                                    <span className="text-sm">{req}</span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removePgRequirement(idx)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
+                    {customFields.map((field, idx) => (
+                        <div
+                            key={field.id}
+                            className="p-4 border rounded-xl bg-gray-50 space-y-3"
+                        >
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex-1 space-y-1">
+                                    <Label className="text-xs text-gray-500">Requirement Name *</Label>
+                                    <Input
+                                        {...register(`customRequirements.${idx}.name`)}
+                                        placeholder="e.g. Portfolio, Work Experience Letter…"
+                                    />
+                                    {errors.customRequirements?.[idx]?.name && (
+                                        <p className="text-xs text-red-500">
+                                            {errors.customRequirements[idx]?.name?.message}
+                                        </p>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* PhD */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>PhD Admissions</CardTitle>
-                    <CardDescription>Requirements for doctoral programs</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>GRE</Label>
-                            <Input {...register("phd.gre")} placeholder="325+" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>GPA</Label>
-                            <Input {...register("phd.gpa")} placeholder="3.7+" />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="researchProposal"
-                            checked={watch("phd.researchProposalRequired")}
-                            onCheckedChange={(checked) =>
-                                setValue("phd.researchProposalRequired", checked as boolean)
-                            }
-                        />
-                        <Label htmlFor="researchProposal">Research Proposal Required</Label>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Requirements</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                value={phdRequirement}
-                                onChange={(e) => setPhdRequirement(e.target.value)}
-                                placeholder="Enter requirement"
-                                onKeyPress={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        addPhdRequirement();
-                                    }
-                                }}
-                            />
-                            <Button type="button" onClick={addPhdRequirement} size="sm">
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <div className="space-y-2 mt-2">
-                            {phdRequirements.map((req, idx) => (
-                                <div
-                                    key={idx}
-                                    className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="mt-5 shrink-0"
+                                    onClick={() => removeCustom(idx)}
                                 >
-                                    <span className="text-sm">{req}</span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removePhdRequirement(idx)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-xs text-gray-500">Details</Label>
+                                <Textarea
+                                    {...register(`customRequirements.${idx}.details`)}
+                                    placeholder="Additional details or instructions…"
+                                    rows={2}
+                                    className="resize-none text-sm"
+                                />
+                            </div>
                         </div>
-                    </div>
+                    ))}
                 </CardContent>
             </Card>
 
