@@ -22,6 +22,7 @@ import EnquiryList from './pages/Enquiry/EnquiryList';
 import { CommissionList } from './pages/University/Commission/CommissionList';
 import PropertyViewsTable from './pages/PropertyViewsTable';
 import { PopupBannerPage } from './pages/PopupBanner/PopupBannerPage';
+import { LibraryPage } from './pages/Library/LibraryPage';
 import { EgAcademyCourseList } from './pages/EgAcademy/EgAcademyCourseList';
 import EditEgAcademyCourse from './pages/EgAcademy/EditEgAcademyCourse';
 
@@ -73,6 +74,9 @@ function App() {
 
                         {/* Popup Banner Routes */}
                         <Route path="/popup-banners" element={<PopupBannerPage />} />
+
+                        {/* eG Library Routes */}
+                        <Route path="/library" element={<LibraryPage />} />
 
                         {/* eG Academy Routes */}
                         <Route path="/eg-academy/courses" element={<EgAcademyCourseList />} />

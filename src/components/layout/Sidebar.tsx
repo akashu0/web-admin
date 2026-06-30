@@ -12,6 +12,7 @@ import {
     Globe,
     Image,
     BookMarked,
+    Library,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -38,6 +39,7 @@ const sidebarItems = [
     { icon: HelpCircle, label: 'FAQs', href: '/faqs' },
     { icon: FileText, label: 'Enquiries', href: '/enquiries' },
     { icon: Image, label: 'Popup Banners', href: '/popup-banners' },
+    { icon: Library, label: 'eG Library', href: '/library' },
 ];
 
 export const Sidebar = () => {
