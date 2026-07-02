@@ -146,12 +146,15 @@ export function CareerOpportunitiesSection({
                                     </Label>
                                     <Input
                                         id={`salary-${index}`}
+                                        type="number"
+                                        min="0"
                                         value={career.averageSalary}
                                         onChange={(e) =>
                                             handleCareerChange(index, 'averageSalary', e.target.value)
                                         }
-                                        placeholder="e.g., £40,000 - £60,000 per year"
+                                        placeholder="e.g., 40000"
                                         className="mt-2"
+                                        onWheel={(e) => e.currentTarget.blur()}
                                     />
                                 </div>
                             </div>

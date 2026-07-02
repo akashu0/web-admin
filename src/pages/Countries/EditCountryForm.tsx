@@ -6,16 +6,12 @@ import type { ICountry } from '@/types/country';
 import { countryService } from '@/services/countryService';
 import { FormTabs } from './FormTabs';
 import { BasicInfoTab } from './BasicInfoTab';
-import { IntakePeriodsTab } from './IntakePeriodsTab';
-import { ScholarshipsTab } from './ScholarshipsTab';
 import { CostOfLivingTab } from './CostOfLivingTab';
-import { ExamsTab } from './ExamsTab';
-import { WorkOpportunitiesTab } from './WorkOpportunitiesTab';
 import { ReferencesTab } from './ReferencesTab';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-export type TabType = 'basic' | 'intakes' | 'scholarships' | 'costs' | 'exams' | 'work' | 'references';
+export type TabType = 'basic' | 'costs' | 'references';
 
 export function EditCountryForm() {
     const { id } = useParams();
@@ -26,12 +22,9 @@ export function EditCountryForm() {
     const [isLoading, setIsLoading] = useState(true);
     const [country, setCountry] = useState<ICountry | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('basic');
-    const [logoPreview, setLogoPreview] = useState<string>('');
     const [bannerPreview, setBannerPreview] = useState<string>('');
-    const [logoFile, setLogoFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
 
-    const logoInputRef = useRef<HTMLInputElement>(null);
     const bannerInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -43,7 +36,6 @@ export function EditCountryForm() {
             setIsLoading(true);
             const response = await countryService.getCountryById(countryId);
             setCountry(response.data);
-            setLogoPreview(response.data.logo || '');
             setBannerPreview(response.data.banner || '');
         } catch (error) {
             console.error('Error fetching country:', error);
@@ -56,7 +48,6 @@ export function EditCountryForm() {
     const form = useForm({
         defaultValues: {
             name: country?.name || '',
-            code: country?.code || '',
             capital: country?.capital || '',
             continent: country?.continent || '',
             currency: country?.currency || '',
@@ -65,11 +56,7 @@ export function EditCountryForm() {
             about: country?.about || '',
             status: country?.status || 'draft',
             slug: country?.slug || '',
-            intakePeriods: country?.intakePeriods || [],
-            scholarships: country?.scholarships || [],
             costOfLiving: country?.costOfLiving || [],
-            examsEligibility: country?.examsEligibility || [],
-            workOpportunities: country?.workOpportunities || [],
             visaProcessDocuments: country?.visaProcessDocuments || '',
             topUniversities: country?.topUniversities || [],
             topCourses: country?.topCourses || [],
@@ -80,7 +67,6 @@ export function EditCountryForm() {
     useEffect(() => {
         if (country) {
             form.setFieldValue('name', country.name);
-            form.setFieldValue('code', country.code);
             form.setFieldValue('capital', country.capital);
             form.setFieldValue('continent', country.continent);
             form.setFieldValue('currency', country.currency);
@@ -89,11 +75,7 @@ export function EditCountryForm() {
             form.setFieldValue('about', country.about);
             form.setFieldValue('status', country.status);
             form.setFieldValue('slug', country.slug);
-            form.setFieldValue('intakePeriods', country.intakePeriods);
-            form.setFieldValue('scholarships', country.scholarships);
             form.setFieldValue('costOfLiving', country.costOfLiving);
-            form.setFieldValue('examsEligibility', country.examsEligibility);
-            form.setFieldValue('workOpportunities', country.workOpportunities);
             form.setFieldValue('visaProcessDocuments', country.visaProcessDocuments);
             form.setFieldValue('topUniversities', country.topUniversities);
             form.setFieldValue('topCourses', country.topCourses);
@@ -102,41 +84,25 @@ export function EditCountryForm() {
 
     const handleImageUpload = (
         e: React.ChangeEvent<HTMLInputElement>,
-        type: 'logo' | 'banner'
+        _type: 'banner'
     ) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (type === 'logo') {
-            setLogoFile(file);
-        } else {
-            setBannerFile(file);
-        }
+        setBannerFile(file);
 
         const reader = new FileReader();
         reader.onloadend = () => {
-            if (type === 'logo') {
-                setLogoPreview(reader.result as string);
-            } else {
-                setBannerPreview(reader.result as string);
-            }
+            setBannerPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
     };
 
-    const handleRemoveImage = (type: 'logo' | 'banner') => {
-        if (type === 'logo') {
-            setLogoPreview('');
-            setLogoFile(null);
-            if (logoInputRef.current) {
-                logoInputRef.current.value = '';
-            }
-        } else {
-            setBannerPreview('');
-            setBannerFile(null);
-            if (bannerInputRef.current) {
-                bannerInputRef.current.value = '';
-            }
+    const handleRemoveImage = (_type: 'banner') => {
+        setBannerPreview('');
+        setBannerFile(null);
+        if (bannerInputRef.current) {
+            bannerInputRef.current.value = '';
         }
     };
 
@@ -154,7 +120,6 @@ export function EditCountryForm() {
                 case 'basic':
                     const basicData: any = {
                         name: values.name,
-                        code: values.code,
                         capital: values.capital,
                         continent: values.continent,
                         currency: values.currency,
@@ -165,30 +130,13 @@ export function EditCountryForm() {
                         slug: values.slug,
                     };
 
-                    if (logoFile) basicData.logo = logoFile;
                     if (bannerFile) basicData.banner = bannerFile;
 
                     await countryService.updateCountryBasicInfo(countryId, basicData);
                     break;
 
-                case 'intakes':
-                    await countryService.updateCountryIntakePeriods(countryId, values.intakePeriods);
-                    break;
-
-                case 'scholarships':
-                    await countryService.updateCountryScholarships(countryId, values.scholarships);
-                    break;
-
                 case 'costs':
                     await countryService.updateCountryCostOfLiving(countryId, values.costOfLiving);
-                    break;
-
-                case 'exams':
-                    await countryService.updateCountryExams(countryId, values.examsEligibility);
-                    break;
-
-                case 'work':
-                    await countryService.updateCountryWorkOpportunities(countryId, values.workOpportunities);
                     break;
 
                 case 'references':
@@ -218,24 +166,14 @@ export function EditCountryForm() {
                 return (
                     <BasicInfoTab
                         form={form}
-                        logoPreview={logoPreview}
                         bannerPreview={bannerPreview}
-                        logoInputRef={logoInputRef}
                         bannerInputRef={bannerInputRef}
                         onImageUpload={handleImageUpload}
                         onRemoveImage={handleRemoveImage}
                     />
                 );
-            case 'intakes':
-                return <IntakePeriodsTab form={form} />;
-            case 'scholarships':
-                return <ScholarshipsTab form={form} />;
             case 'costs':
                 return <CostOfLivingTab form={form} />;
-            case 'exams':
-                return <ExamsTab form={form} />;
-            case 'work':
-                return <WorkOpportunitiesTab form={form} />;
             case 'references':
                 return <ReferencesTab form={form} />;
             default:

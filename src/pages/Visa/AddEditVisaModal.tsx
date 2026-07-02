@@ -294,7 +294,9 @@ export function AddEditVisaModal({
                                 </Label>
                                 <Input
                                     id="visaFee"
-                                    type="text"
+                                    type="number"
+                                    min="0"
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     value={formData.visaFee}
                                     onChange={(e) => {
                                         const value = e.target.value;
@@ -322,7 +324,9 @@ export function AddEditVisaModal({
                                 </Label>
                                 <Input
                                     id="visaRenewalCost"
-                                    type="text"
+                                    type="number"
+                                    min="0"
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     value={formData.visaRenewalCost}
                                     onChange={(e) => {
                                         const value = e.target.value;
@@ -364,7 +368,9 @@ export function AddEditVisaModal({
                                 </Label>
                                 <Input
                                     id="visaProcessingTime"
-                                    type="text"
+                                    type="number"
+                                    min="0"
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     value={formData.visaProcessingTime}
                                     onChange={(e) => {
                                         const value = e.target.value;

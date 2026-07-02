@@ -88,20 +88,6 @@ export const createColumns = ({
             ),
         },
         {
-            accessorKey: "rank",
-            header: "Ranking",
-            cell: ({ row }) => {
-                const rank = row.getValue("rank") as string;
-                return rank ? (
-                    <Badge variant="secondary" className="font-mono">
-                        #{rank}
-                    </Badge>
-                ) : (
-                    <span className="text-gray-400 text-sm">N/A</span>
-                );
-            },
-        },
-        {
             accessorKey: "totalStudents",
             header: "Students",
             cell: ({ row }) => {

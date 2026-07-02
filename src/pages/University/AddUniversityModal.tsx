@@ -28,14 +28,13 @@ import { universityService } from "@/services/universityService";
 const universitySchema = z.object({
     name: z.string().min(1, "University name is required"),
     slug: z.string().min(1, "Slug is required"),
-    fullName: z.string().min(1, "Full name is required"),
+    fullName: z.string().min(1, "Display name is required"),
     country: z.string().min(1, "Country is required"),
     city: z.string().min(1, "City is required"),
     location: z.string().min(1, "Location is required"),
-    founded: z.string().optional(),
-    totalStudents: z.string().optional(),
-    internationalStudents: z.string().optional(),
-    rank: z.string().optional(),
+    founded: z.string().regex(/^\d*$/, "Only numbers are allowed").optional(),
+    totalStudents: z.string().regex(/^\d*$/, "Only numbers are allowed").optional(),
+    internationalStudents: z.string().regex(/^\d*$/, "Only numbers are allowed").optional(),
     about: z.string().min(10, "About section must be at least 10 characters"),
     status: z.enum(["published", "draft"]),
 });
@@ -146,7 +145,6 @@ export function AddUniversityModal({
             formData.append("status", data.status);
 
             if (data.founded) formData.append("founded", data.founded);
-            if (data.rank) formData.append("rank", data.rank);
             if (data.totalStudents) formData.append("totalStudents", data.totalStudents);
             if (data.internationalStudents)
                 formData.append("internationalStudents", data.internationalStudents);
@@ -205,7 +203,7 @@ export function AddUniversityModal({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="fullName">Full Name *</Label>
+                                <Label htmlFor="fullName">Display Name *</Label>
                                 <Input
                                     id="fullName"
                                     {...register("fullName")}
@@ -293,14 +291,15 @@ export function AddUniversityModal({
                                 <Label htmlFor="founded">Founded</Label>
                                 <Input
                                     id="founded"
+                                    type="number"
+                                    min="0"
                                     {...register("founded")}
                                     placeholder="1861"
+                                    onWheel={(e) => e.currentTarget.blur()}
                                 />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="rank">Ranking</Label>
-                                <Input id="rank" {...register("rank")} placeholder="5" />
+                                {errors.founded && (
+                                    <p className="text-sm text-red-500">{errors.founded.message}</p>
+                                )}
                             </div>
                         </div>
 
@@ -309,9 +308,15 @@ export function AddUniversityModal({
                                 <Label htmlFor="totalStudents">Total Students</Label>
                                 <Input
                                     id="totalStudents"
+                                    type="number"
+                                    min="0"
                                     {...register("totalStudents")}
-                                    placeholder="11,000+"
+                                    placeholder="11000"
+                                    onWheel={(e) => e.currentTarget.blur()}
                                 />
+                                {errors.totalStudents && (
+                                    <p className="text-sm text-red-500">{errors.totalStudents.message}</p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -320,9 +325,15 @@ export function AddUniversityModal({
                                 </Label>
                                 <Input
                                     id="internationalStudents"
+                                    type="number"
+                                    min="0"
                                     {...register("internationalStudents")}
-                                    placeholder="3,800+"
+                                    placeholder="3800"
+                                    onWheel={(e) => e.currentTarget.blur()}
                                 />
+                                {errors.internationalStudents && (
+                                    <p className="text-sm text-red-500">{errors.internationalStudents.message}</p>
+                                )}
                             </div>
                         </div>
 
@@ -385,6 +396,9 @@ export function AddUniversityModal({
                                             <span className="text-sm text-gray-600">
                                                 Click to upload logo
                                             </span>
+                                            <span className="text-xs text-amber-600 font-medium mt-1">
+                                                Required image ratio: 1:1 square (e.g., 400 x 400 px)
+                                            </span>
                                         </label>
                                     </div>
                                 )}
@@ -424,6 +438,9 @@ export function AddUniversityModal({
                                             <Upload className="h-8 w-8 text-gray-400 mb-2" />
                                             <span className="text-sm text-gray-600">
                                                 Click to upload banner
+                                            </span>
+                                            <span className="text-xs text-amber-600 font-medium mt-1">
+                                                Required image ratio: 16:9 (e.g., 1280 x 720 px)
                                             </span>
                                         </label>
                                     </div>

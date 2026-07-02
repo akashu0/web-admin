@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     MapPin,
     Calendar,
-    Trophy,
     Users,
     Globe,
     GraduationCap,
@@ -99,16 +98,6 @@ export function ViewUniversityModal({
                 <div className="overflow-y-auto flex-1 px-6 pb-6">
                     {/* Quick Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 mb-6">
-                        {university.rank && (
-                            <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                                <div className="flex items-center gap-2 text-purple-600 mb-1">
-                                    <Trophy className="h-4 w-4" />
-                                    <span className="text-xs font-semibold uppercase">Rank</span>
-                                </div>
-                                <p className="text-2xl font-bold text-purple-900">#{university.rank}</p>
-                            </div>
-                        )}
-
                         {university.totalStudents && (
                             <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                                 <div className="flex items-center gap-2 text-blue-600 mb-1">
@@ -213,34 +202,12 @@ export function ViewUniversityModal({
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                 <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
                                                     <p className="text-sm font-semibold text-blue-600 mb-1">
-                                                        Tuition Fee
+                                                        Average Tuition Fee
                                                     </p>
                                                     <p className="text-2xl font-bold text-blue-900">
                                                         {fee.tuitionFee}
                                                     </p>
                                                 </div>
-
-                                                {fee.applicationFee && (
-                                                    <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                                                        <p className="text-sm font-semibold text-purple-600 mb-1">
-                                                            Application Fee
-                                                        </p>
-                                                        <p className="text-2xl font-bold text-purple-900">
-                                                            {fee.applicationFee}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {fee.duration && (
-                                                    <div className="bg-linear-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-                                                        <p className="text-sm font-semibold text-green-600 mb-1">
-                                                            Duration
-                                                        </p>
-                                                        <p className="text-2xl font-bold text-green-900">
-                                                            {fee.duration}
-                                                        </p>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -490,63 +457,6 @@ export function ViewUniversityModal({
                                         </div>
                                     )}
 
-                                    {university.studentLife.stats && (
-                                        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                                            <h3 className="text-lg font-semibold mb-6 text-gray-900">Campus Statistics</h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                {university.studentLife.stats.studentOrganizations && (
-                                                    <div className="text-center p-6 bg-linear-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-                                                        <Users className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                                                        <p className="text-sm text-purple-600 font-semibold mb-1">
-                                                            Student Organizations
-                                                        </p>
-                                                        <p className="text-3xl font-bold text-purple-900">
-                                                            {university.studentLife.stats.studentOrganizations}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                {university.studentLife.stats.varsitySports && (
-                                                    <div className="text-center p-6 bg-linear-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                                                        <Trophy className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                                                        <p className="text-sm text-blue-600 font-semibold mb-1">
-                                                            Varsity Sports
-                                                        </p>
-                                                        <p className="text-3xl font-bold text-blue-900">
-                                                            {university.studentLife.stats.varsitySports}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                                {university.studentLife.stats.studentFacultyRatio && (
-                                                    <div className="text-center p-6 bg-linear-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                                                        <GraduationCap className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                                                        <p className="text-sm text-green-600 font-semibold mb-1">
-                                                            Student-Faculty Ratio
-                                                        </p>
-                                                        <p className="text-3xl font-bold text-green-900">
-                                                            {university.studentLife.stats.studentFacultyRatio}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {university.studentLife.athletics && (
-                                        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
-                                                <Trophy className="h-5 w-5 text-yellow-600" />
-                                                Athletics
-                                            </h3>
-                                            {university.studentLife.athletics.division && (
-                                                <div className="inline-block bg-linear-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg px-6 py-3">
-                                                    <p className="text-sm text-yellow-600 font-semibold mb-1">Division</p>
-                                                    <p className="text-2xl font-bold text-yellow-900">
-                                                        {university.studentLife.athletics.division}
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
                                 </>
                             ) : (
                                 <div className="text-center py-16">

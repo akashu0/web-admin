@@ -23,27 +23,41 @@ const TUITION_FEE_TYPES = [
     "Regular (Self-Funded Program)",
 ] as const;
 
-const SCHOLARSHIP_PERCENTAGES = [
-    "10%", "20%", "30%", "40%", "50%",
-    "60%", "70%", "80%", "90%", "100%",
-    "Not Applicable",
-] as const;
+const CURRENCY_OPTIONS = [
+    { code: 'USD', name: 'US Dollar' },
+    { code: 'GBP', name: 'British Pound' },
+    { code: 'EUR', name: 'Euro' },
+    { code: 'AUD', name: 'Australian Dollar' },
+    { code: 'CAD', name: 'Canadian Dollar' },
+    { code: 'SGD', name: 'Singapore Dollar' },
+    { code: 'AED', name: 'UAE Dirham' },
+    { code: 'MYR', name: 'Malaysian Ringgit' },
+    { code: 'INR', name: 'Indian Rupee' },
+    { code: 'PKR', name: 'Pakistani Rupee' },
+    { code: 'BDT', name: 'Bangladeshi Taka' },
+    { code: 'LKR', name: 'Sri Lankan Rupee' },
+    { code: 'NPR', name: 'Nepalese Rupee' },
+    { code: 'NZD', name: 'New Zealand Dollar' },
+    { code: 'CHF', name: 'Swiss Franc' },
+    { code: 'SAR', name: 'Saudi Riyal' },
+    { code: 'QAR', name: 'Qatari Riyal' },
+    { code: 'OMR', name: 'Omani Rial' },
+    { code: 'CNY', name: 'Chinese Yuan' },
+    { code: 'JPY', name: 'Japanese Yen' },
+    { code: 'KRW', name: 'South Korean Won' },
+];
 
 const feeStructureSchema = z.object({
     level: z.enum(["undergraduate", "postgraduate"]),
     currency: z.string().min(1, "Currency is required"),
-    tuitionFee: z.string().min(1, "Tuition fee is required"),
-    applicationFee: z.string().optional(),
-    duration: z.string().optional(),
+    tuitionFee: z
+        .string()
+        .min(1, "Average tuition fee is required")
+        .regex(/^\d+(\.\d+)?$/, "Only numbers are allowed"),
     tuitionFeeType: z.enum([
         "Fully Tuition Fee Funded",
         "Scholarships",
         "Regular (Self-Funded Program)",
-    ]).optional(),
-    scholarshipPercentage: z.enum([
-        "10%", "20%", "30%", "40%", "50%",
-        "60%", "70%", "80%", "90%", "100%",
-        "Not Applicable",
     ]).optional(),
 });
 
@@ -83,10 +97,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
             level: "undergraduate",
             currency: "USD",
             tuitionFee: "",
-            applicationFee: "",
-            duration: "",
             tuitionFeeType: "Regular (Self-Funded Program)",
-            scholarshipPercentage: "Not Applicable",
         });
     };
 
@@ -152,32 +163,41 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
 
                                 <div className="space-y-2">
                                     <Label>Currency *</Label>
-                                    <Input {...register(`fees.${index}.currency`)} placeholder="USD" />
+                                    <Select
+                                        value={watch(`fees.${index}.currency`) || ""}
+                                        onValueChange={(v) => setValue(`fees.${index}.currency`, v)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select currency" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {CURRENCY_OPTIONS.map((c) => (
+                                                <SelectItem key={c.code} value={c.code}>
+                                                    {c.name} ({c.code})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     {errors.fees?.[index]?.currency && (
                                         <p className="text-xs text-red-500">{errors.fees[index]?.currency?.message}</p>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Row 2: Tuition Fee + Application Fee */}
+                            {/* Row 2: Average Tuition Fee */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Tuition Fee *</Label>
-                                    <Input {...register(`fees.${index}.tuitionFee`)} placeholder="15000 – 20000" />
+                                    <Label>Average Tuition Fee *</Label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        {...register(`fees.${index}.tuitionFee`)}
+                                        placeholder="15000"
+                                    />
                                     {errors.fees?.[index]?.tuitionFee && (
                                         <p className="text-xs text-red-500">{errors.fees[index]?.tuitionFee?.message}</p>
                                     )}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Application Fee</Label>
-                                    <Input {...register(`fees.${index}.applicationFee`)} placeholder="100" />
-                                </div>
-                            </div>
-
-                            {/* Row 3: Duration */}
-                            <div className="space-y-2">
-                                <Label>Duration</Label>
-                                <Input {...register(`fees.${index}.duration`)} placeholder="4 years" />
                             </div>
 
                             {/* Divider */}
@@ -186,8 +206,8 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                     Funding &amp; Scholarship
                                 </p>
 
-                                {/* Row 4: Tuition Fee Type */}
-                                <div className="space-y-2 mb-4">
+                                {/* Row 3: Tuition Fee Type */}
+                                <div className="space-y-2">
                                     <Label>Tuition Fee Type</Label>
                                     <Select
                                         value={watch(`fees.${index}.tuitionFeeType`) || ""}
@@ -204,29 +224,6 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                         <SelectContent>
                                             {TUITION_FEE_TYPES.map((t) => (
                                                 <SelectItem key={t} value={t}>{t}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* Row 5: Scholarship Percentage */}
-                                <div className="space-y-2">
-                                    <Label>Scholarship Percentage</Label>
-                                    <Select
-                                        value={watch(`fees.${index}.scholarshipPercentage`) || "Not Applicable"}
-                                        onValueChange={(v) =>
-                                            setValue(
-                                                `fees.${index}.scholarshipPercentage`,
-                                                v as typeof SCHOLARSHIP_PERCENTAGES[number]
-                                            )
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {SCHOLARSHIP_PERCENTAGES.map((p) => (
-                                                <SelectItem key={p} value={p}>{p}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>

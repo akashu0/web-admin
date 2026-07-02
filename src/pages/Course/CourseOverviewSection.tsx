@@ -88,6 +88,7 @@ export function CourseOverviewSection({
                                 value={courseImage}
                                 onChange={(file) => setValue('courseImage', file)}
                                 onRemove={() => setValue('courseImage', null)}
+                                ratioHint="16:9 (e.g., 1280 x 720 px)"
                             />
                         </div>
                     </div>

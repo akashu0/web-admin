@@ -574,7 +574,9 @@ const filteredVisas = visas.filter((v) =>
                                                                 Duration (Years)
                                                             </label>
                                                             <input
-                                                                type="text"
+                                                                type="number"
+                                                                min="0"
+                                                                onWheel={(e) => e.currentTarget.blur()}
                                                                 value={fieldItem.state.value}
                                                                 onChange={(e) => fieldItem.handleChange(e.target.value)}
                                                                 placeholder="e.g., 0"
@@ -591,7 +593,9 @@ const filteredVisas = visas.filter((v) =>
                                                                 Duration (Months)
                                                             </label>
                                                             <input
-                                                                type="text"
+                                                                type="number"
+                                                                min="0"
+                                                                onWheel={(e) => e.currentTarget.blur()}
                                                                 value={fieldItem.state.value}
                                                                 onChange={(e) => fieldItem.handleChange(e.target.value)}
                                                                 placeholder="e.g., 0"
@@ -674,7 +678,9 @@ const filteredVisas = visas.filter((v) =>
                                                                     Annual Tuition Fee *
                                                                 </label>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    onWheel={(e) => e.currentTarget.blur()}
                                                                     value={fieldItem.state.value}
                                                                     onChange={(e) => fieldItem.handleChange(e.target.value)}
                                                                     placeholder="e.g., 0"
@@ -693,7 +699,9 @@ const filteredVisas = visas.filter((v) =>
                                                                     Student Visa Fee
                                                                 </label>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    onWheel={(e) => e.currentTarget.blur()}
                                                                     value={fieldItem.state.value}
                                                                     onChange={(e) => fieldItem.handleChange(e.target.value)}
                                                                     placeholder="e.g., 0"
@@ -711,7 +719,9 @@ const filteredVisas = visas.filter((v) =>
                                                                     Accommodation
                                                                 </label>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    onWheel={(e) => e.currentTarget.blur()}
                                                                     value={fieldItem.state.value}
                                                                     onChange={(e) => fieldItem.handleChange(e.target.value)}
                                                                     placeholder="e.g., 0"
@@ -729,7 +739,9 @@ const filteredVisas = visas.filter((v) =>
                                                                     Airport Transfer
                                                                 </label>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    onWheel={(e) => e.currentTarget.blur()}
                                                                     value={fieldItem.state.value}
                                                                     onChange={(e) => fieldItem.handleChange(e.target.value)}
                                                                     placeholder="e.g., 0"
@@ -747,10 +759,12 @@ const filteredVisas = visas.filter((v) =>
                                                                     Tax
                                                                 </label>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    onWheel={(e) => e.currentTarget.blur()}
                                                                     value={fieldItem.state.value}
                                                                     onChange={(e) => fieldItem.handleChange(e.target.value)}
-                                                                    placeholder="e.g., 0%"
+                                                                    placeholder="e.g., 0"
                                                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
                                                                 />
                                                             </div>
@@ -765,10 +779,12 @@ const filteredVisas = visas.filter((v) =>
                                                                     Application Fee
                                                                 </label>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
+                                                                    min="0"
+                                                                    onWheel={(e) => e.currentTarget.blur()}
                                                                     value={fieldItem.state.value}
                                                                     onChange={(e) => fieldItem.handleChange(e.target.value)}
-                                                                    placeholder="e.g., 100 or Free"
+                                                                    placeholder="e.g., 100"
                                                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 bg-white text-gray-900"
                                                                 />
                                                             </div>

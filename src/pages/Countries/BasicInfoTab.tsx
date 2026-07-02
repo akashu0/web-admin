@@ -4,12 +4,10 @@ import type { RefObject } from 'react';
 
 interface BasicInfoTabProps {
     form: any;
-    logoPreview: string;
     bannerPreview: string;
-    logoInputRef: RefObject<HTMLInputElement | null>;
     bannerInputRef: RefObject<HTMLInputElement | null>;
-    onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => void;
-    onRemoveImage: (type: 'logo' | 'banner') => void;
+    onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, type: 'banner') => void;
+    onRemoveImage: (type: 'banner') => void;
 }
 
 const CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
@@ -25,9 +23,7 @@ const generateSlug = (value: string) =>
 
 export function BasicInfoTab({
     form,
-    logoPreview,
     bannerPreview,
-    logoInputRef,
     bannerInputRef,
     onImageUpload,
     onRemoveImage,
@@ -37,48 +33,7 @@ export function BasicInfoTab({
             <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
 
             {/* Image Uploads */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Logo Upload */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Country Logo
-                    </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-500 transition-colors">
-                        {logoPreview ? (
-                            <div className="relative">
-                                <img
-                                    src={logoPreview}
-                                    alt="Logo preview"
-                                    className="w-32 h-32 object-contain mx-auto rounded"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => onRemoveImage('logo')}
-                                    className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div
-                                onClick={() => logoInputRef.current?.click()}
-                                className="cursor-pointer"
-                            >
-                                <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                                <p className="text-sm text-gray-600">Click to upload logo</p>
-                                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 2MB</p>
-                            </div>
-                        )}
-                        <input
-                            ref={logoInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => onImageUpload(e, 'logo')}
-                            className="hidden"
-                        />
-                    </div>
-                </div>
-
+            <div className="grid grid-cols-1 gap-6">
                 {/* Banner Upload */}
                 <div>
                     <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -108,6 +63,7 @@ export function BasicInfoTab({
                                 <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                                 <p className="text-sm text-gray-600">Click to upload banner</p>
                                 <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                                <p className="text-xs text-amber-600 font-medium mt-1">Required image ratio: 16:9 (e.g., 1280 x 720 px)</p>
                             </div>
                         )}
                         <input
@@ -157,25 +113,6 @@ export function BasicInfoTab({
                                 value={field.state.value}
                                 onChange={(e) => field.handleChange(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
                                 placeholder="e.g., united-states"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            />
-                        </div>
-                    )}
-                </form.Field>
-
-                <form.Field name="code">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Country Code <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value.toUpperCase())}
-                                placeholder="e.g., US"
-                                maxLength={3}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                                 required
                             />
@@ -268,10 +205,12 @@ export function BasicInfoTab({
                                 Population
                             </label>
                             <input
-                                type="text"
+                                type="number"
+                                min="0"
                                 value={field.state.value}
                                 onChange={(e) => field.handleChange(e.target.value)}
-                                placeholder="e.g., 331 million"
+                                onWheel={(e) => e.currentTarget.blur()}
+                                placeholder="e.g., 331000000"
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                             />
                         </div>

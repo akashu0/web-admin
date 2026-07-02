@@ -14,13 +14,15 @@ interface ImageUploadProps {
     onChange: (file: File | null) => void;
     onRemove?: () => void;
     showPreview?: boolean;
+    ratioHint?: string;
 }
 
 export function ImageUpload({
     value,
     onChange,
     onRemove,
-    showPreview = true
+    showPreview = true,
+    ratioHint
 }: ImageUploadProps) {
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -269,6 +271,11 @@ export function ImageUpload({
             <p className="text-sm text-gray-500">
                 PNG, JPG, JPEG, WEBP or GIF (MAX. 5MB)
             </p>
+            {ratioHint && (
+                <p className="text-sm text-amber-600 font-medium mt-1">
+                    Required image ratio: {ratioHint}
+                </p>
+            )}
         </div>
     );
 }

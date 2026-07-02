@@ -77,6 +77,12 @@ export const universityService = {
         return response.data;
     },
 
+    // Update Student Reviews
+    updateReviews: async (slug: string, data: any) => {
+        const response = await apiClient.patch(`/universities/reviews/${slug}`, data);
+        return response.data;
+    },
+
     // Update Images (with FormData for file uploads)
     updateImages: async (slug: string, data: FormData) => {
         const response = await apiClient.patch(`/universities/images/${slug}`, data, {

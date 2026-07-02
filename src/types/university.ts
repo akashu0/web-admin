@@ -31,6 +31,18 @@ export interface StudentLife {
 }
 
 /**
+ * Student Review (embedded in University)
+ */
+export interface UniversityReview {
+    _id?: string;
+    studentName: string;
+    rating: number; // 1 - 5
+    comment: string;
+    course?: string;
+    date?: string;
+}
+
+/**
  * Admissions - Undergraduate
  */
 export interface UndergraduateAdmissions {
@@ -121,6 +133,7 @@ export interface University {
     // Populated or raw IDs (depending on query)
     admissions?: Admissions;
     studentLife?: StudentLife;
+    reviews?: UniversityReview[];
     faqs: string[]; // Array of FAQ ObjectIds (as strings)
     courses: string[]; // Array of Course ObjectIds (as strings)
 

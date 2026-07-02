@@ -1,6 +1,6 @@
 // components/CountryForm/FormTabs.tsx
 
-type TabType = 'basic' | 'intakes' | 'scholarships' | 'costs' | 'exams' | 'work' | 'references';
+type TabType = 'basic' | 'costs' | 'references';
 
 
 interface Tab {
@@ -16,11 +16,7 @@ interface FormTabsProps {
 
 const TABS: Tab[] = [
     { id: 'basic', label: 'Basic Info' },
-    { id: 'intakes', label: 'Intake Periods' },
-    { id: 'scholarships', label: 'Scholarships' },
     { id: 'costs', label: 'Cost of Living' },
-    { id: 'exams', label: 'Exams' },
-    { id: 'work', label: 'Work Opportunities' },
     { id: 'references', label: 'References' },
 ];
 

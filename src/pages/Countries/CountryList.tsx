@@ -97,15 +97,12 @@ export default function CountryList() {
             cell: (info) => (
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                        {info.row.original.logo ? (
-                            <img src={info.row.original.logo} alt={info.getValue()} className="w-full h-full object-cover rounded" />
-                        ) : (
-                            <span className="text-gray-600 font-semibold text-xs">{info.row.original.code}</span>
-                        )}
+                        <span className="text-gray-600 font-semibold text-xs">
+                            {info.getValue()?.slice(0, 2).toUpperCase()}
+                        </span>
                     </div>
                     <div>
                         <div className="font-medium text-gray-900">{info.getValue()}</div>
-                        <div className="text-sm text-gray-500">{info.row.original.code}</div>
                     </div>
                 </div>
             ),

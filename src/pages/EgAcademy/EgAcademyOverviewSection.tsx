@@ -93,6 +93,7 @@ export function EgAcademyOverviewSection({
                 value={courseImage}
                 onChange={(file) => setValue('courseImage', file)}
                 onRemove={() => setValue('courseImage', null)}
+                ratioHint="16:9 (e.g., 1280 x 720 px)"
               />
             </div>
           </div>
@@ -160,20 +161,26 @@ export function EgAcademyOverviewSection({
               <Label htmlFor="durationYears">Duration - Years</Label>
               <Input
                 id="durationYears"
+                type="number"
+                min="0"
                 {...register('durationYears')}
                 placeholder="1"
                 className="mt-2"
                 disabled={isSubmitting}
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
             <div>
               <Label htmlFor="durationMonths">Duration - Months</Label>
               <Input
                 id="durationMonths"
+                type="number"
+                min="0"
                 {...register('durationMonths')}
                 placeholder="6"
                 className="mt-2"
                 disabled={isSubmitting}
+                onWheel={(e) => e.currentTarget.blur()}
               />
             </div>
           </div>

@@ -7,14 +7,10 @@ import {
     MapPin,
     DollarSign,
     Users,
-    Calendar,
-    Award,
-    Briefcase,
     BookOpen,
     FileText,
     Edit,
     ArrowLeft,
-    ExternalLink,
     GraduationCap,
 } from 'lucide-react';
 import type { CountryResponse } from '@/types/country';
@@ -72,11 +68,7 @@ export function CountryViewModal() {
 
     const sections = [
         { id: 'overview', label: 'Overview', icon: Globe },
-        { id: 'intakes', label: 'Intake Periods', icon: Calendar },
-        { id: 'scholarships', label: 'Scholarships', icon: Award },
         { id: 'costs', label: 'Cost of Living', icon: DollarSign },
-        { id: 'exams', label: 'Exams', icon: BookOpen },
-        { id: 'work', label: 'Work Opportunities', icon: Briefcase },
         { id: 'references', label: 'References', icon: FileText },
     ];
 
@@ -113,15 +105,6 @@ export function CountryViewModal() {
 
                 {/* Country Info Overlay */}
                 <div className="absolute bottom-6 left-6 flex items-end gap-4">
-                    {country.logo && (
-                        <div className="w-24 h-24 bg-white rounded-lg shadow-lg overflow-hidden border-4 border-white">
-                            <img
-                                src={country.logo}
-                                alt={country.name}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                    )}
                     <div className="text-white mb-2">
                         <h1 className="text-4xl font-bold mb-2">{country.name}</h1>
                         <div className="flex items-center gap-4 text-sm">
@@ -170,11 +153,7 @@ export function CountryViewModal() {
                 {/* Section Content */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     {activeSection === 'overview' && <OverviewSection country={country} />}
-                    {activeSection === 'intakes' && <IntakesSection country={country} />}
-                    {activeSection === 'scholarships' && <ScholarshipsSection country={country} />}
                     {activeSection === 'costs' && <CostsSection country={country} />}
-                    {activeSection === 'exams' && <ExamsSection country={country} />}
-                    {activeSection === 'work' && <WorkSection country={country} />}
                     {activeSection === 'references' && <ReferencesSection country={country} />}
                 </div>
             </div>
@@ -192,112 +171,11 @@ function OverviewSection({ country }: { country: CountryResponse }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <InfoCard icon={Globe} label="Country Code" value={country.code} />
                 <InfoCard icon={MapPin} label="Capital" value={country.capital} />
                 <InfoCard icon={Globe} label="Continent" value={country.continent} />
                 <InfoCard icon={DollarSign} label="Currency" value={country.currency} />
                 <InfoCard icon={Users} label="Languages" value={country.spokenLanguages} />
                 <InfoCard icon={Users} label="Population" value={country.population} />
-            </div>
-        </div>
-    );
-}
-
-// Intake Periods Section
-function IntakesSection({ country }: { country: CountryResponse }) {
-    if (!country.intakePeriods || country.intakePeriods.length === 0) {
-        return <EmptyState message="No intake periods available" />;
-    }
-
-    return (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Intake Periods</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {country.intakePeriods.map((intake, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start gap-3 mb-3">
-                            <Calendar className="w-5 h-5 text-purple-600 mt-1" />
-                            <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-gray-900">{intake.title}</h3>
-                                <p className="text-sm text-purple-600 font-medium">{intake.period}</p>
-                            </div>
-                        </div>
-                        <p className="text-gray-700 mb-3">{intake.description}</p>
-                        <div className="bg-purple-50 rounded-lg p-3">
-                            <p className="text-sm text-gray-700">
-                                <span className="font-medium">Best For:</span> {intake.bestFor}
-                            </p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// Scholarships Section
-function ScholarshipsSection({ country }: { country: CountryResponse }) {
-    if (!country.scholarships || country.scholarships.length === 0) {
-        return <EmptyState message="No scholarships available" />;
-    }
-
-    return (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Scholarships</h2>
-            <div className="space-y-4">
-                {country.scholarships.map((scholarship, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-start gap-3">
-                                <Award className="w-5 h-5 text-yellow-500 mt-1" />
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900">{scholarship.name}</h3>
-                                    {scholarship.isGovernmentFunded && (
-                                        <span className="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                            Government Funded
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            {scholarship.externalLink && (
-                                <a
-                                    href={scholarship.externalLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-purple-600 hover:text-purple-700"
-                                >
-                                    <ExternalLink className="w-5 h-5" />
-                                </a>
-                            )}
-                        </div>
-
-                        <p className="text-gray-700 mb-4">{scholarship.description}</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <p className="text-sm font-medium text-gray-600 mb-1">Amount</p>
-                                <p className="text-lg font-semibold text-gray-900">{scholarship.amount}</p>
-                            </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <p className="text-sm font-medium text-gray-600 mb-1">Coverage</p>
-                                <p className="text-lg font-semibold text-gray-900">{scholarship.coverage}</p>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 space-y-2">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600">Eligibility</p>
-                                <p className="text-gray-700">{scholarship.eligibility}</p>
-                            </div>
-                            {scholarship.applicationDeadline && (
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">Application Deadline</p>
-                                    <p className="text-gray-700">{scholarship.applicationDeadline}</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ))}
             </div>
         </div>
     );
@@ -356,143 +234,6 @@ function CostsSection({ country }: { country: CountryResponse }) {
                     )}
                 </div>
             ))}
-        </div>
-    );
-}
-
-// Exams Section
-function ExamsSection({ country }: { country: CountryResponse }) {
-    if (!country.examsEligibility || country.examsEligibility.length === 0) {
-        return <EmptyState message="No exam requirements available" />;
-    }
-
-    return (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Required Exams</h2>
-            <div className="space-y-4">
-                {country.examsEligibility.map((exam, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-start gap-3">
-                                <BookOpen className="w-5 h-5 text-purple-600 mt-1" />
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900">{exam.examName}</h3>
-                                    <span className="inline-block mt-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                                        {exam.requiredFor}
-                                    </span>
-                                </div>
-                            </div>
-                            {exam.bookingLink && (
-                                <a
-                                    href={exam.bookingLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-                                >
-                                    Book Now
-                                </a>
-                            )}
-                        </div>
-
-                        <p className="text-gray-700 mb-4">{exam.description}</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            {exam.minimumScore && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                    <p className="text-sm font-medium text-gray-600">Minimum Score</p>
-                                    <p className="text-lg font-semibold text-gray-900">{exam.minimumScore}</p>
-                                </div>
-                            )}
-                            {exam.validityPeriod && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                    <p className="text-sm font-medium text-gray-600">Validity Period</p>
-                                    <p className="text-lg font-semibold text-gray-900">{exam.validityPeriod}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {exam.preparationTips && (
-                            <div className="bg-blue-50 rounded-lg p-4">
-                                <p className="text-sm font-medium text-gray-700 mb-2">Preparation Tips</p>
-                                <p className="text-gray-600 text-sm">{exam.preparationTips}</p>
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// Work Opportunities Section
-function WorkSection({ country }: { country: CountryResponse }) {
-    if (!country.workOpportunities || country.workOpportunities.length === 0) {
-        return <EmptyState message="No work opportunities information available" />;
-    }
-
-    return (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Work Opportunities</h2>
-            <div className="space-y-4">
-                {country.workOpportunities.map((work, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-start gap-3 mb-4">
-                            <Briefcase className="w-5 h-5 text-green-600 mt-1" />
-                            <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-gray-900">{work.title}</h3>
-                                <span className="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                    {work.type}
-                                </span>
-                            </div>
-                        </div>
-
-                        <p className="text-gray-700 mb-4">{work.description}</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            {work.allowedHoursPerWeek && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                    <p className="text-sm font-medium text-gray-600">Allowed Hours</p>
-                                    <p className="text-lg font-semibold text-gray-900">{work.allowedHoursPerWeek}</p>
-                                </div>
-                            )}
-                            {work.averageSalary && (
-                                <div className="bg-gray-50 rounded-lg p-3">
-                                    <p className="text-sm font-medium text-gray-600">Average Salary</p>
-                                    <p className="text-lg font-semibold text-gray-900">{work.averageSalary}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-3">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600 mb-1">Eligibility</p>
-                                <p className="text-gray-700">{work.eligibility}</p>
-                            </div>
-                            {work.requirements && (
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Requirements</p>
-                                    <p className="text-gray-700">{work.requirements}</p>
-                                </div>
-                            )}
-                            {work.popularSectors && work.popularSectors.length > 0 && (
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-2">Popular Sectors</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {work.popularSectors.map((sector, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                                            >
-                                                {sector}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
         </div>
     );
 }

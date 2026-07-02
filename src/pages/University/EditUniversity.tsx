@@ -9,6 +9,7 @@ import { BasicInfoSection } from "./BasicInfoSection";
 import { FeeSection } from "./FeeSection";
 import { AdmissionsSection } from "./AdmissionsSection";
 import { StudentLifeSection } from "./StudentLifeSection";
+import { ReviewsSection } from "./ReviewsSection";
 import { ImagesSection } from "./ImagesSection";
 import { MediaSection } from "./Mediasection";
 import { UniversityReferencesTab } from "./UniversityReferencesTab";
@@ -81,11 +82,12 @@ export function EditUniversity() {
             </div>
 
             <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-7">
+                <TabsList className="grid w-full grid-cols-8">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="fees">Fees</TabsTrigger>
                     <TabsTrigger value="admissions">Admissions</TabsTrigger>
                     <TabsTrigger value="studentLife">Student Life</TabsTrigger>
+                    <TabsTrigger value="reviews">Reviews</TabsTrigger>
                     <TabsTrigger value="images">Images</TabsTrigger>
                     <TabsTrigger value="media">Media</TabsTrigger>
                     <TabsTrigger value="refrences">Refrences</TabsTrigger>
@@ -120,6 +122,14 @@ export function EditUniversity() {
                         slug={slug!}
                         initialData={universityData.studentLife || {}}
                         onSuccess={() => handleSectionUpdate("Student Life")}
+                    />
+                </TabsContent>
+
+                <TabsContent value="reviews" className="space-y-4 mt-4">
+                    <ReviewsSection
+                        slug={slug!}
+                        initialData={universityData.reviews || []}
+                        onSuccess={() => handleSectionUpdate("Student Reviews")}
                     />
                 </TabsContent>
 
