@@ -49,6 +49,44 @@ export interface IAgentActivity {
     updatedAt: string;
 }
 
+export type ApplicationStatus =
+    | 'pending'
+    | 'sent-to-crm'
+    | 'crm-sync-failed'
+    | 'abandoned'
+    | 'completed';
+
+export interface IApplicationUser {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    mobile?: string;
+    dob?: string;
+    gender?: string;
+    country?: string;
+    address?: string;
+    passportNumber?: string;
+    studentId?: string;
+}
+
+export interface IAgentApplication {
+    _id: string;
+    userId: IApplicationUser | null;
+    agentId: string;
+    applicationId: string;
+    center: string;
+    course: string;
+    courseLabel?: string;
+    declaration: boolean;
+    status: ApplicationStatus;
+    crmApplicationId?: string;
+    crmSyncedAt?: string;
+    crmSyncError?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface IPagination {
     page: number;
     limit: number;
@@ -79,5 +117,11 @@ export interface AgentSessionListResponse {
 export interface AgentActivityListResponse {
     success: boolean;
     data: IAgentActivity[];
+    pagination: IPagination;
+}
+
+export interface AgentApplicationListResponse {
+    success: boolean;
+    data: IAgentApplication[];
     pagination: IPagination;
 }

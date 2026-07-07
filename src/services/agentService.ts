@@ -2,9 +2,11 @@
 import type {
     AgentByIdResponse,
     AgentActivityListResponse,
+    AgentApplicationListResponse,
     AgentListResponse,
     AgentSessionListResponse,
     AgentStatus,
+    ApplicationStatus,
 } from '@/types/agent';
 import { apiClient } from './api';
 
@@ -62,6 +64,22 @@ export const agentService = {
             return response.data;
         } catch (error) {
             console.error('Error fetching agent activity:', error);
+            throw error;
+        }
+    },
+
+    async getAgentApplications(
+        id: string,
+        params?: { page?: number; limit?: number; status?: ApplicationStatus }
+    ): Promise<AgentApplicationListResponse> {
+        try {
+            const response = await apiClient.get<AgentApplicationListResponse>(
+                `/agent-portal/admin/agents/${id}/applications`,
+                { params }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching agent applications:', error);
             throw error;
         }
     },

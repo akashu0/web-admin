@@ -8,6 +8,7 @@ import { agentService } from '@/services/agentService';
 import type { IAgentSummary, AgentStatus } from '@/types/agent';
 import { AgentSessionsTab } from './AgentSessionsTab';
 import { AgentActivityTab } from './AgentActivityTab';
+import { AgentApplicationsTab } from './AgentApplicationsTab';
 
 const statusStyles: Record<AgentStatus, string> = {
     active: 'bg-green-100 text-green-800',
@@ -102,11 +103,16 @@ export default function AgentDetail() {
                 </div>
 
                 {/* Tabs */}
-                <Tabs defaultValue="sessions" className="w-full">
+                <Tabs defaultValue="applications" className="w-full">
                     <TabsList>
+                        <TabsTrigger value="applications">Applications</TabsTrigger>
                         <TabsTrigger value="sessions">Login Sessions</TabsTrigger>
                         <TabsTrigger value="activity">Activity Log</TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="applications" className="mt-4">
+                        <AgentApplicationsTab agentId={agent._id} />
+                    </TabsContent>
 
                     <TabsContent value="sessions" className="mt-4">
                         <AgentSessionsTab agentId={agent._id} />
