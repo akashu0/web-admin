@@ -83,4 +83,19 @@ export const agentService = {
             throw error;
         }
     },
+
+    async getAllApplications(
+        params?: { page?: number; limit?: number; status?: ApplicationStatus; agentId?: string }
+    ): Promise<AgentApplicationListResponse> {
+        try {
+            const response = await apiClient.get<AgentApplicationListResponse>(
+                '/agent-portal/admin/applications',
+                { params }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+            throw error;
+        }
+    },
 };

@@ -27,6 +27,7 @@ import { EgAcademyCourseList } from './pages/EgAcademy/EgAcademyCourseList';
 import EditEgAcademyCourse from './pages/EgAcademy/EditEgAcademyCourse';
 import AgentList from './pages/Agent/AgentList';
 import AgentDetail from './pages/Agent/AgentDetail';
+import ApplicationList from './pages/Agent/ApplicationList';
 
 function App() {
     return (
@@ -86,6 +87,7 @@ function App() {
 
                         {/* Agent Routes */}
                         <Route path="/agents" element={<AgentList />} />
+                        <Route path="/agents/applications" element={<ApplicationList />} />
                         <Route path="/agents/:id" element={<AgentDetail />} />
 
 

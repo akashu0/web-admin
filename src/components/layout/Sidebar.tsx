@@ -41,7 +41,15 @@ const sidebarItems = [
     { icon: FileText, label: 'Enquiries', href: '/enquiries' },
     { icon: Image, label: 'Popup Banners', href: '/popup-banners' },
     { icon: Library, label: 'eG Library', href: '/library' },
-    { icon: Users, label: 'Agents', href: '/agents' },
+    {
+        icon: Users,
+        label: 'Agents',
+        href: '/agents',
+        subMenus: [
+            { icon: Users, label: 'Agents', href: '/agents' },
+            { icon: FileText, label: 'Applications', href: '/agents/applications' },
+        ]
+    },
 ];
 
 export const Sidebar = () => {
@@ -49,9 +57,12 @@ export const Sidebar = () => {
     const logout = useAuthStore((state) => state.logout);
 
     // Manage which submenus are open (defaulting Universities to open if active)
-    const [openMenus, setOpenMenus] = React.useState<string[]>(
-        location.pathname.includes('/universities') ? ['Universities'] : []
-    );
+    const [openMenus, setOpenMenus] = React.useState<string[]>(() => {
+        const open: string[] = [];
+        if (location.pathname.includes('/universities')) open.push('Universities');
+        if (location.pathname.includes('/agents')) open.push('Agents');
+        return open;
+    });
 
     const toggleMenu = (label: string) => {
         setOpenMenus(prev =>

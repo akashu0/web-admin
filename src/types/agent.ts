@@ -70,10 +70,18 @@ export interface IApplicationUser {
     studentId?: string;
 }
 
+export interface IApplicationAgent {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    emailid: string;
+}
+
 export interface IAgentApplication {
     _id: string;
     userId: IApplicationUser | null;
-    agentId: string;
+    // string when scoped to one agent; populated object on the global list
+    agentId: string | IApplicationAgent | null;
     applicationId: string;
     center: string;
     course: string;
