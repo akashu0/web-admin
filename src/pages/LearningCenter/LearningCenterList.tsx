@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     type ColumnDef,
     type ColumnFiltersState,
@@ -26,13 +26,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 
 import {
     Plus,
@@ -41,10 +34,6 @@ import {
     Trash2,
     Search,
     Loader2,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
 } from "lucide-react";
 
 import { DeleteCenterDialog } from "./DeleteCenterDialog";
@@ -75,15 +64,19 @@ interface PaginationData {
 
 /* ================= COMPONENT ================= */
 
+const LIMIT = 10;
+
 export default function LearningCenterList() {
     const navigate = useNavigate();
     const [centers, setCenters] = useState<EGLearningCenter[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [page, setPage] = useState<number>(1);
     const [pagination, setPagination] = useState<PaginationData>({
         page: 1,
-        limit: 10,
+        limit: LIMIT,
         total: 0,
         totalPages: 0,
         hasNextPage: false,
@@ -92,34 +85,70 @@ export default function LearningCenterList() {
     const [deletingCenter, setDeletingCenter] =
         useState<EGLearningCenter | null>(null);
 
+    const isReset = useRef(true);
+    const loadingRef = useRef(false);
+
     /* ================= FETCH ================= */
 
     useEffect(() => {
-        fetchCenters();
-    }, [pagination.page, pagination.limit]); // ✅ Refetch when page or limit changes
+        fetchCenters(page, !isReset.current);
+        isReset.current = false;
+    }, [page]);
 
-    const fetchCenters = async () => {
+    const fetchCenters = async (pageNum: number, append: boolean) => {
+        if (loadingRef.current) return;
+        loadingRef.current = true;
         try {
-            setIsLoading(true);
+            if (append) {
+                setIsLoadingMore(true);
+            } else {
+                setIsLoading(true);
+            }
             const params = {
-                page: pagination.page,
-                limit: pagination.limit,
+                page: pageNum,
+                limit: LIMIT,
             };
             const data = await learningCenterService.getAllLearningCenters(params);
-            setCenters(data.data);
-            setPagination(prev => ({
-                ...prev,
+            setCenters(prev => (append ? [...prev, ...data.data] : data.data));
+            setPagination({
+                page: pageNum,
+                limit: LIMIT,
                 total: data.pagination.total,
                 totalPages: data.pagination.totalPages,
                 hasNextPage: data.pagination.hasNextPage,
                 hasPrevPage: data.pagination.hasPrevPage,
-            }));
+            });
         } catch (error) {
             console.error("Error fetching learning centers:", error);
         } finally {
             setIsLoading(false);
+            setIsLoadingMore(false);
+            loadingRef.current = false;
         }
     };
+
+    const refetch = () => {
+        isReset.current = true;
+        if (page === 1) {
+            fetchCenters(1, false);
+        } else {
+            setPage(1);
+        }
+    };
+
+    const handleScroll = useCallback(() => {
+        if (loadingRef.current || !pagination.hasNextPage) return;
+        const scrollTop = window.innerHeight + window.scrollY;
+        const threshold = document.documentElement.scrollHeight - 300;
+        if (scrollTop >= threshold) {
+            setPage((p) => p + 1);
+        }
+    }, [pagination.hasNextPage]);
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [handleScroll]);
 
     const handleEditCenter = (center: EGLearningCenter) => {
         navigate(`/learning-centers/edit/${center.id}`);
@@ -132,8 +161,7 @@ export default function LearningCenterList() {
             id: "serialNo",
             header: "S.No",
             cell: ({ row }) => {
-                const serialNo = (pagination.page - 1) * pagination.limit + row.index + 1;
-                return <div className="font-medium">{serialNo}</div>;
+                return <div className="font-medium">{row.index + 1}</div>;
             },
         },
         {
@@ -212,8 +240,6 @@ export default function LearningCenterList() {
     const table = useReactTable({
         data: centers,
         columns,
-        manualPagination: true,
-        pageCount: pagination.totalPages,
         state: {
             sorting,
             columnFilters,
@@ -225,44 +251,11 @@ export default function LearningCenterList() {
         getFilteredRowModel: getFilteredRowModel(),
     });
 
-    /* ================= PAGINATION HANDLERS ================= */
-
-    const goToFirstPage = () => {
-        setPagination(prev => ({ ...prev, page: 1 }));
-    };
-
-    const goToLastPage = () => {
-        setPagination(prev => ({ ...prev, page: prev.totalPages }));
-    };
-
-    const goToPreviousPage = () => {
-        setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }));
-    };
-
-    const goToNextPage = () => {
-        setPagination(prev => ({
-            ...prev,
-            page: Math.min(prev.totalPages, prev.page + 1)
-        }));
-    };
-
-    const changePageSize = (newLimit: number) => {
-        setPagination(prev => ({
-            ...prev,
-            page: 1, // Reset to first page when changing page size
-            limit: newLimit
-        }));
-    };
-
     /* ================= UI ================= */
 
     const handleAddCenter = () => {
         navigate("/learning-centers/new");
     };
-
-    // Calculate display range
-    const startIndex = (pagination.page - 1) * pagination.limit + 1;
-    const endIndex = Math.min(pagination.page * pagination.limit, pagination.total);
 
     return (
         <div className="container mx-auto py-8 px-4">
@@ -346,83 +339,15 @@ export default function LearningCenterList() {
                         </TableBody>
                     </Table>
 
-                    {/* Pagination */}
-                    <div className="flex items-center justify-between border-t px-6 py-4">
-                        <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium text-gray-700">
-                                    Rows per page
-                                </p>
-                                <Select
-                                    value={pagination.limit.toString()}
-                                    onValueChange={(value) => changePageSize(Number(value))}
-                                >
-                                    <SelectTrigger className="h-8 w-[70px]">
-                                        <SelectValue placeholder={pagination.limit.toString()} />
-                                    </SelectTrigger>
-                                    <SelectContent side="top">
-                                        {[10, 20, 30, 40, 50].map((pageSize) => (
-                                            <SelectItem key={pageSize} value={`${pageSize}`}>
-                                                {pageSize}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="text-sm text-gray-700">
-                                {pagination.total > 0 ? (
-                                    <>
-                                        Showing{" "}
-                                        <span className="font-medium">{startIndex}</span> to{" "}
-                                        <span className="font-medium">{endIndex}</span> of{" "}
-                                        <span className="font-medium">{pagination.total}</span>{" "}
-                                        results
-                                    </>
-                                ) : (
-                                    "No results"
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={goToFirstPage}
-                                disabled={!pagination.hasPrevPage}
-                            >
-                                <ChevronsLeft className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={goToPreviousPage}
-                                disabled={!pagination.hasPrevPage}
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <div className="flex items-center gap-1">
-                                <div className="text-sm font-medium">
-                                    Page {pagination.page} of {pagination.totalPages || 1}
-                                </div>
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={goToNextPage}
-                                disabled={!pagination.hasNextPage}
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={goToLastPage}
-                                disabled={!pagination.hasNextPage}
-                            >
-                                <ChevronsRight className="h-4 w-4" />
-                            </Button>
-                        </div>
+                    {/* Infinite scroll status */}
+                    <div className="flex items-center justify-center border-t px-6 py-4">
+                        {isLoadingMore ? (
+                            <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                        ) : !pagination.hasNextPage && centers.length > 0 ? (
+                            <span className="text-sm text-gray-500">
+                                All {pagination.total} learning centers loaded
+                            </span>
+                        ) : null}
                     </div>
                 </div>
             </div>
@@ -432,7 +357,7 @@ export default function LearningCenterList() {
                 isOpen={!!deletingCenter}
                 center={deletingCenter}
                 onClose={() => setDeletingCenter(null)}
-                onSuccess={fetchCenters}
+                onSuccess={refetch}
             />
         </div>
     );

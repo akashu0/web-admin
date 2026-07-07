@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, RefreshCcw, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,29 +14,51 @@ import {
 import { toast } from 'sonner';
 import { egAcademyCourseService } from '@/services/egAcademyCourseService';
 import { STREAM_OPTIONS } from '@/types/egAcademyCourse';
-import type { EgAcademyCourse, EgAcademyPaginationMeta, EgAcademyQueryParams } from '@/types/egAcademyCourse';
+import type { EgAcademyCourse, EgAcademyQueryParams } from '@/types/egAcademyCourse';
 import { AddEgAcademyCourseModal } from './AddEgAcademyCourseModal';
+
+const LIMIT = 10;
+
+type EgAcademyFilters = Omit<EgAcademyQueryParams, 'page' | 'limit'>;
 
 export function EgAcademyCourseList() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<EgAcademyCourse[]>([]);
-  const [pagination, setPagination] = useState<EgAcademyPaginationMeta | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
 
-  const [queryParams, setQueryParams] = useState<EgAcademyQueryParams>({
-    page: 1,
-    limit: 10,
-  });
+  const [filters, setFilters] = useState<EgAcademyFilters>({});
 
-  const fetchCourses = useCallback(async () => {
+  // Distinguishes a filter-driven reset (replace list) from a scroll-driven
+  // next-page fetch (append to list).
+  const isReset = useRef(true);
+
+  // Not memoized: needs the latest `isFetching`/`filters` on every invocation.
+  const fetchCourses = async (pageNum: number, append: boolean) => {
+    if (isFetching) return;
     try {
       setIsFetching(true);
-      const response = await egAcademyCourseService.getAllCourses(queryParams);
-      setCourses(response.data || []);
-      setPagination(response.pagination);
+      const response = await egAcademyCourseService.getAllCourses({
+        ...filters,
+        limit: LIMIT,
+        page: pageNum,
+      });
+
+      const coursesData = response.data || [];
+      const meta = response.pagination;
+
+      setCourses((prev) => (append ? [...prev, ...coursesData] : coursesData));
+      setTotal(meta?.total ?? 0);
+      setHasMore(
+        typeof meta?.hasNextPage === 'boolean'
+          ? meta.hasNextPage
+          : pageNum * LIMIT < (meta?.total ?? 0)
+      );
     } catch (error) {
       console.error('Error fetching courses:', error);
       toast.error('Failed to fetch courses');
@@ -44,19 +66,54 @@ export function EgAcademyCourseList() {
       setIsLoading(false);
       setIsFetching(false);
     }
-  }, [queryParams]);
+  };
 
+  // Reset list when filters change
   useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]);
+    isReset.current = true;
+    setPage(1);
+  }, [filters]);
+
+  // Fetch on page change (including reset -> page 1)
+  useEffect(() => {
+    const append = !isReset.current;
+    isReset.current = false;
+    fetchCourses(page, append);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, filters]);
 
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      setQueryParams(prev => ({ ...prev, search: searchInput || undefined, page: 1 }));
+      setFilters(prev => ({ ...prev, search: searchInput || undefined }));
     }, 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Infinite scroll - this page renders inside MainLayout's <main>, which only
+  // has a min-height (not a fixed height), so the window is the real scroller.
+  const handleScroll = useCallback(() => {
+    if (isFetching || !hasMore) return;
+    if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 400) {
+      setPage((prev) => prev + 1);
+    }
+  }, [isFetching, hasMore]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // Re-fetches the current view from page 1, replacing the list. Used after
+  // CRUD actions and manual refresh, where neither `page` nor `filters` change.
+  const refreshList = () => {
+    if (page === 1) {
+      fetchCourses(1, false);
+    } else {
+      isReset.current = true;
+      setPage(1);
+    }
+  };
 
   const handleEdit = (course: EgAcademyCourse) => {
     navigate(`/eg-academy/courses/${course.overview.slug}`);
@@ -69,7 +126,7 @@ export function EgAcademyCourseList() {
       await egAcademyCourseService.deleteCourse(id);
       toast.dismiss(loadingToastId);
       toast.success('Course deleted successfully');
-      fetchCourses();
+      refreshList();
     } catch (error) {
       console.error('Error deleting course:', error);
       toast.dismiss(loadingToastId);
@@ -78,11 +135,11 @@ export function EgAcademyCourseList() {
   };
 
   const setStream = (stream: string) => {
-    setQueryParams(prev => ({ ...prev, stream: stream || undefined, page: 1 }));
+    setFilters(prev => ({ ...prev, stream: stream || undefined }));
   };
 
-  const goToPage = (page: number) => {
-    setQueryParams(prev => ({ ...prev, page }));
+  const handleRefresh = () => {
+    refreshList();
   };
 
   if (isLoading && !courses.length) {
@@ -101,7 +158,7 @@ export function EgAcademyCourseList() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={fetchCourses}
+            onClick={handleRefresh}
             disabled={isFetching}
             className="border-gray-200 bg-white hover:bg-gray-50"
           >
@@ -127,7 +184,7 @@ export function EgAcademyCourseList() {
           className="max-w-xs"
         />
         <Select
-          value={queryParams.stream ?? '__all__'}
+          value={filters.stream ?? '__all__'}
           onValueChange={v => setStream(v === '__all__' ? '' : v)}
         >
           <SelectTrigger className="w-56">
@@ -141,9 +198,9 @@ export function EgAcademyCourseList() {
           </SelectContent>
         </Select>
         <Select
-          value={queryParams.status ?? '__all__'}
+          value={filters.status ?? '__all__'}
           onValueChange={v =>
-            setQueryParams(prev => ({ ...prev, status: v === '__all__' ? undefined : (v as 'draft' | 'published'), page: 1 }))
+            setFilters(prev => ({ ...prev, status: v === '__all__' ? undefined : (v as 'draft' | 'published') }))
           }
         >
           <SelectTrigger className="w-40">
@@ -156,6 +213,11 @@ export function EgAcademyCourseList() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Results summary */}
+      <p className="text-sm text-gray-600">
+        Showing {courses.length} of {total} courses
+      </p>
 
       {/* Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -174,7 +236,7 @@ export function EgAcademyCourseList() {
             {courses.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-gray-500">
-                  No courses found
+                  {isFetching ? 'Loading...' : 'No courses found'}
                 </td>
               </tr>
             ) : (
@@ -233,42 +295,23 @@ export function EgAcademyCourseList() {
         </table>
       </div>
 
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">
-            Showing {((pagination.page - 1) * pagination.limit) + 1}–
-            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-            {pagination.total} courses
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page - 1)}
-              disabled={!pagination.hasPrevPage || isFetching}
-            >
-              Previous
-            </Button>
-            <span className="text-sm px-3 py-1.5 text-gray-700">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(pagination.page + 1)}
-              disabled={!pagination.hasNextPage || isFetching}
-            >
-              Next
-            </Button>
-          </div>
+      {/* Infinite scroll status */}
+      {courses.length > 0 && isFetching && (
+        <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Loading more courses...
+        </div>
+      )}
+      {courses.length > 0 && !hasMore && !isFetching && (
+        <div className="py-4 text-center text-sm text-gray-400">
+          All {total} courses loaded
         </div>
       )}
 
       <AddEgAcademyCourseModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onSuccess={fetchCourses}
+        onSuccess={refreshList}
       />
     </div>
   );

@@ -1,36 +1,39 @@
-// components/CountryList.tsx
+// pages/Agent/AgentList.tsx
 import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-    Search,
-    Plus,
-    Edit,
-    Trash2,
-    Loader2,
-    Globe,
-    MapPin,
-    Eye
-} from 'lucide-react';
-import { countryService } from '@/services/countryService';
-import type { ICountry } from '@/types/country';
-import { CountryForm } from './CountryForm';
+import { Search, Loader2, Users, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { agentService } from '@/services/agentService';
+import type { IAgentSummary, AgentStatus } from '@/types/agent';
 import {
     useReactTable,
     getCoreRowModel,
     flexRender,
     createColumnHelper,
 } from '@tanstack/react-table';
-import { useNavigate } from 'react-router-dom';
 
-export default function CountryList() {
+const statusStyles: Record<AgentStatus, string> = {
+    active: 'bg-green-100 text-green-800',
+    pending: 'bg-yellow-100 text-yellow-800',
+    'not-verified': 'bg-gray-100 text-gray-800',
+    inactive: 'bg-slate-100 text-slate-800',
+    suspended: 'bg-orange-100 text-orange-800',
+    rejected: 'bg-red-100 text-red-800',
+};
+
+function formatDate(value: string | null) {
+    if (!value) return 'Never';
+    return new Date(value).toLocaleString();
+}
+
+export default function AgentList() {
     const navigate = useNavigate();
-    const [countries, setCountries] = useState<ICountry[]>([]);
+    const [agents, setAgents] = useState<IAgentSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [total, setTotal] = useState(0);
-    const [isFormOpen, setIsFormOpen] = useState(false);
 
     const isReset = useRef(true);
     const loadingRef = useRef(false);
@@ -42,12 +45,12 @@ export default function CountryList() {
     }, [searchTerm]);
 
     useEffect(() => {
-        fetchCountries(page, !isReset.current);
+        fetchAgents(page, !isReset.current);
         isReset.current = false;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, searchTerm]);
 
-    const fetchCountries = async (pageNum: number, append: boolean) => {
+    const fetchAgents = async (pageNum: number, append: boolean) => {
         if (loadingRef.current) return;
         loadingRef.current = true;
         try {
@@ -62,28 +65,19 @@ export default function CountryList() {
                 ...(searchTerm && { search: searchTerm }),
             };
 
-            const response = await countryService.getAllCountries(params);
-            setCountries((prev) => (append ? [...prev, ...(response.data || [])] : response.data || []));
+            const response = await agentService.getAllAgents(params);
+            setAgents((prev) => (append ? [...prev, ...(response.data || [])] : response.data || []));
             if (response.pagination) {
                 setHasMore(response.pagination.hasNextPage);
                 setTotal(response.pagination.total);
             }
         } catch (error) {
-            console.error('Error fetching countries:', error);
-            if (!append) setCountries([]);
+            console.error('Error fetching agents:', error);
+            if (!append) setAgents([]);
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
             loadingRef.current = false;
-        }
-    };
-
-    const refetch = () => {
-        isReset.current = true;
-        if (page === 1) {
-            fetchCountries(1, false);
-        } else {
-            setPage(1);
         }
     };
 
@@ -101,86 +95,52 @@ export default function CountryList() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [handleScroll]);
 
-    const handleEdit = (country: ICountry) => {
-        navigate(`/countries/edit/${country._id}`);
+    const handleView = (agent: IAgentSummary) => {
+        navigate(`/agents/${agent._id}`);
     };
 
-    const handleView = (country: ICountry) => {
-        navigate(`/countries/view/${country.slug}`);
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this country?')) return;
-
-        try {
-            await countryService.deleteCountry(id);
-            refetch();
-        } catch (error) {
-            console.error('Error deleting country:', error);
-            alert('Failed to delete country');
-        }
-    };
-
-    const handleFormClose = () => {
-        setIsFormOpen(false);
-    };
-
-    const handleFormSuccess = () => {
-        handleFormClose();
-        refetch();
-    };
-
-    const columnHelper = createColumnHelper<ICountry>();
+    const columnHelper = createColumnHelper<IAgentSummary>();
 
     const columns = [
-        columnHelper.accessor('name', {
-            header: 'Country',
+        columnHelper.display({
+            id: 'name',
+            header: 'Name',
             cell: (info) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-gray-600 font-semibold text-xs">
-                            {info.getValue()?.slice(0, 2).toUpperCase()}
+                            {(info.row.original.firstName?.[0] || '').toUpperCase()}
+                            {(info.row.original.lastName?.[0] || '').toUpperCase()}
                         </span>
                     </div>
-                    <div>
-                        <div className="font-medium text-gray-900">{info.getValue()}</div>
+                    <div className="font-medium text-gray-900">
+                        {info.row.original.firstName} {info.row.original.lastName}
                     </div>
                 </div>
             ),
         }),
-        columnHelper.accessor('capital', {
-            header: 'Capital',
-            cell: (info) => (
-                <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-900">{info.getValue()}</span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('continent', {
-            header: 'Continent',
+        columnHelper.accessor('emailid', {
+            header: 'Email',
             cell: (info) => <span className="text-gray-900">{info.getValue()}</span>,
         }),
-        // columnHelper.accessor('spokenLanguages', {
-        //     header: 'Language',
-        //     cell: (info) => <span className="text-gray-600">{info.getValue()}</span>,
-        // }),
-        columnHelper.accessor('currency', {
-            header: 'Currency',
-            cell: (info) => <span className="font-mono text-gray-900">{info.getValue()}</span>,
+        columnHelper.accessor('phoneNumber', {
+            header: 'Phone',
+            cell: (info) => <span className="text-gray-900">{info.getValue()}</span>,
         }),
         columnHelper.accessor('status', {
             header: 'Status',
             cell: (info) => (
                 <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${info.getValue() === 'published'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[info.getValue()] || 'bg-gray-100 text-gray-800'
                         }`}
                 >
                     {info.getValue()}
                 </span>
             ),
+        }),
+        columnHelper.accessor('lastLoginAt', {
+            header: 'Last Login',
+            cell: (info) => <span className="text-gray-600">{formatDate(info.getValue())}</span>,
         }),
         columnHelper.display({
             id: 'actions',
@@ -194,31 +154,16 @@ export default function CountryList() {
                     >
                         <Eye className="w-4 h-4" />
                     </button>
-                    <button
-                        onClick={() => handleEdit(info.row.original)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 cursor-pointer rounded-lg transition-colors"
-                        title="Edit"
-                    >
-                        <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => handleDelete(info.row.original._id)}
-                        className="p-2 text-red-600 hover:bg-red-50 cursor-pointer rounded-lg transition-colors"
-                        title="Delete"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
                 </div>
             ),
         }),
     ];
 
     const table = useReactTable({
-        data: countries,
+        data: agents,
         columns,
         getCoreRowModel: getCoreRowModel(),
     });
-
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -228,19 +173,12 @@ export default function CountryList() {
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                                <Globe className="w-8 h-8 text-black" />
-                                Country Management
+                                <Users className="w-8 h-8 text-black" />
+                                Agent Management
                             </h1>
-                            <p className="text-gray-600 mt-2">Manage study abroad destinations</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setIsFormOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-black text-white rounded-lg hover:bg-black transition-colors"
-                            >
-                                <Plus className="w-5 h-5" />
-                                Add Country
-                            </button>
+                            <p className="text-gray-600 mt-2">
+                                Browse agents and their sub-employees using the agent portal
+                            </p>
                         </div>
                     </div>
 
@@ -250,14 +188,12 @@ export default function CountryList() {
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <input
                                 type="text"
-                                placeholder="Search countries..."
+                                placeholder="Search agents..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black-500 focus:border-black-500"
                             />
                         </div>
-
-
                     </div>
                 </div>
 
@@ -266,17 +202,11 @@ export default function CountryList() {
                     <div className="flex items-center justify-center py-12 bg-white rounded-lg">
                         <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
                     </div>
-                ) : countries.length === 0 ? (
+                ) : agents.length === 0 ? (
                     <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                        <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No countries found</h3>
-                        <p className="text-gray-600 mb-6">Get started by adding your first country</p>
-                        <button
-                            onClick={() => setIsFormOpen(true)}
-                            className="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg  transition-colors"
-                        >
-                            Add Country
-                        </button>
+                        <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No agents found</h3>
+                        <p className="text-gray-600">Agents will appear here once they register on the agent portal</p>
                     </div>
                 ) : (
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -298,9 +228,19 @@ export default function CountryList() {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {table.getRowModel().rows.map((row) => (
-                                        <tr key={row.id} className="hover:bg-gray-50">
+                                        <tr
+                                            key={row.id}
+                                            className="hover:bg-gray-50 cursor-pointer"
+                                            onClick={() => handleView(row.original)}
+                                        >
                                             {row.getVisibleCells().map((cell) => (
-                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
+                                                <td
+                                                    key={cell.id}
+                                                    className="px-6 py-4 whitespace-nowrap"
+                                                    onClick={(e) => {
+                                                        if (cell.column.id === 'actions') e.stopPropagation();
+                                                    }}
+                                                >
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </td>
                                             ))}
@@ -314,23 +254,13 @@ export default function CountryList() {
                         <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-center">
                             {isLoadingMore ? (
                                 <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
-                            ) : !hasMore && countries.length > 0 ? (
-                                <span className="text-sm text-gray-500">
-                                    All {total} countries loaded
-                                </span>
+                            ) : !hasMore && agents.length > 0 ? (
+                                <span className="text-sm text-gray-500">All {total} agents loaded</span>
                             ) : null}
                         </div>
                     </div>
                 )}
             </div>
-
-            {/* Form Modal */}
-            {isFormOpen && (
-                <CountryForm
-                    onClose={handleFormClose}
-                    onSuccess={handleFormSuccess}
-                />
-            )}
         </div>
     );
 }

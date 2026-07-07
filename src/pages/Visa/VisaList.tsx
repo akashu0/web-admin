@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     type ColumnDef,
     type ColumnFiltersState,
@@ -35,8 +35,6 @@ import {
     Trash2,
     Search,
     Loader2,
-    ChevronLeft,
-    ChevronRight,
 } from "lucide-react";
 
 import { visaService } from "../../services/visaService";
@@ -57,14 +55,15 @@ interface PaginationInfo {
 const VisaList: React.FC = () => {
     const [visas, setVisas] = useState<Visa[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
     const [editingVisa, setEditingVisa] = useState<Visa | null>(null);
     const [deletingVisa, setDeletingVisa] = useState<Visa | null>(null);
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState<number>(1);
+    // Infinite scroll state
+    const [page, setPage] = useState<number>(1);
     const [pagination, setPagination] = useState<PaginationInfo>({
         page: 1,
         limit: 10,
@@ -74,38 +73,61 @@ const VisaList: React.FC = () => {
         hasPrevPage: false,
     });
 
-    useEffect(() => {
-        fetchVisas();
-    }, [currentPage]);
+    const isReset = useRef(true);
+    const loadingRef = useRef(false);
 
-    const fetchVisas = async () => {
+    useEffect(() => {
+        fetchVisas(page, !isReset.current);
+        isReset.current = false;
+    }, [page]);
+
+    const fetchVisas = async (pageNum: number, append: boolean) => {
+        if (loadingRef.current) return;
+        loadingRef.current = true;
         try {
-            setIsLoading(true);
+            if (append) {
+                setIsLoadingMore(true);
+            } else {
+                setIsLoading(true);
+            }
             const response = await visaService.getAllVisas({
-                page: currentPage,
+                page: pageNum,
                 limit: 10,
             });
-            setVisas(response.data);
+            setVisas((prev) => (append ? [...prev, ...response.data] : response.data));
             setPagination(response.pagination);
         } catch (error) {
             console.error("Error fetching visas:", error);
             toast.error("Failed to fetch visas");
         } finally {
             setIsLoading(false);
+            setIsLoadingMore(false);
+            loadingRef.current = false;
         }
     };
 
-    const handlePreviousPage = () => {
-        if (pagination.hasPrevPage) {
-            setCurrentPage((prev) => prev - 1);
+    const refetch = () => {
+        isReset.current = true;
+        if (page === 1) {
+            fetchVisas(1, false);
+        } else {
+            setPage(1);
         }
     };
 
-    const handleNextPage = () => {
-        if (pagination.hasNextPage) {
-            setCurrentPage((prev) => prev + 1);
+    const handleScroll = useCallback(() => {
+        if (loadingRef.current || !pagination.hasNextPage) return;
+        const scrollTop = window.innerHeight + window.scrollY;
+        const threshold = document.documentElement.scrollHeight - 300;
+        if (scrollTop >= threshold) {
+            setPage((p) => p + 1);
         }
-    };
+    }, [pagination.hasNextPage]);
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [handleScroll]);
 
     const columns: ColumnDef<Visa>[] = [
         {
@@ -212,8 +234,6 @@ const VisaList: React.FC = () => {
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
-        manualPagination: true, // Tell React Table we're handling pagination
-        pageCount: pagination.totalPages,
     });
 
     return (
@@ -296,72 +316,15 @@ const VisaList: React.FC = () => {
                     </Table>
                 </div>
 
-                {/* Pagination */}
-                <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-500">
-                        Showing {visas.length > 0 ? (currentPage - 1) * pagination.limit + 1 : 0} to{" "}
-                        {Math.min(currentPage * pagination.limit, pagination.total)} of{" "}
-                        {pagination.total} entries
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handlePreviousPage}
-                            disabled={!pagination.hasPrevPage || isLoading}
-                        >
-                            <ChevronLeft className="h-4 w-4 mr-1" />
-                            Previous
-                        </Button>
-                        <div className="flex items-center gap-1">
-                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(
-                                (page) => {
-                                    // Show current page, first page, last page, and pages around current
-                                    const showPage =
-                                        page === 1 ||
-                                        page === pagination.totalPages ||
-                                        (page >= currentPage - 1 && page <= currentPage + 1);
-
-                                    if (!showPage) {
-                                        // Show ellipsis
-                                        if (
-                                            page === currentPage - 2 ||
-                                            page === currentPage + 2
-                                        ) {
-                                            return (
-                                                <span key={page} className="px-2">
-                                                    ...
-                                                </span>
-                                            );
-                                        }
-                                        return null;
-                                    }
-
-                                    return (
-                                        <Button
-                                            key={page}
-                                            variant={currentPage === page ? "default" : "outline"}
-                                            size="sm"
-                                            onClick={() => setCurrentPage(page)}
-                                            disabled={isLoading}
-                                            className="min-w-10"
-                                        >
-                                            {page}
-                                        </Button>
-                                    );
-                                }
-                            )}
-                        </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleNextPage}
-                            disabled={!pagination.hasNextPage || isLoading}
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4 ml-1" />
-                        </Button>
-                    </div>
+                {/* Infinite scroll status */}
+                <div className="flex items-center justify-center py-4">
+                    {isLoadingMore ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+                    ) : !pagination.hasNextPage && visas.length > 0 ? (
+                        <span className="text-sm text-gray-500">
+                            All {pagination.total} visas loaded
+                        </span>
+                    ) : null}
                 </div>
             </div>
 
@@ -372,14 +335,14 @@ const VisaList: React.FC = () => {
                     setIsAddModalOpen(false);
                     setEditingVisa(null);
                 }}
-                onSuccess={fetchVisas}
+                onSuccess={refetch}
             />
 
             <DeleteVisaDialog
                 isOpen={!!deletingVisa}
                 visa={deletingVisa}
                 onClose={() => setDeletingVisa(null)}
-                onSuccess={fetchVisas}
+                onSuccess={refetch}
             />
         </div>
     );

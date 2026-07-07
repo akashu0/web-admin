@@ -1,5 +1,5 @@
 // src/pages/FAQ/FAQPage.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import {
@@ -44,9 +44,12 @@ const DEMO_FAQ: IFAQ = {
     updatedAt: new Date().toISOString(),
 };
 
+const LIMIT = 20;
+
 export const FAQPage = () => {
     const [faqs, setFaqs] = useState<IFAQ[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [selectedFAQ, setSelectedFAQ] = useState<IFAQ | null>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -60,36 +63,77 @@ export const FAQPage = () => {
     const [entityType, setEntityType] = useState<string>('all');
     const [status, setStatus] = useState<string>('all');
 
-    // Pagination
+    // Infinite scroll state
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
+    const [total, setTotal] = useState(0);
+
+    const isReset = useRef(true);
+    const loadingRef = useRef(false);
+
+    // Reset to page 1 whenever filters change
+    useEffect(() => {
+        isReset.current = true;
+        setPage(1);
+    }, [entityType, status]);
 
     useEffect(() => {
-        fetchFAQs();
+        fetchFAQs(page, !isReset.current);
+        isReset.current = false;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, entityType, status]);
 
-    const fetchFAQs = async () => {
+    const fetchFAQs = async (pageNum: number, append: boolean) => {
+        if (loadingRef.current) return;
+        loadingRef.current = true;
         try {
-            setLoading(true);
-            const filters: any = { page, limit: 20 };
+            if (append) {
+                setLoadingMore(true);
+            } else {
+                setLoading(true);
+            }
+            const filters: any = { page: pageNum, limit: LIMIT };
             // Only add filters if not 'all'
             if (entityType && entityType !== 'all') filters.entityType = entityType;
             if (status && status !== 'all') filters.status = status;
 
             const response = await faqService.getAllFAQs(filters);
-            setFaqs(response.data);
+            setFaqs((prev) => (append ? [...prev, ...response.data] : response.data));
             if (response.pagination) {
-                setTotalPages(response.pagination.totalPages);
+                const { totalPages, hasNextPage, total: totalCount } = response.pagination;
+                setHasMore(hasNextPage ?? pageNum < totalPages);
+                setTotal(totalCount);
+            } else {
+                setHasMore(false);
             }
         } catch (error: any) {
             // If API fails, show demo data
             console.error('Failed to fetch FAQs, showing demo data:', error);
-            setFaqs([DEMO_FAQ]);
+            if (!append) {
+                setFaqs([DEMO_FAQ]);
+            }
+            setHasMore(false);
             toast.error(error.response?.data?.message || 'Failed to fetch FAQs. Showing demo data.');
         } finally {
             setLoading(false);
+            setLoadingMore(false);
+            loadingRef.current = false;
         }
     };
+
+    const refetch = () => {
+        isReset.current = true;
+        if (page === 1) {
+            fetchFAQs(1, false);
+        } else {
+            setPage(1);
+        }
+    };
+
+    const handleLoadMore = useCallback(() => {
+        if (loadingRef.current || !hasMore) return;
+        setPage((p) => p + 1);
+    }, [hasMore]);
 
     const handleSubmit = async (data: CreateFAQInput | UpdateFAQInput) => {
         try {
@@ -104,7 +148,7 @@ export const FAQPage = () => {
             }
             setShowFormDialog(false);
             setSelectedFAQ(null);
-            fetchFAQs();
+            refetch();
         } catch (error: any) {
             toast.error(error.response?.data?.message || `Failed to ${selectedFAQ ? 'update' : 'create'} FAQ`);
         }
@@ -116,7 +160,7 @@ export const FAQPage = () => {
             await faqService.deleteFAQ(deleteId);
             toast.success('FAQ deleted successfully');
             setDeleteId(null);
-            fetchFAQs();
+            refetch();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to delete FAQ');
         }
@@ -128,7 +172,7 @@ export const FAQPage = () => {
             toast.success(`${selectedIds.length} FAQs deleted successfully`);
             setShowBulkDelete(false);
             setSelectedIds([]);
-            fetchFAQs();
+            refetch();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to delete FAQs');
         }
@@ -139,7 +183,7 @@ export const FAQPage = () => {
             await faqService.bulkUpdateStatus(selectedIds, newStatus);
             toast.success(`${selectedIds.length} FAQs ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
             setSelectedIds([]);
-            fetchFAQs();
+            refetch();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to update FAQ status');
         }
@@ -203,7 +247,7 @@ export const FAQPage = () => {
                     </Select>
                 </div>
 
-                <Button variant="outline" onClick={fetchFAQs}>
+                <Button variant="outline" onClick={refetch}>
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                 </Button>
@@ -265,10 +309,10 @@ export const FAQPage = () => {
                     onDelete={(id) => setDeleteId(id)}
                     onView={handleView}
                     onSelectionChange={setSelectedIds}
-                    page={page}
-                    setPage={setPage}
-                    totalPages={totalPages}
-                    setTotalPages={setTotalPages}
+                    hasMore={hasMore}
+                    loadingMore={loadingMore}
+                    total={total}
+                    onLoadMore={handleLoadMore}
                 />
             )}
 

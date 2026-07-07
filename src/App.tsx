@@ -25,6 +25,8 @@ import { PopupBannerPage } from './pages/PopupBanner/PopupBannerPage';
 import { LibraryPage } from './pages/Library/LibraryPage';
 import { EgAcademyCourseList } from './pages/EgAcademy/EgAcademyCourseList';
 import EditEgAcademyCourse from './pages/EgAcademy/EditEgAcademyCourse';
+import AgentList from './pages/Agent/AgentList';
+import AgentDetail from './pages/Agent/AgentDetail';
 
 function App() {
     return (
@@ -82,7 +84,9 @@ function App() {
                         <Route path="/eg-academy/courses" element={<EgAcademyCourseList />} />
                         <Route path="/eg-academy/courses/:slug" element={<EditEgAcademyCourse />} />
 
-
+                        {/* Agent Routes */}
+                        <Route path="/agents" element={<AgentList />} />
+                        <Route path="/agents/:id" element={<AgentDetail />} />
 
 
 

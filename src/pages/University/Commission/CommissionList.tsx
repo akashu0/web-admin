@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Loader2 } from "lucide-react";
 import { CommissionDrawer, type DrawerMode } from "./Commissiondrawer";
 import { CommissionTierDisplay } from "./Commissiontierdisplay";
 import {
-    useCommissions,
+    useInfiniteCommissions,
     useCreateCommission,
     useUpdateCommission,
     useDeleteCommission,
@@ -180,7 +181,6 @@ const CommissionRow = ({
 // ── Main list component ───────────────────────────────────────────────────────
 
 export const CommissionList = () => {
-    const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const [country, setCountry] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -189,13 +189,42 @@ export const CommissionList = () => {
     const [drawerMode, setDrawerMode] = useState<DrawerMode | null>(null);
     const [selectedCommission, setSelectedCommission] = useState<PartnerCommission | null>(null);
 
-    // Queries
-    const { data, isLoading, isError } = useCommissions({
-        page,
+    // Queries - infinite scroll: each page is fetched in sequence and appended.
+    const {
+        data,
+        isLoading,
+        isError,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteCommissions({
         limit: 20,
         search: debouncedSearch,
         country: country || undefined,
     });
+
+    // Flatten the paginated responses into a single list, and read the total
+    // from the most recent page (it's the same across pages for a given query).
+    const commissions = useMemo(
+        () => data?.pages.flatMap((p) => p.data) ?? [],
+        [data]
+    );
+    const total = data?.pages[data.pages.length - 1]?.total ?? 0;
+
+    // Infinite scroll - this page renders inside MainLayout's <main>, which
+    // only has a min-height (not a fixed height), so the window is the real
+    // scroll container.
+    const handleScroll = useCallback(() => {
+        if (isFetchingNextPage || !hasNextPage) return;
+        if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 400) {
+            fetchNextPage();
+        }
+    }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [handleScroll]);
 
     const createMutation = useCreateCommission();
     const updateMutation = useUpdateCommission();
@@ -261,11 +290,8 @@ export const CommissionList = () => {
         clearTimeout((window as any).__searchTimer);
         (window as any).__searchTimer = setTimeout(() => {
             setDebouncedSearch(val);
-            setPage(1);
         }, 350);
     };
-
-    const totalPages = data ? Math.ceil(data.total / 20) : 1;
 
     return (
         <div className="min-h-screen bg-white">
@@ -278,7 +304,7 @@ export const CommissionList = () => {
                         </h1>
                         {data && (
                             <p className="text-xs text-zinc-400 mt-0.5 font-mono">
-                                {data.total} universities
+                                {total} universities
                             </p>
                         )}
                     </div>
@@ -312,10 +338,7 @@ export const CommissionList = () => {
                     type="text"
                     placeholder="Filter by country..."
                     value={country}
-                    onChange={(e) => {
-                        setCountry(e.target.value);
-                        setPage(1);
-                    }}
+                    onChange={(e) => setCountry(e.target.value)}
                     className="w-48 text-sm border border-zinc-200 rounded-lg px-3 py-2 bg-white text-zinc-900 placeholder-zinc-300 focus:outline-none focus:border-zinc-900 transition-colors font-mono"
                 />
                 {(search || country) && (
@@ -324,7 +347,6 @@ export const CommissionList = () => {
                             setSearch("");
                             setCountry("");
                             setDebouncedSearch("");
-                            setPage(1);
                         }}
                         className="text-xs text-zinc-400 hover:text-zinc-900 transition-colors font-medium"
                     >
@@ -367,12 +389,12 @@ export const CommissionList = () => {
                             {isLoading &&
                                 Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
 
-                            {!isLoading && data?.data.length === 0 && (
+                            {!isLoading && commissions.length === 0 && (
                                 <EmptyState onAdd={openCreate} />
                             )}
 
                             {!isLoading &&
-                                data?.data.map((commission: PartnerCommission) => (
+                                commissions.map((commission: PartnerCommission) => (
                                     <CommissionRow
                                         key={commission._id}
                                         commission={commission}
@@ -385,45 +407,17 @@ export const CommissionList = () => {
                     </table>
                 </div>
 
-                {/* Pagination */}
-                {data && data.total > 20 && (
-                    <div className="flex items-center justify-between mt-4">
-                        <p className="text-xs text-zinc-400 font-mono">
-                            Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, data.total)} of{" "}
-                            {data.total}
-                        </p>
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            >
-                                ← Prev
-                            </button>
-                            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                                const p = i + 1;
-                                return (
-                                    <button
-                                        key={p}
-                                        onClick={() => setPage(p)}
-                                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${page === p
-                                                ? "bg-zinc-900 text-white border-zinc-900"
-                                                : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"
-                                            }`}
-                                    >
-                                        {p}
-                                    </button>
-                                );
-                            })}
-                            <button
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            >
-                                Next →
-                            </button>
-                        </div>
+                {/* Infinite scroll status */}
+                {commissions.length > 0 && isFetchingNextPage && (
+                    <div className="flex items-center justify-center gap-2 py-4 text-xs text-zinc-400">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Loading more commissions...
                     </div>
+                )}
+                {commissions.length > 0 && !hasNextPage && !isFetchingNextPage && (
+                    <p className="text-center text-xs text-zinc-400 mt-4">
+                        All {total} commissions loaded
+                    </p>
                 )}
             </div>
 

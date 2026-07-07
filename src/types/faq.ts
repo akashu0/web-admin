@@ -50,6 +50,8 @@ export interface PaginationResponse<T> {
         page: number;
         limit: number;
         totalPages: number;
+        hasNextPage?: boolean;
+        hasPrevPage?: boolean;
     };
     count?: number;
 }

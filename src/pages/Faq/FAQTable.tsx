@@ -1,16 +1,15 @@
 // src/pages/FAQ/FAQTable.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     type ColumnDef,
     flexRender,
     getCoreRowModel,
     useReactTable,
-    getPaginationRowModel,
     getSortedRowModel,
     type SortingState,
 } from '@tanstack/react-table';
 
-import { MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pencil, Trash2, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -24,10 +23,10 @@ interface FAQTableProps {
     onDelete: (id: string) => void;
     onView: (faq: IFAQ) => void;
     onSelectionChange?: (selectedIds: string[]) => void;
-    page: number;
-    setPage: (page: number) => void;
-    totalPages: number;
-    setTotalPages: (totalPages: number) => void;
+    hasMore: boolean;
+    loadingMore: boolean;
+    total: number;
+    onLoadMore: () => void;
 }
 
 export const FAQTable = ({
@@ -36,9 +35,28 @@ export const FAQTable = ({
     onDelete,
     onView,
     onSelectionChange,
+    hasMore,
+    loadingMore,
+    total,
+    onLoadMore,
 }: FAQTableProps) => {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState({});
+
+    // Auto-fetch the next page when the window is scrolled near the bottom
+    const handleScroll = useCallback(() => {
+        if (!hasMore) return;
+        const scrollTop = window.innerHeight + window.scrollY;
+        const threshold = document.documentElement.scrollHeight - 300;
+        if (scrollTop >= threshold) {
+            onLoadMore();
+        }
+    }, [hasMore, onLoadMore]);
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [handleScroll]);
 
     const columns: ColumnDef<IFAQ>[] = [
         {
@@ -184,7 +202,6 @@ export const FAQTable = ({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onSortingChange: setSorting,
         onRowSelectionChange: setRowSelection,
@@ -253,29 +270,20 @@ export const FAQTable = ({
                 </Table>
             </div>
 
-            {/* Pagination */}
+            {/* Selection summary + infinite scroll status */}
             <div className="flex items-center justify-between">
                 <div className="text-sm text-zinc-500">
                     {table.getFilteredSelectedRowModel().rows.length} of{' '}
                     {table.getFilteredRowModel().rows.length} row(s) selected.
                 </div>
-                <div className="flex items-center space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
+                <div className="flex items-center">
+                    {loadingMore ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
+                    ) : !hasMore && data.length > 0 ? (
+                        <span className="text-sm text-zinc-500">
+                            All {total} FAQs loaded
+                        </span>
+                    ) : null}
                 </div>
             </div>
         </div>

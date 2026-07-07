@@ -1,4 +1,4 @@
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, RefreshCcw, Loader2, FileQuestion, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,67 +12,109 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { University, PaginationMeta, UniversityQueryParams } from "@/types/university";
+import type { University, UniversityQueryParams } from "@/types/university";
 import { universityService } from "@/services/universityService";
 import { UniversityDataTable } from "./UniversityDataTable";
 import { AddUniversityModal } from "./AddUniversityModal";
 import { ViewUniversityModal } from "./ViewUniversityModal";
 
+const LIMIT = 10;
+
+type UniversityFilters = Omit<UniversityQueryParams, 'page' | 'limit'>;
+
 export function UniversityList() {
     const navigate = useNavigate();
-    const [isPending, startTransition] = useTransition();
 
     const [universities, setUniversities] = useState<University[]>([]);
-    const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [total, setTotal] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isFetching, setIsFetching] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
     const [error, setError] = useState<boolean>(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    const [queryParams, setQueryParams] = useState<UniversityQueryParams>({
-        page: 1,
-        limit: 10,
+    const [filters, setFilters] = useState<UniversityFilters>({
         status: "all",
     });
 
-    const fetchUniversities = async () => {
-        startTransition(async () => {
-            try {
-                setError(false);
-                const response = await universityService.getAllUniversities(queryParams);
+    // Distinguishes a filter-driven reset (replace list) from a scroll-driven
+    // next-page fetch (append to list).
+    const isReset = useRef(true);
 
-                setUniversities(response.data);
+    // Not memoized: needs the latest `isFetching`/`filters` on every invocation.
+    const fetchUniversities = async (pageNum: number, append: boolean) => {
+        if (isFetching) return;
+        try {
+            setIsFetching(true);
+            setError(false);
+            const response = await universityService.getAllUniversities({
+                ...filters,
+                limit: LIMIT,
+                page: pageNum,
+            });
 
-                const meta: PaginationMeta = {
-                    page: response.pagination.page,
-                    limit: response.pagination.limit,
-                    total: response.pagination.total,
-                    totalPages: response.pagination.totalPages,
-                    currentPage: response.pagination.page,
-                    itemsPerPage: response.pagination.limit,
-                    totalItems: response.pagination.total,
-                    hasNextPage: response.pagination.hasNextPage,
-                    hasPrevPage: response.pagination.hasPrevPage,
-                };
+            const universitiesData = response.data || [];
+            const meta = response.pagination;
 
-                setPagination(meta);
-            } catch (error) {
-                console.error("Error fetching universities:", error);
-                setError(true);
-                setUniversities([]);
-                setPagination(null);
-                toast.error("Failed to fetch universities");
-            } finally {
-                setIsInitialLoad(false);
-            }
-        });
+            setUniversities((prev) => (append ? [...prev, ...universitiesData] : universitiesData));
+            setTotal(meta?.total ?? 0);
+            setHasMore(
+                typeof meta?.hasNextPage === "boolean"
+                    ? meta.hasNextPage
+                    : pageNum * LIMIT < (meta?.total ?? 0)
+            );
+        } catch (error) {
+            console.error("Error fetching universities:", error);
+            setError(true);
+            if (!append) setUniversities([]);
+            toast.error("Failed to fetch universities");
+        } finally {
+            setIsLoading(false);
+            setIsFetching(false);
+        }
     };
 
+    // Reset list when filters change
     useEffect(() => {
-        fetchUniversities();
+        isReset.current = true;
+        setPage(1);
+    }, [filters]);
+
+    // Fetch on page change (including reset -> page 1)
+    useEffect(() => {
+        const append = !isReset.current;
+        isReset.current = false;
+        fetchUniversities(page, append);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [queryParams.page, queryParams.limit, queryParams.status, queryParams.search, queryParams.sortBy, queryParams.sortOrder]);
+    }, [page, filters]);
+
+    // Infinite scroll - this page renders inside MainLayout's <main>, which only
+    // has a min-height (not a fixed height), so the window is the real scroller.
+    const handleScroll = useCallback(() => {
+        if (isFetching || !hasMore) return;
+        if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 400) {
+            setPage((prev) => prev + 1);
+        }
+    }, [isFetching, hasMore]);
+
+    useEffect(() => {
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [handleScroll]);
+
+    // Re-fetches the current view from page 1, replacing the list. Used after
+    // CRUD actions and manual refresh, where neither `page` nor `filters` change.
+    const refreshList = () => {
+        if (page === 1) {
+            fetchUniversities(1, false);
+        } else {
+            isReset.current = true;
+            setPage(1);
+        }
+    };
 
     const handleEdit = (university: University) => {
         // Navigate to edit page using slug
@@ -89,11 +131,10 @@ export function UniversityList() {
             return;
         }
 
-
         try {
             await universityService.deleteUniversity(id);
             toast.success("University deleted successfully");
-            fetchUniversities();
+            refreshList();
         } catch (error) {
             console.error("Error deleting university:", error);
             toast.error("Failed to delete university");
@@ -101,7 +142,7 @@ export function UniversityList() {
     };
 
     const handleRefresh = () => {
-        fetchUniversities();
+        refreshList();
     };
 
     const handleAddUniversity = () => {
@@ -110,22 +151,16 @@ export function UniversityList() {
 
     const handleModalSuccess = () => {
         setIsModalOpen(false);
-        fetchUniversities();
+        refreshList();
     };
 
-    const updateQueryParams = (updates: Partial<UniversityQueryParams>) => {
-        setQueryParams((prev) => ({
-            ...prev,
-            ...updates,
-            page: updates.page ?? (updates.search || updates.sortBy ? 1 : prev.page),
-        }));
-    };
+    const setSearch = useCallback((search: string) => {
+        setFilters((prev) => ({ ...prev, search: search || undefined }));
+    }, []);
 
-    const goToPage = (page: number) => updateQueryParams({ page });
-    const setPageSize = (limit: number) => updateQueryParams({ limit, page: 1 });
-    const setSearch = (search: string) => updateQueryParams({ search, page: 1 });
-    const setSort = (sortBy: string, sortOrder: "asc" | "desc") =>
-        updateQueryParams({ sortBy, sortOrder, page: 1 });
+    const setSort = useCallback((sortBy: string, sortOrder: "asc" | "desc") => {
+        setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
+    }, []);
 
     // Use useMemo to prevent columns from being recreated on every render
     const columns: ColumnDef<University>[] = useMemo(() => [
@@ -285,7 +320,7 @@ export function UniversityList() {
     ], []);
 
     // Initial loading state
-    if (isInitialLoad && isPending) {
+    if (isLoading) {
         return (
             <div className="flex h-96 items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
@@ -294,7 +329,7 @@ export function UniversityList() {
     }
 
     // Error or No universities found state
-    if (error || (!universities.length && !isPending)) {
+    if (error || (!universities.length && !isFetching)) {
         return (
             <div className="space-y-8 p-6">
                 {/* Header */}
@@ -310,10 +345,10 @@ export function UniversityList() {
                         <Button
                             variant="outline"
                             onClick={handleRefresh}
-                            disabled={isPending}
+                            disabled={isFetching}
                         >
                             <RefreshCcw
-                                className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
+                                className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
                             />
                             Refresh
                         </Button>
@@ -338,7 +373,7 @@ export function UniversityList() {
                     </p>
                     <div className="flex gap-3">
                         {error ? (
-                            <Button onClick={handleRefresh} disabled={isPending}>
+                            <Button onClick={handleRefresh} disabled={isFetching}>
                                 <RefreshCcw className="mr-2 h-4 w-4" />
                                 Try Again
                             </Button>
@@ -382,10 +417,10 @@ export function UniversityList() {
                     <Button
                         variant="outline"
                         onClick={handleRefresh}
-                        disabled={isPending}
+                        disabled={isFetching}
                     >
                         <RefreshCcw
-                            className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
+                            className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
                         />
                         Refresh
                     </Button>
@@ -401,12 +436,11 @@ export function UniversityList() {
             <UniversityDataTable
                 columns={columns}
                 data={universities}
-                pagination={pagination}
-                onPageChange={goToPage}
-                onPageSizeChange={setPageSize}
+                total={total}
+                hasMore={hasMore}
+                isLoadingMore={isFetching}
                 onSearchChange={setSearch}
                 onSortChange={setSort}
-                isLoading={isPending}
             />
 
             {/* Add Modal */}

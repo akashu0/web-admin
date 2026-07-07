@@ -7,7 +7,7 @@ import {
     getCoreRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -16,7 +16,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
     Select,
@@ -25,7 +24,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import type { PaginationMeta } from "@/types/course";
 
 const STREAM_OPTIONS = [
     'Engineering & Technology',
@@ -51,25 +49,23 @@ const STREAM_OPTIONS = [
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    pagination: PaginationMeta | null;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (size: number) => void;
+    total: number;
+    hasMore: boolean;
+    isLoadingMore?: boolean;
     onSearchChange: (search: string) => void;
     onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void;
     onStreamChange: (stream: string) => void;
-    isLoading?: boolean;
 }
 
 export function CourseDataTable<TData, TValue>({
     columns,
     data,
-    pagination,
-    onPageChange,
-    onPageSizeChange,
+    total,
+    hasMore,
+    isLoadingMore = false,
     onSearchChange,
     onSortChange,
     onStreamChange,
-    isLoading = false,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [searchValue, setSearchValue] = React.useState("");
@@ -96,13 +92,11 @@ export function CourseDataTable<TData, TValue>({
         data: data || [],
         columns,
         getCoreRowModel: getCoreRowModel(),
-        manualPagination: true,
         manualSorting: true,
         onSortingChange: setSorting,
         state: {
             sorting,
         },
-        pageCount: pagination?.totalPages || 0,
     });
 
     const rows = table.getRowModel()?.rows || [];
@@ -138,21 +132,11 @@ export function CourseDataTable<TData, TValue>({
                         ))}
                     </SelectContent>
                 </Select>
-                <Select
-                    value={pagination?.limit?.toString() || "10"}
-                    onValueChange={(value) => onPageSizeChange(Number(value))}
-                >
-                    <SelectTrigger className="w-[120px] bg-white border-gray-200">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                        <SelectItem value="5">5 per page</SelectItem>
-                        <SelectItem value="10">10 per page</SelectItem>
-                        <SelectItem value="20">20 per page</SelectItem>
-                        <SelectItem value="50">50 per page</SelectItem>
-                        <SelectItem value="100">100 per page</SelectItem>
-                    </SelectContent>
-                </Select>
+            </div>
+
+            {/* Results summary */}
+            <div className="text-sm text-gray-600">
+                Showing {data.length} of {total} courses
             </div>
 
             {/* Table */}
@@ -175,16 +159,7 @@ export function CourseDataTable<TData, TValue>({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center text-gray-500"
-                                >
-                                    Loading...
-                                </TableCell>
-                            </TableRow>
-                        ) : rows.length > 0 ? (
+                        {rows.length > 0 ? (
                             rows.map((row) => (
                                 <TableRow
                                     key={row.id}
@@ -201,6 +176,15 @@ export function CourseDataTable<TData, TValue>({
                                     ))}
                                 </TableRow>
                             ))
+                        ) : isLoadingMore ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center text-gray-500"
+                                >
+                                    Loading...
+                                </TableCell>
+                            </TableRow>
                         ) : (
                             <TableRow>
                                 <TableCell
@@ -215,57 +199,16 @@ export function CourseDataTable<TData, TValue>({
                 </Table>
             </div>
 
-            {/* Pagination */}
-            {pagination && (
-                <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
-                        Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
-                        {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-                        of {pagination.total} courses
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(1)}
-                            disabled={pagination.page === 1 || isLoading}
-                            className="border-gray-200 bg-white hover:bg-gray-50"
-                        >
-                            <ChevronsLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(pagination.page - 1)}
-                            disabled={pagination.page === 1 || isLoading}
-                            className="border-gray-200 bg-white hover:bg-gray-50"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Previous
-                        </Button>
-                        <span className="text-sm text-gray-600 px-2">
-                            Page {pagination.page} of {pagination.totalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(pagination.page + 1)}
-                            disabled={pagination.page >= pagination.totalPages || isLoading}
-                            className="border-gray-200 bg-white hover:bg-gray-50"
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(pagination.totalPages)}
-                            disabled={pagination.page >= pagination.totalPages || isLoading}
-                            className="border-gray-200 bg-white hover:bg-gray-50"
-                        >
-                            <ChevronsRight className="h-4 w-4" />
-                        </Button>
-                    </div>
+            {/* Infinite scroll status */}
+            {rows.length > 0 && isLoadingMore && (
+                <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading more courses...
+                </div>
+            )}
+            {rows.length > 0 && !hasMore && !isLoadingMore && (
+                <div className="py-4 text-center text-sm text-gray-400">
+                    All {total} courses loaded
                 </div>
             )}
         </div>

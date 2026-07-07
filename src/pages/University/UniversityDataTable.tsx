@@ -4,16 +4,8 @@ import {
     getCoreRowModel,
     useReactTable,
 } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -22,35 +14,31 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import type { University, PaginationMeta } from "@/types/university";
+import type { University } from "@/types/university";
 
 interface UniversityDataTableProps {
     columns: ColumnDef<University>[];
     data: University[];
-    pagination: PaginationMeta | null;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (pageSize: number) => void;
+    total: number;
+    hasMore: boolean;
+    isLoadingMore?: boolean;
     onSearchChange: (search: string) => void;
     onSortChange?: (sortBy: string, sortOrder: "asc" | "desc") => void;
-    isLoading?: boolean;
 }
 
 export function UniversityDataTable({
     columns,
     data,
-    pagination,
-    onPageChange,
-    onPageSizeChange,
+    total,
+    hasMore,
+    isLoadingMore = false,
     onSearchChange,
-    isLoading = false,
 }: UniversityDataTableProps) {
     // 1. Keep Table logic minimal
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        manualPagination: true,
-        pageCount: pagination?.totalPages ?? 0,
     });
 
     return (
@@ -66,20 +54,9 @@ export function UniversityDataTable({
                     />
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Rows:</span>
-                    <Select
-                        value={String(pagination?.limit ?? 20)}
-                        onValueChange={(v) => onPageSizeChange(Number(v))}
-                    >
-                        <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            {[10, 20, 50].map(size => (
-                                <SelectItem key={size} value={String(size)}>{size}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+                <p className="text-sm text-gray-500 shrink-0">
+                    Showing {data.length} of {total}
+                </p>
             </div>
 
             {/* Table Core */}
@@ -97,10 +74,8 @@ export function UniversityDataTable({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? (
-                            <TableRow><TableCell colSpan={columns.length} className="h-32 text-center">Loading...</TableCell></TableRow>
-                        ) : data.length === 0 ? (
-                            <TableRow><TableCell colSpan={columns.length} className="h-32 text-center">No results.</TableCell></TableRow>
+                        {data.length === 0 ? (
+                            <TableRow><TableCell colSpan={columns.length} className="h-32 text-center">{isLoadingMore ? "Loading..." : "No results."}</TableCell></TableRow>
                         ) : (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
@@ -116,30 +91,16 @@ export function UniversityDataTable({
                 </Table>
             </div>
 
-            {/* Simplified Pagination Controls */}
-            {pagination && (
-                <div className="flex items-center justify-between px-2">
-                    <p className="text-sm text-gray-500">
-                        Page {pagination.page} of {pagination.totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={pagination.page <= 1 || isLoading}
-                            onClick={() => onPageChange(pagination.page - 1)}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={pagination.page >= pagination.totalPages || isLoading}
-                            onClick={() => onPageChange(pagination.page + 1)}
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
+            {/* Infinite scroll status */}
+            {data.length > 0 && isLoadingMore && (
+                <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading more universities...
+                </div>
+            )}
+            {data.length > 0 && !hasMore && !isLoadingMore && (
+                <div className="py-4 text-center text-sm text-gray-400">
+                    All {total} universities loaded
                 </div>
             )}
         </div>
