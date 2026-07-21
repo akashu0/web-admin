@@ -100,15 +100,21 @@ export const courseService = {
     updateCourseOverview: async (slug: string, data: CourseFormData['overview']) => {
         const formData = new FormData();
 
-        Object.entries(data).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-                if (typeof value === 'object' && !(value instanceof File)) {
-                    formData.append(key, JSON.stringify(value));
-                } else {
-                    formData.append(key, value as any);
-                }
-            }
-        });
+        // Mirror the create path: send the whole overview as ONE JSON blob so the
+        // backend parses nested arrays/objects (intakes, dynamicFields, etc.) intact.
+        // Appending each field individually stringifies arrays into raw strings that
+        // the backend never re-parses, corrupting `[String]` paths like `intakes`.
+        const overviewData = { ...data };
+
+        // A newly-picked image must go as a file part, not inside the JSON blob
+        // (a File serializes to "{}"). An unchanged image is a string URL and is
+        // safely carried inside the blob.
+        if (overviewData.courseImage instanceof File) {
+            formData.append('courseImage', overviewData.courseImage);
+            delete overviewData.courseImage;
+        }
+
+        formData.append('overview', JSON.stringify(overviewData));
 
         const response = await apiClient.put(
             `/courses/courses-overview/${slug}`,
