@@ -46,7 +46,8 @@ const sidebarItems = [
         label: 'Agents',
         href: '/agents',
         subMenus: [
-            { icon: Users, label: 'Agents', href: '/agents' },
+            { icon: LayoutDashboard, label: 'Dashboard', href: '/agents' },
+            { icon: Users, label: 'All Agents', href: '/agents/list' },
             { icon: FileText, label: 'Applications', href: '/agents/applications' },
         ]
     },

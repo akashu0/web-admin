@@ -5,8 +5,10 @@ import type {
     AgentApplicationListResponse,
     AgentListResponse,
     AgentSessionListResponse,
+    AgentStatsResponse,
     AgentStatus,
     ApplicationStatus,
+    MostActiveAgentsResponse,
 } from '@/types/agent';
 import { apiClient } from './api';
 
@@ -22,6 +24,32 @@ export const agentService = {
             return response.data;
         } catch (error) {
             console.error('Error fetching agents:', error);
+            throw error;
+        }
+    },
+
+    async getAgentStats(): Promise<AgentStatsResponse> {
+        try {
+            const response = await apiClient.get<AgentStatsResponse>('/agent-portal/admin/agents/stats');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching agent stats:', error);
+            throw error;
+        }
+    },
+
+    async getMostActiveAgents(params?: {
+        days?: number;
+        limit?: number;
+    }): Promise<MostActiveAgentsResponse> {
+        try {
+            const response = await apiClient.get<MostActiveAgentsResponse>(
+                '/agent-portal/admin/agents/most-active',
+                { params }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching most active agents:', error);
             throw error;
         }
     },

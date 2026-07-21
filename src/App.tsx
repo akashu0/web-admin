@@ -25,6 +25,7 @@ import { PopupBannerPage } from './pages/PopupBanner/PopupBannerPage';
 import { LibraryPage } from './pages/Library/LibraryPage';
 import { EgAcademyCourseList } from './pages/EgAcademy/EgAcademyCourseList';
 import EditEgAcademyCourse from './pages/EgAcademy/EditEgAcademyCourse';
+import AgentDashboard from './pages/Agent/AgentDashboard';
 import AgentList from './pages/Agent/AgentList';
 import AgentDetail from './pages/Agent/AgentDetail';
 import ApplicationList from './pages/Agent/ApplicationList';
@@ -86,7 +87,8 @@ function App() {
                         <Route path="/eg-academy/courses/:slug" element={<EditEgAcademyCourse />} />
 
                         {/* Agent Routes */}
-                        <Route path="/agents" element={<AgentList />} />
+                        <Route path="/agents" element={<AgentDashboard />} />
+                        <Route path="/agents/list" element={<AgentList />} />
                         <Route path="/agents/applications" element={<ApplicationList />} />
                         <Route path="/agents/:id" element={<AgentDetail />} />
 

@@ -95,6 +95,36 @@ export interface IAgentApplication {
     updatedAt: string;
 }
 
+export interface IAgentStats {
+    total: number;
+    active: number;
+    pending: number;
+    notVerified: number;
+    inactive: number;
+    suspended: number;
+    rejected: number;
+}
+
+export interface AgentStatsResponse {
+    success: boolean;
+    data: IAgentStats;
+}
+
+// One agent in the "most active" ranking (agent summary + engagement counts).
+export interface IMostActiveAgent extends IAgentSummary {
+    loginCount: number;
+    activityCount: number;
+    score: number;
+    windowLastLoginAt: string | null;
+    windowLastActivityAt: string | null;
+}
+
+export interface MostActiveAgentsResponse {
+    success: boolean;
+    data: IMostActiveAgent[];
+    meta: { days: number; since: string; limit: number };
+}
+
 export interface IPagination {
     page: number;
     limit: number;
