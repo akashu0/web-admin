@@ -23,6 +23,19 @@ const TUITION_FEE_TYPES = [
     "Regular (Self-Funded Program)",
 ] as const;
 
+const LEVEL_OPTIONS = [
+    "Certification",
+    "Diploma",
+    "Foundation Diploma (Level 3 Diploma)",
+    "Level 4 Diploma",
+    "Level 5 Diploma",
+    "Higher National Diploma (Level 5 Extended Diploma)",
+    "PG Diploma (Level 7 Diploma)",
+    "Bachelors",
+    "Masters",
+    "Doctorate (PhD)",
+] as const;
+
 const CURRENCY_OPTIONS = [
     { code: 'USD', name: 'US Dollar' },
     { code: 'GBP', name: 'British Pound' },
@@ -48,7 +61,8 @@ const CURRENCY_OPTIONS = [
 ];
 
 const feeStructureSchema = z.object({
-    level: z.enum(["undergraduate", "postgraduate"]),
+    // String (not enum) so existing records with legacy levels still load/submit.
+    level: z.string().min(1, "Level is required"),
     currency: z.string().min(1, "Currency is required"),
     tuitionFee: z
         .string()
@@ -94,7 +108,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
 
     const addFeeStructure = () => {
         append({
-            level: "undergraduate",
+            level: "",
             currency: "USD",
             tuitionFee: "",
             tuitionFeeType: "Regular (Self-Funded Program)",
@@ -148,17 +162,21 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                 <div className="space-y-2">
                                     <Label>Level *</Label>
                                     <Select
-                                        value={watch(`fees.${index}.level`)}
-                                        onValueChange={(v) => setValue(`fees.${index}.level`, v as "undergraduate" | "postgraduate")}
+                                        value={watch(`fees.${index}.level`) || ""}
+                                        onValueChange={(v) => setValue(`fees.${index}.level`, v)}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue />
+                                            <SelectValue placeholder="Select level" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                                            <SelectItem value="postgraduate">Postgraduate</SelectItem>
+                                            {LEVEL_OPTIONS.map((lvl) => (
+                                                <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
+                                    {errors.fees?.[index]?.level && (
+                                        <p className="text-xs text-red-500">{errors.fees[index]?.level?.message}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">

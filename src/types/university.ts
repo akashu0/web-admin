@@ -4,7 +4,7 @@
  * Fee Structure (embedded in University)
  */
 export interface FeeStructure {
-    level: "undergraduate" | "postgraduate";
+    level: string;
     currency: string; // e.g., "USD", "EUR", "GBP"
     tuitionFee: string; // e.g., "15000 - 20000"
     applicationFee?: string;
