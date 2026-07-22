@@ -67,7 +67,11 @@ const feeStructureSchema = z.object({
     tuitionFee: z
         .string()
         .min(1, "Average tuition fee is required")
-        .regex(/^\d+(\.\d+)?$/, "Only numbers are allowed"),
+        // Accept a single number (15000 / 15000.5) or a range (1000-2000, 1000 - 2000)
+        .regex(
+            /^\d+(\.\d+)?(\s*-\s*\d+(\.\d+)?)?$/,
+            "Enter a number or a range like 1000-2000"
+        ),
     tuitionFeeType: z.enum([
         "Fully Tuition Fee Funded",
         "Scholarships",
@@ -207,10 +211,10 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                 <div className="space-y-2">
                                     <Label>Average Tuition Fee *</Label>
                                     <Input
-                                        type="number"
-                                        min="0"
+                                        type="text"
+                                        inputMode="text"
                                         {...register(`fees.${index}.tuitionFee`)}
-                                        placeholder="15000"
+                                        placeholder="e.g. 15000 or 1000-2000"
                                     />
                                     {errors.fees?.[index]?.tuitionFee && (
                                         <p className="text-xs text-red-500">{errors.fees[index]?.tuitionFee?.message}</p>

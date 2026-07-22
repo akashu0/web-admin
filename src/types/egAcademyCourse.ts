@@ -80,6 +80,22 @@ export const STREAM_OPTIONS = [
   'Civil, Mechanical & Electrical Engineering',
   'Petroleum & Chemical Engineering',
   'Nanotechnology & Advanced Materials Science',
+  // --- Merged 2026-07-22: broader field taxonomy (also used by University streams) ---
+  'Business & Management',
+  'Computing & Information Technology',
+  'Architecture & Built Environment',
+  'Geomatics & Geospatial Sciences',
+  'Property & Real Estate',
+  'Health & Medical Sciences',
+  'Education',
+  'Law',
+  'Hospitality & Tourism',
+  'Arts, Design & Media',
+  'Social Sciences',
+  'Environmental Sciences',
+  'Agriculture & Food Sciences',
+  'Aviation & Maritime',
+  'Languages & Communication',
 ] as const;
 
 export const CONTINENT_OPTIONS = [

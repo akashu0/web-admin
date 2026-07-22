@@ -22,7 +22,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { universityService } from "@/services/universityService";
+import { STREAM_OPTIONS } from "@/types/course";
 
 // Simplified validation schema - only basic info
 const universitySchema = z.object({
@@ -67,6 +70,15 @@ export function AddUniversityModal({
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+    const [selectedStreams, setSelectedStreams] = useState<string[]>([]);
+
+    const toggleStream = (stream: string) => {
+        setSelectedStreams((prev) =>
+            prev.includes(stream)
+                ? prev.filter((s) => s !== stream)
+                : [...prev, stream]
+        );
+    };
 
     const {
         register,
@@ -94,9 +106,29 @@ export function AddUniversityModal({
         }
     }, [name, setValue]);
 
+    // Must match the backend multer limit (5MB) and allowed formats.
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+
+    const validateImage = (file: File): boolean => {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            toast.error("Only image files are allowed (jpeg, jpg, png, gif, webp).");
+            return false;
+        }
+        if (file.size > MAX_IMAGE_SIZE) {
+            toast.error("Image is too large. Maximum allowed size is 5MB.");
+            return false;
+        }
+        return true;
+    };
+
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!validateImage(file)) {
+                e.target.value = "";
+                return;
+            }
             setLogoFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -109,6 +141,10 @@ export function AddUniversityModal({
     const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (!validateImage(file)) {
+                e.target.value = "";
+                return;
+            }
             setBannerFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -149,6 +185,9 @@ export function AddUniversityModal({
             if (data.internationalStudents)
                 formData.append("internationalStudents", data.internationalStudents);
 
+            // Streams (multi-select) — sent as a JSON array string
+            formData.append("streams", JSON.stringify(selectedStreams));
+
             // Append files
             if (logoFile) {
                 formData.append("logo", logoFile);
@@ -165,6 +204,7 @@ export function AddUniversityModal({
             setLogoPreview(null);
             setBannerFile(null);
             setBannerPreview(null);
+            setSelectedStreams([]);
             onSuccess();
         } catch (error: any) {
             console.error("Error creating university:", error);
@@ -353,6 +393,45 @@ export function AddUniversityModal({
                                     <SelectItem value="published">Published</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        {/* Streams (multi-select) */}
+                        <div className="space-y-2">
+                            <Label>Streams</Label>
+                            <p className="text-xs text-gray-500">
+                                Select the fields of study this university offers. You can pick more than one.
+                            </p>
+
+                            {selectedStreams.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {selectedStreams.map((stream) => (
+                                        <Badge
+                                            key={stream}
+                                            variant="secondary"
+                                            className="gap-1 cursor-pointer"
+                                            onClick={() => toggleStream(stream)}
+                                        >
+                                            {stream}
+                                            <X className="h-3 w-3" />
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="max-h-52 overflow-y-auto rounded-md border p-3 grid grid-cols-2 gap-2">
+                                {STREAM_OPTIONS.map((stream) => (
+                                    <label
+                                        key={stream}
+                                        className="flex items-center gap-2 text-sm cursor-pointer"
+                                    >
+                                        <Checkbox
+                                            checked={selectedStreams.includes(stream)}
+                                            onCheckedChange={() => toggleStream(stream)}
+                                        />
+                                        <span>{stream}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

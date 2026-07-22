@@ -121,6 +121,7 @@ export interface University {
     internationalStudents: string;
     rank: string;
     about: string;
+    streams?: string[];
 
     // Images
     logoUrl?: string;
