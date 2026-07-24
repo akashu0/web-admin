@@ -197,4 +197,6 @@ export interface UniversityQueryParams {
     sortOrder?: "asc" | "desc";
     country?: string;
     city?: string;
+    location?: string;
+    universityType?: "all" | "Public" | "Private";
 }

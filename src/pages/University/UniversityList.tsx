@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, RefreshCcw, Loader2, FileQuestion, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, RefreshCcw, Loader2, FileQuestion, MoreHorizontal, Pencil, Trash2, Eye, ChevronDown, Check, CheckCircle2, FileEdit, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -36,9 +44,68 @@ export function UniversityList() {
     const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
     const [error, setError] = useState<boolean>(false);
 
+    // Bulk-action selection: ids lifted from the data table + a signal we bump
+    // to clear the table's row selection after a successful bulk update.
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [selectionResetSignal, setSelectionResetSignal] = useState(0);
+
     const [filters, setFilters] = useState<UniversityFilters>({
         status: "all",
     });
+
+    // Text-filter inputs are kept local and pushed into `filters` on a short
+    // debounce, so typing doesn't fire a request on every keystroke.
+    const [countryInput, setCountryInput] = useState("");
+    const [cityInput, setCityInput] = useState("");
+    const [locationInput, setLocationInput] = useState("");
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setFilters((prev) => ({
+                ...prev,
+                country: countryInput.trim() || undefined,
+                city: cityInput.trim() || undefined,
+                location: locationInput.trim() || undefined,
+            }));
+        }, 400);
+        return () => clearTimeout(t);
+    }, [countryInput, cityInput, locationInput]);
+
+    const hasActiveFilters = Boolean(
+        (filters.status && filters.status !== "all") ||
+        filters.country ||
+        filters.city ||
+        filters.location ||
+        filters.universityType ||
+        filters.search
+    );
+
+    const setStatusFilter = useCallback((value: string) => {
+        setFilters((prev) => ({
+            ...prev,
+            status: value as UniversityFilters["status"],
+        }));
+    }, []);
+
+    const setTypeFilter = useCallback((value: string) => {
+        setFilters((prev) => ({
+            ...prev,
+            universityType:
+                value === "all" ? undefined : (value as "Public" | "Private"),
+        }));
+    }, []);
+
+    const clearFilters = useCallback(() => {
+        setCountryInput("");
+        setCityInput("");
+        setLocationInput("");
+        setFilters((prev) => ({
+            status: "all",
+            search: prev.search,
+            sortBy: prev.sortBy,
+            sortOrder: prev.sortOrder,
+        }));
+    }, []);
 
     // Distinguishes a filter-driven reset (replace list) from a scroll-driven
     // next-page fetch (append to list).
@@ -140,6 +207,38 @@ export function UniversityList() {
             toast.error("Failed to delete university");
         }
     };
+
+    // Change status for one or many universities. Routed through the bulk
+    // endpoint (updateMany, no doc validation), so it never fails on unrelated
+    // required fields being empty — status is independent of the rest of the
+    // record and only controls website visibility.
+    const handleStatusChange = async (
+        ids: string[],
+        status: "published" | "draft"
+    ) => {
+        if (!ids.length) return;
+        try {
+            await universityService.bulkUpdateStatus(ids, status);
+            const noun = ids.length === 1 ? "University" : `${ids.length} universities`;
+            toast.success(
+                status === "published"
+                    ? `${noun} published`
+                    : `${noun} moved to draft`
+            );
+            setSelectedIds([]);
+            setSelectionResetSignal((s) => s + 1);
+            refreshList();
+        } catch (error) {
+            console.error("Error updating university status:", error);
+            const message = (error as { response?: { data?: { message?: string } } })
+                ?.response?.data?.message;
+            toast.error(message || "Failed to update status");
+        }
+    };
+
+    const handleSelectionChange = useCallback((ids: string[]) => {
+        setSelectedIds(ids);
+    }, []);
 
     const handleRefresh = () => {
         refreshList();
@@ -259,17 +358,54 @@ export function UniversityList() {
             header: "Status",
             cell: ({ row }) => {
                 const status = row.getValue("status") as string;
+                const university = row.original;
                 return (
-                    <Badge
-                        variant={status === "published" ? "default" : "secondary"}
-                        className={
-                            status === "published"
-                                ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                        }
-                    >
-                        {status === "published" ? "Published" : "Draft"}
-                    </Badge>
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button type="button" className="focus:outline-none">
+                                    <Badge
+                                        variant={status === "published" ? "default" : "secondary"}
+                                        className={
+                                            "cursor-pointer gap-1 " +
+                                            (status === "published"
+                                                ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                                : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200")
+                                        }
+                                    >
+                                        {status === "published" ? "Published" : "Draft"}
+                                        <ChevronDown className="h-3 w-3" />
+                                    </Badge>
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem
+                                    disabled={status === "published"}
+                                    onSelect={() => handleStatusChange([university._id], "published")}
+                                >
+                                    <Check
+                                        className={
+                                            "mr-2 h-4 w-4 " +
+                                            (status === "published" ? "opacity-100" : "opacity-0")
+                                        }
+                                    />
+                                    Published
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    disabled={status === "draft"}
+                                    onSelect={() => handleStatusChange([university._id], "draft")}
+                                >
+                                    <Check
+                                        className={
+                                            "mr-2 h-4 w-4 " +
+                                            (status === "draft" ? "opacity-100" : "opacity-0")
+                                        }
+                                    />
+                                    Draft
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 );
             },
         },
@@ -328,8 +464,10 @@ export function UniversityList() {
         );
     }
 
-    // Error or No universities found state
-    if (error || (!universities.length && !isFetching)) {
+    // Error or No universities found state. When filters/search are active we
+    // keep the normal layout (so the filter bar stays reachable and the table
+    // shows an inline "No results") instead of this full-page empty screen.
+    if (error || (!universities.length && !isFetching && !hasActiveFilters)) {
         return (
             <div className="space-y-8 p-6">
                 {/* Header */}
@@ -432,6 +570,106 @@ export function UniversityList() {
                 </div>
             </div>
 
+            {/* Filter bar */}
+            <div className="flex flex-wrap items-end gap-3 rounded-md border bg-white p-4">
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">Status</label>
+                    <Select value={filters.status ?? "all"} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[150px]">
+                            <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="published">Published</SelectItem>
+                            <SelectItem value="draft">Draft</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">Type</label>
+                    <Select
+                        value={filters.universityType ?? "all"}
+                        onValueChange={setTypeFilter}
+                    >
+                        <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="All Types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="Public">Public</SelectItem>
+                            <SelectItem value="Private">Private</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">Country</label>
+                    <Input
+                        value={countryInput}
+                        onChange={(e) => setCountryInput(e.target.value)}
+                        placeholder="e.g. United Kingdom"
+                        className="w-[170px]"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">City</label>
+                    <Input
+                        value={cityInput}
+                        onChange={(e) => setCityInput(e.target.value)}
+                        placeholder="e.g. London"
+                        className="w-[150px]"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-600">Location</label>
+                    <Input
+                        value={locationInput}
+                        onChange={(e) => setLocationInput(e.target.value)}
+                        placeholder="e.g. Downtown"
+                        className="w-[150px]"
+                    />
+                </div>
+
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-600">
+                        <X className="mr-1 h-4 w-4" />
+                        Clear filters
+                    </Button>
+                )}
+            </div>
+
+            {/* Bulk action toolbar - only visible when rows are selected */}
+            {selectedIds.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 rounded-md border bg-gray-50 px-4 py-3">
+                    <span className="text-sm font-medium text-gray-700">
+                        {selectedIds.length} selected
+                    </span>
+                    <div className="ml-auto flex gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-700 border-green-200 hover:bg-green-50"
+                            onClick={() => handleStatusChange(selectedIds, "published")}
+                        >
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Publish Selected
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-yellow-700 border-yellow-200 hover:bg-yellow-50"
+                            onClick={() => handleStatusChange(selectedIds, "draft")}
+                        >
+                            <FileEdit className="mr-2 h-4 w-4" />
+                            Move to Draft
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Data Table */}
             <UniversityDataTable
                 columns={columns}
@@ -441,6 +679,8 @@ export function UniversityList() {
                 isLoadingMore={isFetching}
                 onSearchChange={setSearch}
                 onSortChange={setSort}
+                onSelectionChange={handleSelectionChange}
+                resetSelectionSignal={selectionResetSignal}
             />
 
             {/* Add Modal */}

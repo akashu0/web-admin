@@ -104,4 +104,18 @@ export const universityService = {
         const response = await apiClient.patch(`/universities/references/${slug}`, data);
         return response.data;
     },
+
+    // Bulk (or single) status change. Hits updateMany on the backend with no
+    // document validation, so switching draft<->published never trips the
+    // required-field validation of the full editor (basic-info) path.
+    bulkUpdateStatus: async (
+        universityIds: string[],
+        status: "published" | "draft"
+    ) => {
+        const response = await apiClient.patch(`/universities/bulk/status`, {
+            universityIds,
+            status,
+        });
+        return response.data;
+    },
 };

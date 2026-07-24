@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import {
     type ColumnDef,
+    type RowSelectionState,
     flexRender,
     getCoreRowModel,
     useReactTable,
@@ -24,6 +26,11 @@ interface UniversityDataTableProps {
     isLoadingMore?: boolean;
     onSearchChange: (search: string) => void;
     onSortChange?: (sortBy: string, sortOrder: "asc" | "desc") => void;
+    // Lifts the currently selected university _ids to the parent for bulk actions.
+    onSelectionChange?: (ids: string[]) => void;
+    // Bumping this signal from the parent clears the current row selection
+    // (e.g. right after a bulk status change succeeds).
+    resetSelectionSignal?: number;
 }
 
 export function UniversityDataTable({
@@ -33,13 +40,33 @@ export function UniversityDataTable({
     hasMore,
     isLoadingMore = false,
     onSearchChange,
+    onSelectionChange,
+    resetSelectionSignal,
 }: UniversityDataTableProps) {
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
     // 1. Keep Table logic minimal
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
+        enableRowSelection: true,
+        // Key selection by _id so it stays stable as infinite-scroll appends rows.
+        getRowId: (row) => row._id,
+        onRowSelectionChange: setRowSelection,
+        state: { rowSelection },
     });
+
+    // Report selected ids upward whenever the selection changes.
+    useEffect(() => {
+        const ids = Object.keys(rowSelection).filter((id) => rowSelection[id]);
+        onSelectionChange?.(ids);
+    }, [rowSelection, onSelectionChange]);
+
+    // Clear selection when the parent bumps the reset signal.
+    useEffect(() => {
+        if (resetSelectionSignal !== undefined) setRowSelection({});
+    }, [resetSelectionSignal]);
 
     return (
         <div className="space-y-4">
