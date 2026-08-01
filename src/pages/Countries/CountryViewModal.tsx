@@ -53,10 +53,10 @@ export function CountryViewModal() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="bg-white rounded-lg p-8 shadow-lg">
-                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
-                    <p className="mt-4 text-gray-600">Loading country details...</p>
+            <div className="flex h-96 items-center justify-center">
+                <div className="bg-card rounded-lg p-8 shadow-lg">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                    <p className="mt-4 text-muted-foreground">Loading country details...</p>
                 </div>
             </div>
         );
@@ -73,9 +73,9 @@ export function CountryViewModal() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="-m-4 lg:-m-5">
             {/* Header with Banner */}
-            <div className="relative h-64 bg-linear-to-r from-purple-600 to-blue-600">
+            <div className="relative h-64 bg-linear-to-r from-primary to-primary">
                 {country.banner && (
                     <img
                         src={country.banner}
@@ -83,20 +83,20 @@ export function CountryViewModal() {
                         className="w-full h-full object-cover"
                     />
                 )}
-                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-0 bg-primary/40" />
 
                 {/* Navigation */}
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-center">
                     <button
                         onClick={handleClose}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-card/90 hover:bg-card rounded-lg transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span>Back to Countries</span>
                     </button>
                     <button
                         onClick={handleEdit}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary text-primary-foreground rounded-lg transition-colors"
                     >
                         <Edit className="w-4 h-4" />
                         <span>Edit Country</span>
@@ -105,7 +105,7 @@ export function CountryViewModal() {
 
                 {/* Country Info Overlay */}
                 <div className="absolute bottom-6 left-6 flex items-end gap-4">
-                    <div className="text-white mb-2">
+                    <div className="text-primary-foreground mb-2">
                         <h1 className="text-4xl font-bold mb-2">{country.name}</h1>
                         <div className="flex items-center gap-4 text-sm">
                             <span className="flex items-center gap-1">
@@ -115,8 +115,8 @@ export function CountryViewModal() {
                             <span>{country.continent}</span>
                             <span
                                 className={`px-3 py-1 rounded-full text-xs font-medium ${country.status === 'published'
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-yellow-500 text-white'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground'
                                     }`}
                             >
                                 {country.status}
@@ -129,7 +129,7 @@ export function CountryViewModal() {
             {/* Content */}
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Section Tabs */}
-                <div className="bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
+                <div className="bg-card rounded-lg shadow-sm mb-6 overflow-x-auto">
                     <div className="flex border-b">
                         {sections.map((section) => {
                             const Icon = section.icon;
@@ -138,8 +138,8 @@ export function CountryViewModal() {
                                     key={section.id}
                                     onClick={() => setActiveSection(section.id)}
                                     className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${activeSection === section.id
-                                        ? 'text-purple-600 border-b-2 border-purple-600'
-                                        : 'text-gray-600 hover:text-gray-900'
+                                        ? 'text-primary border-b-2 border-primary'
+                                        : 'text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -151,7 +151,7 @@ export function CountryViewModal() {
                 </div>
 
                 {/* Section Content */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="bg-card rounded-lg shadow-sm p-6">
                     {activeSection === 'overview' && <OverviewSection country={country} />}
                     {activeSection === 'costs' && <CostsSection country={country} />}
                     {activeSection === 'references' && <ReferencesSection country={country} />}
@@ -166,8 +166,8 @@ function OverviewSection({ country }: { country: CountryResponse }) {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">About {country.name}</h2>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{country.about}</p>
+                <h2 className="text-2xl font-bold text-foreground mb-4">About {country.name}</h2>
+                <p className="text-foreground leading-relaxed whitespace-pre-wrap">{country.about}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -189,18 +189,18 @@ function CostsSection({ country }: { country: CountryResponse }) {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Cost of Living</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Cost of Living</h2>
             {country.costOfLiving.map((cost, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6">
+                <div key={index} className="border border-border rounded-lg p-6">
                     {/* Tuition Costs */}
                     {cost.tuition && cost.tuition.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tuition Fees</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Tuition Fees</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {cost.tuition.map((item, idx) => (
-                                    <div key={idx} className="bg-purple-50 rounded-lg p-4">
-                                        <p className="text-sm font-medium text-gray-600 mb-2">{item.label}</p>
-                                        <p className="text-2xl font-bold text-gray-900">
+                                    <div key={idx} className="bg-accent rounded-lg p-4">
+                                        <p className="text-sm font-medium text-muted-foreground mb-2">{item.label}</p>
+                                        <p className="text-2xl font-bold text-foreground">
                                             {item.currency || 'USD'} {item.min?.toLocaleString()} - {item.max?.toLocaleString()}
                                         </p>
                                     </div>
@@ -212,12 +212,12 @@ function CostsSection({ country }: { country: CountryResponse }) {
                     {/* Living Costs */}
                     {cost.living && cost.living.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Living Expenses</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Living Expenses</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {cost.living.map((item, idx) => (
-                                    <div key={idx} className="bg-blue-50 rounded-lg p-4">
-                                        <p className="text-sm font-medium text-gray-600 mb-2">{item.label}</p>
-                                        <p className="text-2xl font-bold text-gray-900">
+                                    <div key={idx} className="bg-accent rounded-lg p-4">
+                                        <p className="text-sm font-medium text-muted-foreground mb-2">{item.label}</p>
+                                        <p className="text-2xl font-bold text-foreground">
                                             {item.currency || 'USD'} {item.min?.toLocaleString()} - {item.max?.toLocaleString()}
                                         </p>
                                     </div>
@@ -228,8 +228,8 @@ function CostsSection({ country }: { country: CountryResponse }) {
 
                     {/* Note */}
                     {cost.note && (
-                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <p className="text-sm text-gray-700">{cost.note}</p>
+                        <div className="bg-muted border-l-4 border-primary p-4">
+                            <p className="text-sm text-foreground">{cost.note}</p>
                         </div>
                     )}
                 </div>
@@ -244,34 +244,34 @@ function CostsSection({ country }: { country: CountryResponse }) {
 function ReferencesSection({ country }: { country: CountryResponse }) {
     return (
         <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-foreground">
                 References & Resources
             </h2>
 
             {/* ================= VISA PROCESS ================= */}
             {country.visaProcessDocuments && (
-                <div className="border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-purple-600" />
+                <div className="border border-border rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-primary" />
                         Visa Process
                     </h3>
 
                     {/* Visa Steps */}
                     {/* {country?.visaProcessDocuments?.visaSteps?.length > 0 && ( */}
                     <div className="mb-6">
-                        <h4 className="font-medium text-gray-800 mb-3">
+                        <h4 className="font-medium text-foreground mb-3">
                             Application Steps
                         </h4>
 
-                        <div className="relative border-l-2 border-purple-200 pl-6 space-y-6">
+                        <div className="relative border-l-2 border-primary/30 pl-6 space-y-6">
                             {country?.visaProcessDocuments?.visaSteps?.map(
                                 (step: any, index: number) => (
                                     <div key={index} className="relative">
-                                        <span className="absolute -left-[10px] top-1.5 w-4 h-4 bg-purple-600 rounded-full" />
-                                        <h5 className="font-semibold text-gray-900">
+                                        <span className="absolute -left-[10px] top-1.5 w-4 h-4 bg-primary rounded-full" />
+                                        <h5 className="font-semibold text-foreground">
                                             {step.title}
                                         </h5>
-                                        <p className="text-gray-600 text-sm mt-1">
+                                        <p className="text-muted-foreground text-sm mt-1">
                                             {step.description}
                                         </p>
                                     </div>
@@ -284,7 +284,7 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
                     {/* Required Documents */}
                     {/* {country.visaProcessDocuments.requiredDocuments?.length > 0 && ( */}
                     <div>
-                        <h4 className="font-medium text-gray-800 mb-3">
+                        <h4 className="font-medium text-foreground mb-3">
                             Required Documents
                         </h4>
                         <ul className="space-y-3">
@@ -294,12 +294,12 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
                                         key={index}
                                         className="flex gap-3 items-start"
                                     >
-                                        <span className="mt-1 w-2 h-2 bg-purple-600 rounded-full" />
+                                        <span className="mt-1 w-2 h-2 bg-primary rounded-full" />
                                         <div>
-                                            <p className="font-medium text-gray-900">
+                                            <p className="font-medium text-foreground">
                                                 {doc.name}
                                             </p>
-                                            <p className="text-gray-600 text-sm">
+                                            <p className="text-muted-foreground text-sm">
                                                 {doc.description}
                                             </p>
                                         </div>
@@ -313,9 +313,9 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
 
             {/* ================= UNIVERSITIES ================= */}
             {/* {country?.topUniversities?.length > 0 && ( */}
-            <div className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-blue-600" />
+            <div className="border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-primary" />
                     Top Universities
                 </h3>
 
@@ -323,7 +323,7 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
                     {country?.topUniversities?.map((uni: any) => (
                         <li
                             key={uni._id}
-                            className="flex items-center gap-4 p-3 rounded-md border hover:bg-gray-50"
+                            className="flex items-center gap-4 p-3 rounded-md border hover:bg-muted"
                         >
                             {uni.logo && (
                                 <img
@@ -333,10 +333,10 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
                                 />
                             )}
                             <div>
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-foreground">
                                     {uni.name}
                                 </p>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-muted-foreground">
                                     {uni.city} · Rank {uni.rank}
                                 </p>
                             </div>
@@ -348,9 +348,9 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
 
             {/* ================= COURSES ================= */}
             {/* {country.topCourses?.length > 0 && ( */}
-            <div className="border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-green-600" />
+            <div className="border border-border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-primary" />
                     Popular Courses
                 </h3>
 
@@ -358,12 +358,12 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
                     {country?.topCourses?.map((course: any) => (
                         <li
                             key={course._id}
-                            className="p-4 border rounded-md hover:bg-gray-50"
+                            className="p-4 border rounded-md hover:bg-muted"
                         >
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-foreground">
                                 {course.overview?.courseName}
                             </p>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <p className="text-sm text-muted-foreground mt-1">
                                 {course.overview?.courseDescription}
                             </p>
                         </li>
@@ -379,12 +379,12 @@ function ReferencesSection({ country }: { country: CountryResponse }) {
 // Helper Components
 function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
     return (
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-muted rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2">
-                <Icon className="w-5 h-5 text-purple-600" />
-                <p className="text-sm font-medium text-gray-600">{label}</p>
+                <Icon className="w-5 h-5 text-primary" />
+                <p className="text-sm font-medium text-muted-foreground">{label}</p>
             </div>
-            <p className="text-lg font-semibold text-gray-900">{value}</p>
+            <p className="text-lg font-semibold text-foreground">{value}</p>
         </div>
     );
 }
@@ -392,8 +392,8 @@ function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; valu
 function EmptyState({ message }: { message: string }) {
     return (
         <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">{message}</p>
+            <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">{message}</p>
         </div>
     );
 }

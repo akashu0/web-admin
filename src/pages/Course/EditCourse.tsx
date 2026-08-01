@@ -130,9 +130,8 @@ export default function EditCourse() {
                 case "studyCenters":
                     await courseService.updateStudyCenters(slug!, data);
                     break;
-                case "brochure":
-                    await courseService.updateBrochure(slug!, data);
-                    break;
+                // Brochures are added and removed one at a time by
+                // BrochureSection itself — there is no whole-list save.
                 case "dynamicFields":
                     await courseService.updateDynamicFields(slug!, data);
                     break;
@@ -149,27 +148,27 @@ export default function EditCourse() {
 
     if (isLoading) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <div className="flex h-96 items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
         );
     }
 
     if (!courseData) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                <p className="text-gray-500">Course not found</p>
+            <div className="flex h-96 items-center justify-center">
+                <p className="text-muted-foreground">Course not found</p>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-gray-50">
+        <div className="-m-4 flex h-[calc(100dvh-3.5rem)] bg-canvas lg:-m-5">
             {/* Sidebar */}
-            <aside className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-900">Edit Course</h2>
-                    <p className="text-sm text-gray-500 mt-1 truncate" title={courseData.overview.courseName}>
+            <aside className="w-64 bg-card border-r border-border overflow-y-auto">
+                <div className="p-6 border-b border-border">
+                    <h2 className="text-lg font-semibold text-foreground">Edit Course</h2>
+                    <p className="text-sm text-muted-foreground mt-1 truncate" title={courseData.overview.courseName}>
                         {courseData.overview.courseName}
                     </p>
                 </div>
@@ -182,8 +181,8 @@ export default function EditCourse() {
                             className={cn(
                                 "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
                                 activeSection === item.id
-                                    ? "bg-gray-900 text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-foreground hover:bg-muted"
                             )}
                         >
                             {item.icon}
@@ -195,13 +194,13 @@ export default function EditCourse() {
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto">
-                <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-8 py-4">
+                <div className="sticky top-0 z-10 bg-card border-b border-border px-8 py-4">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
+                            <h1 className="text-2xl font-bold text-foreground">
                                 {sidebarItems.find(item => item.id === activeSection)?.label}
                             </h1>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-muted-foreground mt-1">
                                 Update course information and publish when ready
                             </p>
                         </div>
@@ -212,8 +211,8 @@ export default function EditCourse() {
                             className={cn(
                                 "gap-2",
                                 courseData.status === "published"
-                                    ? "bg-gray-600 hover:bg-gray-700"
-                                    : "bg-green-600 hover:bg-green-700"
+                                    ? "bg-muted-foreground hover:bg-primary"
+                                    : "bg-primary hover:bg-primary/90"
                             )}
                         >
                             {isPublishing ? (
@@ -232,7 +231,7 @@ export default function EditCourse() {
                 </div>
 
                 <div className="p-8">
-                    <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div className="max-w-5xl mx-auto bg-card rounded-lg shadow-sm border border-border p-6">
                         {activeSection === "overview" && (
                             <CourseOverviewSection
                                 data={courseData.overview}

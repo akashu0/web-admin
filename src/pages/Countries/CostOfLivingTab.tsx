@@ -1,274 +1,166 @@
 // components/CountryForm/tabs/CostOfLivingTab.tsx
 import { Plus, Trash2 } from 'lucide-react';
-import type { Cost, CostItem } from '@/types/country';
+import { useFieldArray, type UseFormReturn } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { EmptyState } from '@/components/common/states';
+import type { CountryFormValues } from './country-form-values';
 
 interface CostOfLivingTabProps {
-    form: any;
+    form: UseFormReturn<CountryFormValues>;
+}
+
+/**
+ * Tuition and living are the same row shape, so one component covers both —
+ * `kind` picks which nested array of the parent cost section it edits.
+ */
+function CostItemList({
+    form,
+    costIndex,
+    kind,
+    label,
+    placeholder,
+}: {
+    form: UseFormReturn<CountryFormValues>;
+    costIndex: number;
+    kind: 'tuition' | 'living';
+    label: string;
+    placeholder: string;
+}) {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: `costOfLiving.${costIndex}.${kind}` as const,
+    });
+
+    return (
+        <div className="mb-4">
+            <div className="mb-2 flex items-center justify-between">
+                <Label>{label}</Label>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => append({ label: '', currency: 'USD' })}
+                >
+                    + Add Item
+                </Button>
+            </div>
+
+            <div className="space-y-2">
+                {fields.map((field, itemIndex) => (
+                    <div
+                        key={field.id}
+                        className="grid grid-cols-12 items-end gap-2 rounded-lg border border-border bg-card p-2"
+                    >
+                        <Input
+                            className="col-span-4"
+                            placeholder={placeholder}
+                            {...form.register(`costOfLiving.${costIndex}.${kind}.${itemIndex}.label`)}
+                        />
+                        <Input
+                            className="col-span-3"
+                            type="number"
+                            placeholder="Min"
+                            {...form.register(`costOfLiving.${costIndex}.${kind}.${itemIndex}.min`, {
+                                valueAsNumber: true,
+                            })}
+                        />
+                        <Input
+                            className="col-span-3"
+                            type="number"
+                            placeholder="Max"
+                            {...form.register(`costOfLiving.${costIndex}.${kind}.${itemIndex}.max`, {
+                                valueAsNumber: true,
+                            })}
+                        />
+                        <Input
+                            className="col-span-1"
+                            placeholder="USD"
+                            maxLength={3}
+                            {...form.register(`costOfLiving.${costIndex}.${kind}.${itemIndex}.currency`)}
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="col-span-1 text-destructive hover:text-destructive"
+                            onClick={() => remove(itemIndex)}
+                        >
+                            <Trash2 className="size-4" />
+                        </Button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 export function CostOfLivingTab({ form }: CostOfLivingTabProps) {
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: 'costOfLiving',
+    });
+
     return (
-        <form.Field name="costOfLiving" mode="array">
-            {(field: any) => (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Cost of Living</h3>
-                        <button
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-h3 font-semibold">Cost of Living</h3>
+                <Button type="button" onClick={() => append({ tuition: [], living: [], note: '' })}>
+                    <Plus className="mr-2 size-4" />
+                    Add Cost Section
+                </Button>
+            </div>
+
+            {fields.map((field, costIndex) => (
+                <div key={field.id} className="rounded-lg border border-border bg-muted/40 p-4">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h4 className="font-medium">Cost Section {costIndex + 1}</h4>
+                        <Button
                             type="button"
-                            onClick={() => {
-                                const newCost: Cost = {
-                                    tuition: [],
-                                    living: [],
-                                    note: '',
-                                };
-                                field.pushValue(newCost);
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => remove(costIndex)}
                         >
-                            <Plus className="w-4 h-4" />
-                            Add Cost Section
-                        </button>
+                            <Trash2 className="size-4" />
+                        </Button>
                     </div>
 
-                    {field.state.value.map((_: any, costIndex: number) => (
-                        <div key={costIndex} className="p-4 border rounded-lg bg-gray-50">
-                            <div className="flex items-center justify-between mb-4">
-                                <h4 className="font-medium text-gray-900">Cost Section {costIndex + 1}</h4>
-                                <button
-                                    type="button"
-                                    onClick={() => field.removeValue(costIndex)}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
+                    <CostItemList
+                        form={form}
+                        costIndex={costIndex}
+                        kind="tuition"
+                        label="Tuition Costs"
+                        placeholder="Label (e.g., Undergraduate)"
+                    />
 
-                            {/* Tuition Costs */}
-                            <div className="mb-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-gray-900">Tuition Costs</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const currentCost = form.getFieldValue(`costOfLiving[${costIndex}]`);
-                                            const newTuition: CostItem = {
-                                                label: '',
-                                                currency: 'USD',
-                                            };
-                                            form.setFieldValue(`costOfLiving[${costIndex}].tuition`, [
-                                                ...(currentCost.tuition || []),
-                                                newTuition,
-                                            ]);
-                                        }}
-                                        className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                                    >
-                                        + Add Item
-                                    </button>
-                                </div>
+                    <CostItemList
+                        form={form}
+                        costIndex={costIndex}
+                        kind="living"
+                        label="Living Costs"
+                        placeholder="Label (e.g., Accommodation)"
+                    />
 
-                                <form.Field name={`costOfLiving[${costIndex}].tuition`} mode="array">
-                                    {(tuitionField: any) => (
-                                        <div className="space-y-2">
-                                            {tuitionField.state.value?.map((_: any, tuitionIndex: number) => (
-                                                <div key={tuitionIndex} className="grid grid-cols-12 gap-2 items-end bg-white p-2 rounded border">
-                                                    <form.Field name={`costOfLiving[${costIndex}].tuition[${tuitionIndex}].label`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-4">
-                                                                <input
-                                                                    type="text"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(e.target.value)}
-                                                                    placeholder="Label (e.g., Undergraduate)"
-                                                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <form.Field name={`costOfLiving[${costIndex}].tuition[${tuitionIndex}].min`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-3">
-                                                                <input
-                                                                    type="number"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(Number(e.target.value))}
-                                                                    placeholder="Min"
-                                                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <form.Field name={`costOfLiving[${costIndex}].tuition[${tuitionIndex}].max`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-3">
-                                                                <input
-                                                                    type="number"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(Number(e.target.value))}
-                                                                    placeholder="Max"
-                                                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <form.Field name={`costOfLiving[${costIndex}].tuition[${tuitionIndex}].currency`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-1">
-                                                                <input
-                                                                    type="text"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(e.target.value.toUpperCase())}
-                                                                    placeholder="USD"
-                                                                    maxLength={3}
-                                                                    className="w-full px-2 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => tuitionField.removeValue(tuitionIndex)}
-                                                        className="col-span-1 p-2 text-red-600 hover:bg-red-50 rounded"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </form.Field>
-                            </div>
-
-                            {/* Living Costs */}
-                            <div className="mb-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="text-sm font-medium text-gray-900">Living Costs</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const currentCost = form.getFieldValue(`costOfLiving[${costIndex}]`);
-                                            const newLiving: CostItem = {
-                                                label: '',
-                                                currency: 'USD',
-                                            };
-                                            form.setFieldValue(`costOfLiving[${costIndex}].living`, [
-                                                ...(currentCost.living || []),
-                                                newLiving,
-                                            ]);
-                                        }}
-                                        className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                                    >
-                                        + Add Item
-                                    </button>
-                                </div>
-
-                                <form.Field name={`costOfLiving[${costIndex}].living`} mode="array">
-                                    {(livingField: any) => (
-                                        <div className="space-y-2">
-                                            {livingField.state.value?.map((_: any, livingIndex: number) => (
-                                                <div key={livingIndex} className="grid grid-cols-12 gap-2 items-end bg-white p-2 rounded border">
-                                                    <form.Field name={`costOfLiving[${costIndex}].living[${livingIndex}].label`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-4">
-                                                                <input
-                                                                    type="text"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(e.target.value)}
-                                                                    placeholder="Label (e.g., Accommodation)"
-                                                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <form.Field name={`costOfLiving[${costIndex}].living[${livingIndex}].min`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-3">
-                                                                <input
-                                                                    type="number"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(Number(e.target.value))}
-                                                                    placeholder="Min"
-                                                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <form.Field name={`costOfLiving[${costIndex}].living[${livingIndex}].max`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-3">
-                                                                <input
-                                                                    type="number"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(Number(e.target.value))}
-                                                                    placeholder="Max"
-                                                                    className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <form.Field name={`costOfLiving[${costIndex}].living[${livingIndex}].currency`}>
-                                                        {(itemField: any) => (
-                                                            <div className="col-span-1">
-                                                                <input
-                                                                    type="text"
-                                                                    value={itemField.state.value}
-                                                                    onChange={(e) => itemField.handleChange(e.target.value.toUpperCase())}
-                                                                    placeholder="USD"
-                                                                    maxLength={3}
-                                                                    className="w-full px-2 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </form.Field>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => livingField.removeValue(livingIndex)}
-                                                        className="col-span-1 p-2 text-red-600 hover:bg-red-50 rounded"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </form.Field>
-                            </div>
-
-                            {/* Note */}
-                            <form.Field name={`costOfLiving[${costIndex}].note`}>
-                                {(noteField: any) => (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                                            Note
-                                        </label>
-                                        <textarea
-                                            value={noteField.state.value}
-                                            onChange={(e) => noteField.handleChange(e.target.value)}
-                                            placeholder="Additional notes about costs..."
-                                            rows={2}
-                                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                )}
-                            </form.Field>
-                        </div>
-                    ))}
-
-                    {field.state.value.length === 0 && (
-                        <div className="text-center py-12 text-gray-500">
-                            <p>No cost sections added yet</p>
-                            <p className="text-sm mt-1">Click "Add Cost Section" to get started</p>
-                        </div>
-                    )}
+                    <div className="space-y-1.5">
+                        <Label>Note</Label>
+                        <Textarea
+                            rows={2}
+                            placeholder="Additional notes about costs..."
+                            {...form.register(`costOfLiving.${costIndex}.note`)}
+                        />
+                    </div>
                 </div>
+            ))}
+
+            {fields.length === 0 && (
+                <EmptyState
+                    title="No cost sections added yet"
+                    description='Click "Add Cost Section" to get started.'
+                />
             )}
-        </form.Field>
+        </div>
     );
 }

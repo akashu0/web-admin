@@ -176,6 +176,9 @@ export interface Brochure {
     description?: string;
     fileUrl?: string;
     fileSize?: number;
+    // Cloudinary's id for the file — what DELETE addresses, so removing a
+    // brochure takes the file with it instead of orphaning it.
+    publicId?: string;
 }
 
 
@@ -207,15 +210,19 @@ export interface PaginationMeta {
 }
 
 export interface Course {
+    // The section arrays were declared `never[]`, which made every read of a row
+    // a type error and forced casts at each call site. They are the same shapes
+    // the form uses.
     feeStructures: FeeStructure[];
     universityId: string;
-    studyCenters: never[];
-    dynamicFields: never[];
-    brochure: never[];
+    studyCenters?: LearningCenter[];
+    dynamicFields?: DynamicField[];
+    brochure?: Brochure[];
     overview: CourseOverview;
-    careerOpportunities: never[];
-    visaProcess: never[];
-    documentsRequired: never[];
+    careerOpportunities?: CareerOpportunity[];
+    visaProcess?: VisaProcess[];
+    documentsRequired?: DocumentRequired[];
+    viewCount?: number;
     _id: string;
     courseName: string;
     slug: string;

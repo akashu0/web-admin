@@ -113,21 +113,10 @@ export function BrochureSection({
 
         setIsUploading(true);
         try {
-            // Pass slug to the upload function
-            const response = await courseService.uploadBrochure(previewFile, courseSlug);
-
-            const newBrochure: Brochure = {
-                fileName: previewFile.name,
-                fileUrl: response.url,
-                fileSize: previewFile.size,
-                title: previewFile.name,
-                description: '',
-            };
-
-            // Add to backend
-            const updatedBrochures = [...brochures, newBrochure];
-
-            setBrochures(updatedBrochures);
+            // The API appends the brochure and returns the whole course, so the
+            // list comes back from the server rather than being guessed here.
+            const updated = await courseService.uploadBrochure(previewFile, courseSlug);
+            setBrochures(updated.brochure ?? []);
             setPreviewFile(null);
             setPreviewBrochure(null);
 
@@ -146,12 +135,12 @@ export function BrochureSection({
     const handleRemoveBrochure = async (index: number) => {
         try {
             const brochureToRemove = brochures[index];
-
-            // Remove from backend
-            const updatedBrochures = brochures.filter((_, i) => i !== index);
-            await courseService.deleteBrochure(courseSlug, brochureToRemove.fileUrl || '');
-
-            setBrochures(updatedBrochures);
+            if (!brochureToRemove.publicId) {
+                toast.error('This brochure predates the media library and cannot be deleted here');
+                return;
+            }
+            const updated = await courseService.deleteBrochure(courseSlug, brochureToRemove.publicId);
+            setBrochures(updated.brochure ?? []);
             toast.success('Brochure removed successfully');
         } catch (error: any) {
             console.error('Delete failed:', error);
@@ -198,10 +187,10 @@ export function BrochureSection({
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
                 <div className="flex items-center gap-3 mb-6">
-                    <FileText className="h-6 w-6 text-gray-900" />
+                    <FileText className="h-6 w-6 text-foreground" />
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Course Brochure</h2>
-                        <p className="text-sm text-gray-600">Optional: Upload detailed course brochures (PDF, DOC, DOCX)</p>
+                        <h2 className="text-2xl font-bold text-foreground">Course Brochure</h2>
+                        <p className="text-sm text-muted-foreground">Optional: Upload detailed course brochures (PDF, DOC, DOCX)</p>
                     </div>
                 </div>
 
@@ -211,16 +200,16 @@ export function BrochureSection({
                         <div className="space-y-3 mb-4">
                             <Label className="text-sm font-semibold">Uploaded Brochures</Label>
                             {brochures.map((brochure, index) => (
-                                <Card key={index} className="p-4 bg-white border-gray-200">
+                                <Card key={index} className="p-4 bg-card border-border">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-gray-100 rounded-lg">
-                                                <FileText className="h-5 w-5 text-gray-600" />
+                                            <div className="p-2 bg-muted rounded-lg">
+                                                <FileText className="h-5 w-5 text-muted-foreground" />
                                             </div>
                                             <div>
-                                                <h3 className="font-semibold text-gray-900 text-sm">{brochure.fileName}</h3>
+                                                <h3 className="font-semibold text-foreground text-sm">{brochure.fileName}</h3>
                                                 {brochure.fileSize && (
-                                                    <p className="text-xs text-gray-600 mt-1">
+                                                    <p className="text-xs text-muted-foreground mt-1">
                                                         {formatFileSize(brochure.fileSize)}
                                                     </p>
                                                 )}
@@ -242,7 +231,7 @@ export function BrochureSection({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => handleRemoveBrochure(index)}
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                         >
                                             <X className="h-4 w-4" />
                                         </Button>
@@ -256,16 +245,16 @@ export function BrochureSection({
                     {previewBrochure && (
                         <div className="space-y-3 mb-4">
                             <Label className="text-sm font-semibold">Preview</Label>
-                            <Card className="p-4 bg-blue-50 border-blue-200">
+                            <Card className="p-4 bg-accent border-primary/30">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-white rounded-lg">
-                                            <FileText className="h-5 w-5 text-blue-600" />
+                                        <div className="p-2 bg-card rounded-lg">
+                                            <FileText className="h-5 w-5 text-primary" />
                                         </div>
                                         <div>
-                                            <h3 className="font-semibold text-gray-900 text-sm">{previewBrochure.fileName}</h3>
+                                            <h3 className="font-semibold text-foreground text-sm">{previewBrochure.fileName}</h3>
                                             {previewBrochure.fileSize && (
-                                                <p className="text-xs text-gray-600 mt-1">
+                                                <p className="text-xs text-muted-foreground mt-1">
                                                     {formatFileSize(previewBrochure.fileSize)}
                                                 </p>
                                             )}
@@ -275,7 +264,7 @@ export function BrochureSection({
                                                     size="sm"
                                                     onClick={handleUploadBrochure}
                                                     disabled={isUploading}
-                                                    className="bg-blue-600 hover:bg-blue-700"
+                                                    className="bg-primary hover:bg-primary"
                                                 >
                                                     {isUploading ? (
                                                         <>
@@ -331,17 +320,17 @@ export function BrochureSection({
                                 className={`
                   border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
                   transition-colors duration-200
-                  ${isDragging ? 'border-gray-400 bg-gray-50' : 'border-gray-200 bg-white'}
-                  ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400'}
+                  ${isDragging ? 'border-input bg-muted' : 'border-border bg-card'}
+                  ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-input'}
                 `}
                             >
-                                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-3" />
-                                <p className="text-gray-600 mb-1 text-sm">
+                                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+                                <p className="text-muted-foreground mb-1 text-sm">
                                     {isDragging
                                         ? 'Drop the file here'
                                         : 'Drag & drop a brochure, or click to select'}
                                 </p>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-muted-foreground">
                                     Supports: PDF, DOC, DOCX (Max 10MB)
                                 </p>
                             </div>
@@ -351,7 +340,7 @@ export function BrochureSection({
             </div>
 
             <div className="flex justify-end gap-4 pt-6 border-t">
-                <Button type="submit" className="bg-gray-900 hover:bg-gray-800">
+                <Button type="submit" className="bg-primary hover:bg-primary">
                     Save & Continue
                 </Button>
             </div>

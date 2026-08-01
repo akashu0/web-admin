@@ -40,9 +40,9 @@ export function AddCourseModal({
     const handleSave = async (data: CourseOverview) => {
         try {
 
-            const response = await courseService.createCourseOverview(data);
+            await courseService.createCourseOverview(data);
 
-            toast.success(response.message || "Course created successfully");
+            toast.success("Course created successfully");
 
             onOpenChange(false);
             onSuccess();

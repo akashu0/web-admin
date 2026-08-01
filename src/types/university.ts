@@ -7,6 +7,10 @@ export interface FeeStructure {
     level: string;
     currency: string; // e.g., "USD", "EUR", "GBP"
     tuitionFee: string; // e.g., "15000 - 20000"
+    // Written by the Fees tab and carried by the imported records; it was missing
+    // here, so anything reading a fee row had to cast.
+    tuitionFeeType?: "Fully Tuition Fee Funded" | "Scholarships" | "Regular (Self-Funded Program)";
+    scholarshipPercentage?: string;
     applicationFee?: string;
     duration?: string; // e.g., "4 years"
 }
@@ -43,66 +47,27 @@ export interface UniversityReview {
 }
 
 /**
- * Admissions - Undergraduate
+ * Admissions.
+ *
+ * A flat map of requirement -> { required, details } plus free-form extras —
+ * which is what the API stores and what the editor writes. It replaced a
+ * level-keyed shape (undergraduate/postgraduate/phd) that no record has carried
+ * since the Go cutover; the old view modal still rendered that shape, which is
+ * why it always showed an empty Admissions tab.
  */
-export interface UndergraduateAdmissions {
-    acceptanceRate?: string;
-    sat?: string;
-    act?: string;
-    toefl?: string;
-    ielts?: string;
-    requirements?: string[];
+export interface AdmissionEntry {
+    required?: boolean;
+    details?: string;
 }
 
-/**
- * Admissions - Postgraduate
- */
-export interface PostgraduateAdmissions {
-    acceptanceRate?: string;
-    gre?: string;
-    gpa?: string;
-    toefl?: string;
-    ielts?: string;
-    requirements?: string[];
+export interface CustomRequirement {
+    name: string;
+    details?: string;
 }
 
-/**
- * Admissions - PhD
- */
-export interface PhdAdmissions {
-    gre?: string;
-    gpa?: string;
-    researchProposalRequired?: boolean;
-    requirements?: string[];
-}
-
-/**
- * Full Admissions object (array of references in schema, but often populated)
- */
-export interface Admissions {
-    undergraduate?: {
-        acceptanceRate?: string;
-        sat?: string;
-        act?: string;
-        toefl?: string;
-        ielts?: string;
-        requirements?: string[];
-    };
-    postgraduate?: {
-        acceptanceRate?: string;
-        gre?: string;
-        gpa?: string;
-        toefl?: string;
-        ielts?: string;
-        requirements?: string[];
-    };
-    phd?: {
-        gre?: string;
-        gpa?: string;
-        researchProposalRequired?: boolean;
-        requirements?: string[];
-    };
-}
+export type Admissions = Partial<Record<string, AdmissionEntry>> & {
+    customRequirements?: CustomRequirement[];
+};
 
 /**
  * Main University Type (matches IUniversity interface + Document)

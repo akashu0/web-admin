@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-// TODO: Replace with actual API URL
+// The Go API's staff surface (/api/staff). Every response is the shared
+// envelope — { success, data, pagination? , cursor? , message?, code? } — so
+// `unwrap` below is the one place that knows about it.
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const apiClient = axios.create({
@@ -31,3 +33,20 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+/**
+ * The API's error message, or a fallback.
+ *
+ * The envelope carries `message` and a machine-readable `code`; a 403 from the
+ * permission layer also carries which module and action were missing, which is
+ * worth showing rather than a generic "forbidden".
+ */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+    const e = error as { response?: { data?: { message?: string; details?: Record<string, string> } } };
+    const body = e?.response?.data;
+    if (!body?.message) return fallback;
+    if (body.details?.module && body.details?.action) {
+        return `${body.message} (${body.details.module}:${body.details.action})`;
+    }
+    return body.message;
+}

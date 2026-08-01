@@ -46,7 +46,7 @@ export const DynamicFieldBuilder: React.FC<DynamicFieldBuilderProps> = ({
         <div className="space-y-4">
             {fields.length === 0 ? (
                 <Card className="p-8 text-center border-dashed">
-                    <p className="text-gray-500 mb-4">No additional fields added yet</p>
+                    <p className="text-muted-foreground mb-4">No additional fields added yet</p>
                     <Button
                         type="button"
                         onClick={addField}
@@ -60,9 +60,9 @@ export const DynamicFieldBuilder: React.FC<DynamicFieldBuilderProps> = ({
             ) : (
                 <>
                     {fields.map((field, index) => (
-                        <Card key={field.id} className="p-4 bg-white border-gray-200">
+                        <Card key={field.id} className="p-4 bg-card border-border">
                             <div className="flex items-start justify-between mb-4">
-                                <h3 className="text-sm font-semibold text-gray-900">
+                                <h3 className="text-sm font-semibold text-foreground">
                                     Field {index + 1}
                                 </h3>
                                 <Button
@@ -70,7 +70,7 @@ export const DynamicFieldBuilder: React.FC<DynamicFieldBuilderProps> = ({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => removeField(index)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>

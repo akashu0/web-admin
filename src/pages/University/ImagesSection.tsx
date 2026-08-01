@@ -157,13 +157,13 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                     <button
                                         type="button"
                                         onClick={removeLogo}
-                                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                        className="absolute -top-2 -right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
                                 </div>
                             ) : (
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                                <div className="border-2 border-dashed border-input rounded-lg p-6">
                                     <input
                                         type="file"
                                         id="logo"
@@ -175,11 +175,11 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                         htmlFor="logo"
                                         className="flex flex-col items-center cursor-pointer"
                                     >
-                                        <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                        <span className="text-sm text-gray-600">
+                                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                                        <span className="text-sm text-muted-foreground">
                                             Click to upload logo
                                         </span>
-                                        <span className="text-xs text-amber-600 font-medium mt-1">
+                                        <span className="text-xs text-muted-foreground font-medium mt-1">
                                             Required image ratio: 1:1 square (e.g., 400 x 400 px)
                                         </span>
                                     </label>
@@ -200,13 +200,13 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                     <button
                                         type="button"
                                         onClick={removeBanner}
-                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                        className="absolute top-2 right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
                                 </div>
                             ) : (
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                                <div className="border-2 border-dashed border-input rounded-lg p-6">
                                     <input
                                         type="file"
                                         id="banner"
@@ -218,11 +218,11 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                         htmlFor="banner"
                                         className="flex flex-col items-center cursor-pointer"
                                     >
-                                        <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                        <span className="text-sm text-gray-600">
+                                        <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                                        <span className="text-sm text-muted-foreground">
                                             Click to upload banner
                                         </span>
-                                        <span className="text-xs text-amber-600 font-medium mt-1">
+                                        <span className="text-xs text-muted-foreground font-medium mt-1">
                                             Required image ratio: 16:9 (e.g., 1280 x 720 px)
                                         </span>
                                     </label>
@@ -246,7 +246,7 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                         <button
                                             type="button"
                                             onClick={() => removeExistingGalleryImage(index)}
-                                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                            className="absolute -top-2 -right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -271,7 +271,7 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                         <button
                                             type="button"
                                             onClick={() => removeGalleryImage(index)}
-                                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                            className="absolute -top-2 -right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -279,7 +279,7 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                 ))}
                             </div>
                         )}
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                        <div className="border-2 border-dashed border-input rounded-lg p-6">
                             <input
                                 type="file"
                                 id="gallery"
@@ -292,14 +292,14 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                 htmlFor="gallery"
                                 className="flex flex-col items-center cursor-pointer"
                             >
-                                <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                <span className="text-sm text-gray-600">
+                                <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                                <span className="text-sm text-muted-foreground">
                                     Click to upload gallery images
                                 </span>
-                                <span className="text-xs text-gray-500 mt-1">
+                                <span className="text-xs text-muted-foreground mt-1">
                                     You can select multiple images
                                 </span>
-                                <span className="text-xs text-amber-600 font-medium mt-1">
+                                <span className="text-xs text-muted-foreground font-medium mt-1">
                                     Required image ratio: 16:9 (e.g., 1280 x 720 px)
                                 </span>
                             </label>

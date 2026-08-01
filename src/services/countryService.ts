@@ -37,7 +37,7 @@ export const countryService = {
         try {
 
 
-            const response = await apiClient.get<CountryListResponse>('/country/get-all-country', { params });
+            const response = await apiClient.get<CountryListResponse>('/countries', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching countries:', error);
@@ -47,7 +47,7 @@ export const countryService = {
 
     async getCountryById(id: string): Promise<CountryByIdResponse> {
         try {
-            const response = await apiClient.get<CountryByIdResponse>(`/country/get-country/${id}`);
+            const response = await apiClient.get<CountryByIdResponse>(`/countries/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching country:', error);
@@ -57,7 +57,7 @@ export const countryService = {
 
     async getCountryBySlug(slug: string): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.get<CountryResponseData>(`/country/get-country-slug/${slug}`);
+            const response = await apiClient.get<CountryResponseData>(`/countries/${slug}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching country by slug:', error);
@@ -68,7 +68,7 @@ export const countryService = {
     async createCountry(formData: FormData): Promise<CountryResponseData> {
         try {
 
-            const response = await apiClient.post<CountryResponseData>('/country/create-country', formData, {
+            const response = await apiClient.post<CountryResponseData>('/countries', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -100,7 +100,7 @@ export const countryService = {
                 }
             });
 
-            const response = await apiClient.put<CountryResponseData>(`/countries/${id}`, formData, {
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -114,7 +114,7 @@ export const countryService = {
 
     async deleteCountry(id: string): Promise<{ success: boolean; message: string }> {
         try {
-            const response = await apiClient.delete(`/country/delete-country/${id}`);
+            const response = await apiClient.delete(`/countries/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error deleting country:', error);
@@ -124,7 +124,7 @@ export const countryService = {
 
     async updateCountryStatus(id: string, status: 'published' | 'draft'): Promise<CountryResponse> {
         try {
-            const response = await apiClient.patch<CountryResponse>(`/country/update-country-status/${id}`, { status });
+            const response = await apiClient.patch<CountryResponse>(`/countries/${id}/status`, { status });
             return response.data;
         } catch (error) {
             console.error('Error updating country status:', error);
@@ -134,7 +134,7 @@ export const countryService = {
 
     async getCountriesByContinent(continent: string): Promise<{ success: boolean; data: ICountry[] }> {
         try {
-            const response = await apiClient.get(`/countries/continent/${continent}`);
+            const response = await apiClient.get(`/countries?continent=${encodeURIComponent(continent)}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching countries by continent:', error);
@@ -156,12 +156,10 @@ export const countryService = {
                 }
             });
 
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-basic-info/${id}`,
+            const response = await apiClient.patch<CountryResponseData>(
+                `/countries/${id}`,
                 formData,
-                {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                }
+                { headers: { 'Content-Type': 'multipart/form-data' } },
             );
             return response.data;
         } catch (error) {
@@ -172,10 +170,7 @@ export const countryService = {
 
     async updateCountryIntakePeriods(id: string, intakePeriods: any[]): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-intake-periods/${id}`,
-                { intakePeriods }
-            );
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { intakePeriods });
             return response.data;
         } catch (error) {
             console.error('Error updating intake periods:', error);
@@ -185,10 +180,7 @@ export const countryService = {
 
     async updateCountryScholarships(id: string, scholarships: any[]): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-scholarships/${id}`,
-                { scholarships }
-            );
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { scholarships });
             return response.data;
         } catch (error) {
             console.error('Error updating scholarships:', error);
@@ -198,10 +190,7 @@ export const countryService = {
 
     async updateCountryCostOfLiving(id: string, costOfLiving: any[]): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-cost-of-living/${id}`,
-                { costOfLiving }
-            );
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { costOfLiving });
             return response.data;
         } catch (error) {
             console.error('Error updating cost of living:', error);
@@ -211,10 +200,7 @@ export const countryService = {
 
     async updateCountryExams(id: string, examsEligibility: any[]): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-exams/${id}`,
-                { examsEligibility }
-            );
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { examsEligibility });
             return response.data;
         } catch (error) {
             console.error('Error updating exams:', error);
@@ -224,10 +210,7 @@ export const countryService = {
 
     async updateCountryWorkOpportunities(id: string, workOpportunities: any[]): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-work-opportunities/${id}`,
-                { workOpportunities }
-            );
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { workOpportunities });
             return response.data;
         } catch (error) {
             console.error('Error updating work opportunities:', error);
@@ -244,10 +227,7 @@ export const countryService = {
         }
     ): Promise<CountryResponseData> {
         try {
-            const response = await apiClient.put<CountryResponseData>(
-                `/country/update-country-references/${id}`,
-                data
-            );
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, data);
             return response.data;
         } catch (error) {
             console.error('Error updating references:', error);

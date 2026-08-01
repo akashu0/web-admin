@@ -78,11 +78,3 @@ export const useDeleteCommission = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: commissionKeys.all }),
     });
 };
-
-export const useBulkUpload = () => {
-    const qc = useQueryClient();
-    return useMutation({
-        mutationFn: (records: unknown[]) => commissionService.bulkUpload(records),
-        onSuccess: () => qc.invalidateQueries({ queryKey: commissionKeys.all }),
-    });
-};

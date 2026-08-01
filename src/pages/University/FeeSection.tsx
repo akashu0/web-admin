@@ -151,13 +151,13 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
 
                 <CardContent className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="p-5 border rounded-xl space-y-4 bg-gray-50">
+                        <div key={field.id} className="p-5 border rounded-xl space-y-4 bg-muted">
                             <div className="flex items-center justify-between">
-                                <h4 className="font-semibold text-sm text-gray-700">
+                                <h4 className="font-semibold text-sm text-foreground">
                                     Fee Structure #{index + 1}
                                 </h4>
                                 <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                             </div>
 
@@ -179,7 +179,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                         </SelectContent>
                                     </Select>
                                     {errors.fees?.[index]?.level && (
-                                        <p className="text-xs text-red-500">{errors.fees[index]?.level?.message}</p>
+                                        <p className="text-xs text-destructive">{errors.fees[index]?.level?.message}</p>
                                     )}
                                 </div>
 
@@ -201,7 +201,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                         </SelectContent>
                                     </Select>
                                     {errors.fees?.[index]?.currency && (
-                                        <p className="text-xs text-red-500">{errors.fees[index]?.currency?.message}</p>
+                                        <p className="text-xs text-destructive">{errors.fees[index]?.currency?.message}</p>
                                     )}
                                 </div>
                             </div>
@@ -217,14 +217,14 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                         placeholder="e.g. 15000 or 1000-2000"
                                     />
                                     {errors.fees?.[index]?.tuitionFee && (
-                                        <p className="text-xs text-red-500">{errors.fees[index]?.tuitionFee?.message}</p>
+                                        <p className="text-xs text-destructive">{errors.fees[index]?.tuitionFee?.message}</p>
                                     )}
                                 </div>
                             </div>
 
                             {/* Divider */}
                             <div className="border-t pt-4">
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                                     Funding &amp; Scholarship
                                 </p>
 
@@ -255,7 +255,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                     ))}
 
                     {fields.length === 0 && (
-                        <p className="text-sm text-gray-500 text-center py-10">
+                        <p className="text-sm text-muted-foreground text-center py-10">
                             No fee structures added yet. Click "Add Fee" to get started.
                         </p>
                     )}

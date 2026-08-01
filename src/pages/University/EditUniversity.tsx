@@ -13,6 +13,7 @@ import { ReviewsSection } from "./ReviewsSection";
 import { ImagesSection } from "./ImagesSection";
 import { MediaSection } from "./Mediasection";
 import { UniversityReferencesTab } from "./UniversityReferencesTab";
+import { CommissionSection } from "./CommissionSection";
 
 
 export function EditUniversity() {
@@ -50,7 +51,7 @@ export function EditUniversity() {
     if (isLoading) {
         return (
             <div className="flex h-96 items-center justify-center">
-                <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
+                <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
             </div>
         );
     }
@@ -60,7 +61,7 @@ export function EditUniversity() {
     }
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -73,8 +74,8 @@ export function EditUniversity() {
                         Back to Universities
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Edit University</h1>
-                        <p className="text-gray-600 mt-1">
+                        <h1 className="text-3xl font-bold text-foreground">Edit University</h1>
+                        <p className="text-muted-foreground mt-1">
                             Update university information section by section
                         </p>
                     </div>
@@ -82,7 +83,7 @@ export function EditUniversity() {
             </div>
 
             <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-8">
+                <TabsList className="grid w-full grid-cols-9">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="fees">Fees</TabsTrigger>
                     <TabsTrigger value="admissions">Admissions</TabsTrigger>
@@ -90,6 +91,7 @@ export function EditUniversity() {
                     <TabsTrigger value="reviews">Reviews</TabsTrigger>
                     <TabsTrigger value="images">Images</TabsTrigger>
                     <TabsTrigger value="media">Media</TabsTrigger>
+                    <TabsTrigger value="commission">Commission</TabsTrigger>
                     <TabsTrigger value="refrences">Refrences</TabsTrigger>
                 </TabsList>
 
@@ -154,6 +156,13 @@ export function EditUniversity() {
                         onSuccess={() => handleSectionUpdate("Media")}
                     />
                 </TabsContent>
+                <TabsContent value="commission" className="space-y-4 mt-4">
+                    <CommissionSection
+                        slug={slug!}
+                        onSuccess={() => handleSectionUpdate("Partner Commission")}
+                    />
+                </TabsContent>
+
                 <TabsContent value="refrences" className="space-y-4 mt-4">
                     <UniversityReferencesTab
                         slug={slug!}

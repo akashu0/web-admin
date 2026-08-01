@@ -258,7 +258,7 @@ export function AddEditVisaModal({
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="country">
-                                    Country <span className="text-red-500">*</span>
+                                    Country <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="country"
@@ -279,7 +279,7 @@ export function AddEditVisaModal({
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white">
+                                    <SelectContent className="bg-card">
                                         <SelectItem value="active">Active</SelectItem>
                                         <SelectItem value="inactive">Inactive</SelectItem>
                                     </SelectContent>
@@ -290,7 +290,7 @@ export function AddEditVisaModal({
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="visaFee">
-                                    Visa Fee <span className="text-red-500">*</span>
+                                    Visa Fee <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="visaFee"
@@ -320,7 +320,7 @@ export function AddEditVisaModal({
 
                             <div className="space-y-2">
                                 <Label htmlFor="visaRenewalCost">
-                                    Renewal Cost <span className="text-red-500">*</span>
+                                    Renewal Cost <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="visaRenewalCost"
@@ -343,7 +343,7 @@ export function AddEditVisaModal({
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="visaSuccessRate">
-                                    Success Rate (%) <span className="text-red-500">*</span>
+                                    Success Rate (%) <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="visaSuccessRate"
@@ -364,7 +364,7 @@ export function AddEditVisaModal({
 
                             <div className="space-y-2">
                                 <Label htmlFor="visaProcessingTime">
-                                    Processing Time <span className="text-red-500">*</span>
+                                    Processing Time <span className="text-destructive">*</span>
                                 </Label>
                                 <Input
                                     id="visaProcessingTime"
@@ -394,7 +394,7 @@ export function AddEditVisaModal({
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white">
+                                    <SelectContent className="bg-card">
                                         <SelectItem value="days">Days</SelectItem>
                                         <SelectItem value="weeks">Weeks</SelectItem>
                                         <SelectItem value="months">Months</SelectItem>
@@ -415,12 +415,12 @@ export function AddEditVisaModal({
                         </div>
 
                         {formData.visaDocuments.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
+                            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                                 No documents added. Click "Add Document" to create one.
                             </div>
                         ) : (
                             formData.visaDocuments.map((doc, index) => (
-                                <div key={doc._id || index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
+                                <div key={doc._id || index} className="p-4 border rounded-lg space-y-3 bg-muted">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
@@ -447,7 +447,7 @@ export function AddEditVisaModal({
                                             onClick={() => removeVisaDocument(index)}
                                             className="ml-2"
                                         >
-                                            <Trash2 className="h-4 w-4 text-red-600" />
+                                            <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
                                     </div>
                                     <div className="flex items-center space-x-2">
@@ -476,12 +476,12 @@ export function AddEditVisaModal({
                         </div>
 
                         {formData.visaSteps.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
+                            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                                 No steps added. Click "Add Step" to create one.
                             </div>
                         ) : (
                             formData.visaSteps.map((step, index) => (
-                                <div key={step._id || index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
+                                <div key={step._id || index} className="p-4 border rounded-lg space-y-3 bg-muted">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 space-y-3">
                                             <div className="grid grid-cols-2 gap-4">
@@ -507,7 +507,7 @@ export function AddEditVisaModal({
                                                 <Label>
                                                     Description (Optional - Max 5 words)
                                                     {step.description && (
-                                                        <span className={`ml-2 text-xs ${getWordCount(step.description) > 5 ? 'text-red-600' : 'text-gray-500'}`}>
+                                                        <span className={`ml-2 text-xs ${getWordCount(step.description) > 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
                                                             ({getWordCount(step.description)}/5 words)
                                                         </span>
                                                     )}
@@ -526,7 +526,7 @@ export function AddEditVisaModal({
                                             onClick={() => removeVisaStep(index)}
                                             className="ml-2"
                                         >
-                                            <Trash2 className="h-4 w-4 text-red-600" />
+                                            <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
                                     </div>
                                 </div>
@@ -545,12 +545,12 @@ export function AddEditVisaModal({
                         </div>
 
                         {formData.renewalDocuments.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
+                            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                                 No renewal documents added. Click "Add Document" to create one.
                             </div>
                         ) : (
                             formData.renewalDocuments.map((doc, index) => (
-                                <div key={doc._id || index} className="p-4 border rounded-lg space-y-3 bg-gray-50">
+                                <div key={doc._id || index} className="p-4 border rounded-lg space-y-3 bg-muted">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
@@ -577,7 +577,7 @@ export function AddEditVisaModal({
                                             onClick={() => removeRenewalDocument(index)}
                                             className="ml-2"
                                         >
-                                            <Trash2 className="h-4 w-4 text-red-600" />
+                                            <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
                                     </div>
                                     <div className="flex items-center space-x-2">
@@ -601,7 +601,7 @@ export function AddEditVisaModal({
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-primary hover:bg-primary"
                             disabled={isLoading}
                         >
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

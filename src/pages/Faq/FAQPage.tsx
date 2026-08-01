@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Plus, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
+import { Label } from '../../components/ui/label';
 import {
     Select,
     SelectContent,
@@ -9,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../../components/ui/select';
+import { PageHeader } from '../../components/common/PageHeader';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -26,23 +29,6 @@ import { faqService } from '@/services/faqservice';
 import { FAQTable } from './FAQTable';
 import { FAQFormDialog } from './FAQFormDialog';
 import { FAQViewDialog } from './FAQViewDialog';
-
-// Demo FAQ data
-const DEMO_FAQ: IFAQ = {
-    _id: 'demo-faq-001',
-    entityType: 'University',
-    title: 'General University Information',
-    questions: [
-        {
-            question: 'What is the acceptance rate for this university?',
-            answer: 'The acceptance rate is approximately 15% for undergraduate programs. We receive around 50,000 applications annually and admit roughly 7,500 students. The acceptance rate varies by program, with some competitive programs having lower acceptance rates.',
-            order: 1,
-        },
-    ],
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-};
 
 const LIMIT = 20;
 
@@ -107,13 +93,14 @@ export const FAQPage = () => {
                 setHasMore(false);
             }
         } catch (error: any) {
-            // If API fails, show demo data
-            console.error('Failed to fetch FAQs, showing demo data:', error);
+            // An empty list, not a fabricated one: a demo row in an admin table
+            // reads as real content and hid this endpoint being wrong for weeks.
+            console.error('Failed to fetch FAQs:', error);
             if (!append) {
-                setFaqs([DEMO_FAQ]);
+                setFaqs([]);
             }
             setHasMore(false);
-            toast.error(error.response?.data?.message || 'Failed to fetch FAQs. Showing demo data.');
+            toast.error(error.response?.data?.message || 'Failed to fetch FAQs');
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -200,25 +187,22 @@ export const FAQPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">FAQs</h1>
-                    <p className="text-zinc-500 mt-1">
-                        Manage frequently asked questions for universities, courses, and countries
-                    </p>
-                </div>
-                <Button onClick={() => setShowFormDialog(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add FAQ
-                </Button>
-            </div>
+        <div>
+            <PageHeader
+                title="FAQs"
+                subtitle="Manage frequently asked questions for universities, courses, and countries"
+                actions={
+                    <Button onClick={() => setShowFormDialog(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add FAQ
+                    </Button>
+                }
+            />
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-end">
+            <Card className="mb-4 flex flex-wrap items-end gap-3 p-3">
                 <div className="w-48">
-                    <label className="text-sm font-medium mb-2 block">Entity Type</label>
+                    <Label className="mb-1.5 block text-xs text-muted-foreground">Entity Type</Label>
                     <Select value={entityType} onValueChange={setEntityType}>
                         <SelectTrigger>
                             <SelectValue placeholder="All types" />
@@ -233,7 +217,7 @@ export const FAQPage = () => {
                 </div>
 
                 <div className="w-48">
-                    <label className="text-sm font-medium mb-2 block">Status</label>
+                    <Label className="mb-1.5 block text-xs text-muted-foreground">Status</Label>
                     <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger>
                             <SelectValue placeholder="All status" />
@@ -251,14 +235,16 @@ export const FAQPage = () => {
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                 </Button>
-            </div>
+
+                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+                    {faqs.length} of {total}
+                </span>
+            </Card>
 
             {/* Bulk Actions */}
             {selectedIds.length > 0 && (
-                <div className="flex items-center gap-2 p-4 bg-zinc-100 rounded-lg">
-                    <span className="text-sm font-medium">
-                        {selectedIds.length} selected
-                    </span>
+                <Card className="mb-4 flex items-center gap-2 bg-accent/40 p-3">
+                    <span className="font-medium">{selectedIds.length} selected</span>
                     <Button
                         size="sm"
                         variant="outline"
@@ -281,40 +267,24 @@ export const FAQPage = () => {
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Selected
                     </Button>
-                </div>
+                </Card>
             )}
 
             {/* Table */}
-            {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <RefreshCw className="h-8 w-8 animate-spin text-zinc-500" />
-                </div>
-            ) : faqs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 border border-dashed border-zinc-300 rounded-lg">
-                    <div className="text-center space-y-2">
-                        <h3 className="text-lg font-semibold text-zinc-900">No FAQs Found</h3>
-                        <p className="text-sm text-zinc-500">
-                            Get started by creating your first FAQ
-                        </p>
-                        <Button onClick={() => setShowFormDialog(true)} className="mt-4">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Your First FAQ
-                        </Button>
-                    </div>
-                </div>
-            ) : (
+            <Card className="overflow-hidden">
                 <FAQTable
                     data={faqs}
                     onEdit={handleEdit}
                     onDelete={(id) => setDeleteId(id)}
                     onView={handleView}
+                    selectedIds={selectedIds}
                     onSelectionChange={setSelectedIds}
+                    loading={loading}
                     hasMore={hasMore}
                     loadingMore={loadingMore}
-                    total={total}
                     onLoadMore={handleLoadMore}
                 />
-            )}
+            </Card>
 
             {/* Dialogs */}
             <FAQFormDialog

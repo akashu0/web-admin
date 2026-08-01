@@ -131,18 +131,18 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Reference Links</h3>
+            <h3 className="text-lg font-semibold text-foreground">Reference Links</h3>
 
             {/* Visa Process Documents */}
             <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                     Visa Process Documents
                 </label>
                 <div className="space-y-2">
                     <select
                         value={selectedVisa}
                         onChange={(e) => setSelectedVisa(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-primary"
                         disabled={isLoadingVisa}
                     >
                         <option value="">
@@ -157,14 +157,14 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
 
                     {/* Show selected visa with remove option */}
                     {selectedVisa && (
-                        <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                            <span className="flex-1 text-sm text-gray-900">
+                        <div className="flex items-center gap-2 p-3 bg-accent border border-primary/30 rounded-lg">
+                            <span className="flex-1 text-sm text-foreground">
                                 {visaProcesses.find(v => v._id === selectedVisa)?.country || 'Selected Visa'}
                             </span>
                             <button
                                 type="button"
                                 onClick={() => setSelectedVisa('')}
-                                className="text-gray-500 hover:text-gray-700"
+                                className="text-muted-foreground hover:text-foreground"
                                 title="Remove selection"
                             >
                                 <X className="w-4 h-4" />
@@ -176,14 +176,14 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
 
             {/* FAQ Section */}
             <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                     FAQ
                 </label>
                 <div className="space-y-2">
                     <select
                         value={selectedFAQ}
                         onChange={(e) => setSelectedFAQ(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-primary"
                         disabled={isLoadingFAQ}
                     >
                         <option value="">
@@ -198,14 +198,14 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
 
                     {/* Show selected FAQ with remove option */}
                     {selectedFAQ && (
-                        <div className="flex items-center gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                            <span className="flex-1 text-sm text-gray-900">
+                        <div className="flex items-center gap-2 p-3 bg-accent border border-primary/30 rounded-lg">
+                            <span className="flex-1 text-sm text-foreground">
                                 {faqs.find(f => f._id === selectedFAQ)?.title || 'Selected FAQ'}
                             </span>
                             <button
                                 type="button"
                                 onClick={() => setSelectedFAQ('')}
-                                className="text-gray-500 hover:text-gray-700"
+                                className="text-muted-foreground hover:text-foreground"
                                 title="Remove selection"
                             >
                                 <X className="w-4 h-4" />
@@ -217,26 +217,26 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
 
             {/* Top Courses */}
             <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                     Top Courses
                 </label>
                 <div className="relative">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                         <input
                             type="text"
                             placeholder="Search courses..."
                             value={courseSearch}
                             onChange={(e) => setCourseSearch(e.target.value)}
                             onFocus={() => setShowCourseDropdown(true)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-primary"
                         />
                     </div>
 
                     {showCourseDropdown && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-card border border-input rounded-lg shadow-lg max-h-60 overflow-y-auto">
                             {isLoadingCourses ? (
-                                <div className="px-4 py-3 text-center text-gray-500">
+                                <div className="px-4 py-3 text-center text-muted-foreground">
                                     Loading courses...
                                 </div>
                             ) : courses.length > 0 ? (
@@ -246,20 +246,20 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                                         <div
                                             key={course._id}
                                             onClick={() => toggleCourse(course._id)}
-                                            className={`px-4 py-2 cursor-pointer hover:bg-purple-50 transition-colors ${isSelected ? 'bg-purple-50 text-purple-700' : ''
+                                            className={`px-4 py-2 cursor-pointer hover:bg-accent transition-colors ${isSelected ? 'bg-accent text-primary' : ''
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm">{course.courseName}</span>
                                                 {isSelected && (
-                                                    <span className="text-purple-600 font-semibold">✓</span>
+                                                    <span className="text-primary font-semibold">✓</span>
                                                 )}
                                             </div>
                                         </div>
                                     );
                                 })
                             ) : (
-                                <div className="px-4 py-3 text-center text-gray-500">
+                                <div className="px-4 py-3 text-center text-muted-foreground">
                                     {courseSearch ? 'No courses found' : 'Start typing to search courses'}
                                 </div>
                             )}
@@ -270,7 +270,7 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                 {/* Selected Courses */}
                 {selectedCourses.length > 0 && (
                     <div className="mt-3 space-y-2">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                             {selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -279,13 +279,13 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                                 return course ? (
                                     <span
                                         key={id}
-                                        className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm"
+                                        className="inline-flex items-center gap-1 px-3 py-1 bg-accent text-primary rounded-full text-sm"
                                     >
                                         {course.courseName}
                                         <button
                                             type="button"
                                             onClick={() => removeCourse(id)}
-                                            className="hover:text-purple-900 transition-colors"
+                                            className="hover:text-primary transition-colors"
                                             title="Remove course"
                                         >
                                             <X className="w-3 h-3" />
@@ -303,7 +303,7 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                     {isSaving ? 'Saving...' : 'Save References'}
                 </button>

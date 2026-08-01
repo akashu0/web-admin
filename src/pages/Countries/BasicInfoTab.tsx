@@ -1,25 +1,31 @@
 // components/CountryForm/tabs/BasicInfoTab.tsx
 import { Image as ImageIcon, X } from 'lucide-react';
 import type { RefObject } from 'react';
+import type { UseFormReturn } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { generateSlug, type CountryFormValues } from './country-form-values';
 
 interface BasicInfoTabProps {
-    form: any;
+    form: UseFormReturn<CountryFormValues>;
     bannerPreview: string;
     bannerInputRef: RefObject<HTMLInputElement | null>;
-    onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, type: 'banner') => void;
-    onRemoveImage: (type: 'banner') => void;
+    onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onRemoveImage: () => void;
 }
 
 const CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
 
-const generateSlug = (value: string) =>
-    value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, '') // remove special chars
-        .replace(/\s+/g, '-')         // spaces → -
-        .replace(/-+/g, '-');         // avoid multiple -
-
+const Required = () => <span className="text-destructive">*</span>;
 
 export function BasicInfoTab({
     form,
@@ -28,234 +34,172 @@ export function BasicInfoTab({
     onImageUpload,
     onRemoveImage,
 }: BasicInfoTabProps) {
+    const { register, setValue, watch } = form;
+
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+            <h3 className="text-h3 font-semibold">Basic Information</h3>
 
-            {/* Image Uploads */}
-            <div className="grid grid-cols-1 gap-6">
-                {/* Banner Upload */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Country Banner
-                    </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-500 transition-colors">
-                        {bannerPreview ? (
-                            <div className="relative">
-                                <img
-                                    src={bannerPreview}
-                                    alt="Banner preview"
-                                    className="w-full h-32 object-cover rounded"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => onRemoveImage('banner')}
-                                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div
-                                onClick={() => bannerInputRef.current?.click()}
-                                className="cursor-pointer"
+            {/* Banner Upload */}
+            <div>
+                <Label className="mb-2 block">Country Banner</Label>
+                <div className="rounded-lg border-2 border-dashed border-input p-4 text-center transition-colors hover:border-primary/50">
+                    {bannerPreview ? (
+                        <div className="relative">
+                            <img
+                                src={bannerPreview}
+                                alt="Banner preview"
+                                className="h-32 w-full rounded object-cover"
+                            />
+                            <Button
+                                type="button"
+                                size="icon"
+                                variant="destructive"
+                                className="absolute right-2 top-2 size-7 rounded-full"
+                                onClick={() => onRemoveImage()}
                             >
-                                <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                                <p className="text-sm text-gray-600">Click to upload banner</p>
-                                <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
-                                <p className="text-xs text-amber-600 font-medium mt-1">Required image ratio: 16:9 (e.g., 1280 x 720 px)</p>
-                            </div>
-                        )}
-                        <input
-                            ref={bannerInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => onImageUpload(e, 'banner')}
-                            className="hidden"
-                        />
-                    </div>
+                                <X className="size-4" />
+                            </Button>
+                        </div>
+                    ) : (
+                        <div onClick={() => bannerInputRef.current?.click()} className="cursor-pointer">
+                            <ImageIcon className="mx-auto mb-2 size-12 text-muted-foreground" />
+                            <p className="text-muted-foreground">Click to upload banner</p>
+                            <p className="mt-1 text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                            <p className="mt-1 text-xs font-medium text-primary">
+                                Required image ratio: 16:9 (e.g., 1280 x 720 px)
+                            </p>
+                        </div>
+                    )}
+                    <input
+                        ref={bannerInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={onImageUpload}
+                        className="hidden"
+                    />
                 </div>
             </div>
 
             {/* Form Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <form.Field name="name">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Country Name <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={field.state.value}
-                                onChange={(e) => {
-                                    const nameValue = e.target.value;
-                                    field.handleChange(nameValue);
-                                    form.setFieldValue('slug', generateSlug(nameValue));
-                                }}
-                                placeholder="e.g., United States"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            />
-                        </div>
-                    )}
-                </form.Field>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-1.5">
+                    <Label htmlFor="country-name">Country Name <Required /></Label>
+                    <Input
+                        id="country-name"
+                        placeholder="e.g., United States"
+                        {...register('name', {
+                            // Typing the name keeps the slug in step; it stays editable below.
+                            onChange: (e) => setValue('slug', generateSlug(e.target.value)),
+                        })}
+                        required
+                    />
+                </div>
 
+                <div className="space-y-1.5">
+                    <Label htmlFor="country-slug">Slug <Required /></Label>
+                    <Input
+                        id="country-slug"
+                        placeholder="e.g., united-states"
+                        {...register('slug', {
+                            onChange: (e) =>
+                                setValue('slug', e.target.value.toLowerCase().replace(/\s+/g, '-')),
+                        })}
+                        required
+                    />
+                </div>
 
-                <form.Field name="slug">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Slug <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                                placeholder="e.g., united-states"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            />
-                        </div>
-                    )}
-                </form.Field>
+                <div className="space-y-1.5">
+                    <Label htmlFor="country-capital">Capital <Required /></Label>
+                    <Input
+                        id="country-capital"
+                        placeholder="e.g., Washington, D.C."
+                        {...register('capital')}
+                        required
+                    />
+                </div>
 
-                <form.Field name="capital">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Capital <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value)}
-                                placeholder="e.g., Washington, D.C."
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            />
-                        </div>
-                    )}
-                </form.Field>
+                <div className="space-y-1.5">
+                    <Label>Continent <Required /></Label>
+                    <Select
+                        value={watch('continent') || undefined}
+                        onValueChange={(v) => setValue('continent', v)}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Continent" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {CONTINENTS.map((continent) => (
+                                <SelectItem key={continent} value={continent}>
+                                    {continent}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
 
-                <form.Field name="continent">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Continent <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            >
-                                <option value="">Select Continent</option>
-                                {CONTINENTS.map((continent) => (
-                                    <option key={continent} value={continent}>
-                                        {continent}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                </form.Field>
+                <div className="space-y-1.5">
+                    <Label htmlFor="country-currency">Currency <Required /></Label>
+                    <Input
+                        id="country-currency"
+                        placeholder="e.g., USD"
+                        maxLength={3}
+                        {...register('currency', {
+                            onChange: (e) => setValue('currency', e.target.value.toUpperCase()),
+                        })}
+                        required
+                    />
+                </div>
 
-                <form.Field name="currency">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Currency <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value.toUpperCase())}
-                                placeholder="e.g., USD"
-                                maxLength={3}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            />
-                        </div>
-                    )}
-                </form.Field>
+                <div className="space-y-1.5">
+                    <Label htmlFor="country-languages">Spoken Languages <Required /></Label>
+                    <Input
+                        id="country-languages"
+                        placeholder="e.g., English"
+                        {...register('spokenLanguages')}
+                        required
+                    />
+                </div>
 
-                <form.Field name="spokenLanguages">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Spoken Languages <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value)}
-                                placeholder="e.g., English"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                required
-                            />
-                        </div>
-                    )}
-                </form.Field>
-
-                <form.Field name="population">
-                    {(field: any) => (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-900 mb-2">
-                                Population
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                value={field.state.value}
-                                onChange={(e) => field.handleChange(e.target.value)}
-                                onWheel={(e) => e.currentTarget.blur()}
-                                placeholder="e.g., 331000000"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                        </div>
-                    )}
-                </form.Field>
-
-
+                <div className="space-y-1.5">
+                    <Label htmlFor="country-population">Population</Label>
+                    <Input
+                        id="country-population"
+                        type="number"
+                        min="0"
+                        placeholder="e.g., 331000000"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        {...register('population')}
+                    />
+                </div>
             </div>
 
-            <form.Field name="about">
-                {(field: any) => (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                            About <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            placeholder="Brief description about the country..."
-                            rows={4}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            required
-                        />
-                    </div>
-                )}
-            </form.Field>
+            <div className="space-y-1.5">
+                <Label htmlFor="country-about">About <Required /></Label>
+                <Textarea
+                    id="country-about"
+                    placeholder="Brief description about the country..."
+                    rows={4}
+                    {...register('about')}
+                    required
+                />
+            </div>
 
-            <form.Field name="status">
-                {(field: any) => (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-900 mb-2">
-                            Status <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={field.state.value}
-                            onChange={(e) => field.handleChange(e.target.value as 'published' | 'draft')}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            required
-                        >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                        </select>
-                    </div>
-                )}
-            </form.Field>
+            <div className="space-y-1.5">
+                <Label>Status <Required /></Label>
+                <Select
+                    value={watch('status')}
+                    onValueChange={(v) => setValue('status', v as 'draft' | 'published')}
+                >
+                    <SelectTrigger className="w-full md:w-64">
+                        <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
     );
 }

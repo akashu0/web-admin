@@ -1,164 +1,78 @@
-import { Link, useLocation } from 'react-router-dom';
-import {
-    LayoutDashboard,
-    BookOpen,
-    GraduationCap,
-    FileText,
-    School,
-    LogOut,
-    HelpCircle,
-    ChevronDown,
-    Percent,
-    Globe,
-    Image,
-    BookMarked,
-    Library,
-    Users,
-} from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/button';
-import { useAuthStore } from '../../store/authStore';
-import React from 'react';
+import { NavLink } from "react-router-dom";
+import { GraduationCap, LogOut } from "lucide-react";
+import { NAV_GROUPS } from "@/app/nav";
+import { useAuthStore } from "@/store/authStore";
+import { cn } from "@/lib/utils";
 
-const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    { icon: BookOpen, label: 'Courses', href: '/courses' },
-    { icon: BookMarked, label: 'eG Academy', href: '/eg-academy/courses' },
-    {
-        icon: GraduationCap,
-        label: 'Universities',
-        href: '/universities',
-        // Add submenus here
-        subMenus: [
-            { icon: GraduationCap, label: 'Universities', href: '/universities' },
-            { icon: Percent, label: 'Commission', href: '/universities/commission' },
-        ]
-    },
-    { icon: Globe, label: 'Countries', href: '/countries' },
-    { icon: FileText, label: 'Visas', href: '/visas' },
-    { icon: School, label: 'Learning Centers', href: '/learning-centers' },
-    { icon: HelpCircle, label: 'FAQs', href: '/faqs' },
-    { icon: FileText, label: 'Enquiries', href: '/enquiries' },
-    { icon: Image, label: 'Popup Banners', href: '/popup-banners' },
-    { icon: Library, label: 'eG Library', href: '/library' },
-    {
-        icon: Users,
-        label: 'Agents',
-        href: '/agents',
-        subMenus: [
-            { icon: LayoutDashboard, label: 'Dashboard', href: '/agents' },
-            { icon: Users, label: 'All Agents', href: '/agents/list' },
-            { icon: FileText, label: 'Applications', href: '/agents/applications' },
-        ]
-    },
-];
+export const Sidebar = ({ onNavigate }: { onNavigate?: () => void }) => {
+  const logout = useAuthStore((s) => s.logout);
 
-export const Sidebar = () => {
-    const location = useLocation();
-    const logout = useAuthStore((state) => state.logout);
-
-    // Manage which submenus are open (defaulting Universities to open if active)
-    const [openMenus, setOpenMenus] = React.useState<string[]>(() => {
-        const open: string[] = [];
-        if (location.pathname.includes('/universities')) open.push('Universities');
-        if (location.pathname.includes('/agents')) open.push('Agents');
-        return open;
-    });
-
-    const toggleMenu = (label: string) => {
-        setOpenMenus(prev =>
-            prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
-        );
-    };
-
-    return (
-        <div className="h-screen w-64 bg-white text-black flex flex-col border-r border-zinc-200">
-            <div className="p-6">
-                <h1 className="text-2xl font-bold tracking-tight">eduGuardian</h1>
-            </div>
-
-            <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-                {sidebarItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = location.pathname === item.href || (item.subMenus && location.pathname.startsWith(item.href));
-                    const isMenuOpen = openMenus.includes(item.label);
-
-                    return (
-                        <div key={item.label} className="flex flex-col">
-                            {/* Main Item */}
-                            {item.subMenus ? (
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => toggleMenu(item.label)}
-                                    className={cn(
-                                        "w-full justify-between gap-3 mb-1 cursor-pointer",
-                                        isActive && !isMenuOpen ? "bg-zinc-100 text-black" : "text-zinc-500 hover:text-black"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <Icon size={20} />
-                                        {item.label}
-                                    </div>
-                                    <ChevronDown size={16} className={cn("transition-transform", isMenuOpen && "rotate-180")} />
-                                </Button>
-                            ) : (
-                                <Link to={item.href}>
-                                    <Button
-                                        variant="ghost"
-                                        className={cn(
-                                            "w-full justify-start gap-3 mb-1 cursor-pointer",
-                                            isActive
-                                                ? "bg-black text-white hover:bg-zinc-800 hover:text-white"
-                                                : "text-zinc-500 hover:text-black hover:bg-zinc-100"
-                                        )}
-                                    >
-                                        <Icon size={20} />
-                                        {item.label}
-                                    </Button>
-                                </Link>
-                            )}
-
-                            {/* Submenu Rendering */}
-                            {item.subMenus && isMenuOpen && (
-                                <div className="ml-4 pl-4 border-l border-zinc-100 flex flex-col gap-1 mb-2">
-                                    {item.subMenus.map((sub) => {
-                                        const SubIcon = sub.icon;
-                                        const isSubActive = location.pathname === sub.href;
-                                        return (
-                                            <Link key={sub.href} to={sub.href}>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className={cn(
-                                                        "w-full justify-start gap-3 h-9 cursor-pointer text-sm",
-                                                        isSubActive
-                                                            ? "bg-zinc-100 text-black font-medium"
-                                                            : "text-zinc-400 hover:text-black hover:bg-zinc-50"
-                                                    )}
-                                                >
-                                                    <SubIcon size={16} />
-                                                    {sub.label}
-                                                </Button>
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </nav>
-
-            <div className="p-4 border-t border-zinc-200">
-                <Button
-                    variant="ghost"
-                    className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
-                    onClick={logout}
-                >
-                    <LogOut size={20} />
-                    Logout
-                </Button>
-            </div>
+  return (
+    <aside className="flex h-full w-[212px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-2.5 py-4">
+      <div className="mb-4 flex items-center gap-2 px-1.5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-brand text-white shadow-sm">
+          <GraduationCap className="size-[18px]" />
         </div>
-    );
+        <div className="leading-tight">
+          <h1 className="text-[15px] font-bold tracking-tight text-brand">eduGuardian</h1>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Content Admin</p>
+        </div>
+      </div>
+
+      <nav className="hide-scroll flex-1 space-y-3 overflow-y-auto">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label}>
+            <p className="mb-1 px-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground/60">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    cn(
+                      "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-[6px] text-[13px] transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r bg-primary" />
+                      )}
+                      <item.icon className="size-[17px] shrink-0" />
+                      <span className="min-w-0 flex-1 leading-tight">
+                        <span className="block truncate">{item.label}</span>
+                        {item.hint && (
+                          <span className="block truncate text-[10px] font-normal text-muted-foreground">
+                            {item.hint}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      <div className="mt-auto border-t border-sidebar-border/70 pt-3">
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60"
+        >
+          <LogOut className="size-[17px]" />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+  );
 };

@@ -41,6 +41,10 @@ interface Props {
     onCancel: () => void;
     isSubmitting?: boolean;
     mode: "create" | "edit";
+    // Set by the university editor's Commission tab: the institution is already
+    // decided, and the API overwrites name/ref from the university anyway, so
+    // showing those inputs would offer an edit that never takes effect.
+    universityLocked?: boolean;
 }
 
 // ── Input component ───────────────────────────────────────────────────────────
@@ -53,7 +57,7 @@ const Field = ({
     children: React.ReactNode;
 }) => (
     <div className="flex flex-col gap-1.5">
-        <label className="text-[11px] font-semibold tracking-widest uppercase text-zinc-400">
+        <label className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground">
             {label}
         </label>
         {children}
@@ -61,7 +65,7 @@ const Field = ({
 );
 
 const inputCls =
-    "w-full text-sm border border-zinc-200 rounded-lg px-3 py-2 bg-white text-zinc-900 placeholder-zinc-300 focus:outline-none focus:border-zinc-900 transition-colors font-mono";
+    "w-full text-sm border border-border rounded-lg px-3 py-2 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors font-mono";
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -71,6 +75,7 @@ export const CommissionForm = ({
     onCancel,
     isSubmitting = false,
     mode,
+    universityLocked = false,
 }: Props) => {
     const [values, setValues] = useState<CommissionFormValues>({
         ...defaultValues(),
@@ -90,7 +95,7 @@ export const CommissionForm = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-        if (!values.universityName.trim()) {
+        if (!universityLocked && !values.universityName.trim()) {
             setError("University name is required.");
             return;
         }
@@ -104,15 +109,15 @@ export const CommissionForm = ({
     return (
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
             {/* Tabs */}
-            <div className="flex border-b border-zinc-200 px-6">
+            <div className="flex border-b border-border px-6">
                 {(["details", "commissions", "notes"] as const).map((tab) => (
                     <button
                         key={tab}
                         type="button"
                         onClick={() => setActiveTab(tab)}
                         className={`pb-3 pt-1 mr-6 text-xs font-semibold tracking-widest uppercase transition-colors border-b-2 -mb-px ${activeTab === tab
-                            ? "border-zinc-900 text-zinc-900"
-                            : "border-transparent text-zinc-400 hover:text-zinc-600"
+                            ? "border-primary text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-muted-foreground"
                             }`}
                     >
                         {tab}
@@ -125,32 +130,36 @@ export const CommissionForm = ({
                 {/* ── Details tab ── */}
                 {activeTab === "details" && (
                     <>
-                        <Field label="University name *">
-                            <input
-                                className={inputCls}
-                                placeholder="e.g. HTMI (Luzern Campus)"
-                                value={values.universityName}
-                                onChange={(e) => set("universityName", e.target.value)}
-                            />
-                        </Field>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Field label="Country">
-                                <input
-                                    className={inputCls}
-                                    placeholder="e.g. Switzerland"
-                                    value={values.country}
-                                    onChange={(e) => set("country", e.target.value)}
-                                />
-                            </Field>
-                            <Field label="Location / city">
-                                <input
-                                    className={inputCls}
-                                    placeholder="e.g. Luzern"
-                                    value={values.location}
-                                    onChange={(e) => set("location", e.target.value)}
-                                />
-                            </Field>
-                        </div>
+                        {!universityLocked && (
+                            <>
+                                <Field label="University name *">
+                                    <input
+                                        className={inputCls}
+                                        placeholder="e.g. HTMI (Luzern Campus)"
+                                        value={values.universityName}
+                                        onChange={(e) => set("universityName", e.target.value)}
+                                    />
+                                </Field>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Field label="Country">
+                                        <input
+                                            className={inputCls}
+                                            placeholder="e.g. Switzerland"
+                                            value={values.country}
+                                            onChange={(e) => set("country", e.target.value)}
+                                        />
+                                    </Field>
+                                    <Field label="Location / city">
+                                        <input
+                                            className={inputCls}
+                                            placeholder="e.g. Luzern"
+                                            value={values.location}
+                                            onChange={(e) => set("location", e.target.value)}
+                                        />
+                                    </Field>
+                                </div>
+                            </>
+                        )}
                         <Field label="Intakes">
                             <input
                                 className={inputCls}
@@ -173,7 +182,7 @@ export const CommissionForm = ({
                 {/* ── Commissions tab ── */}
                 {activeTab === "commissions" && (
                     <div className="space-y-3">
-                        <p className="text-xs text-zinc-400">
+                        <p className="text-xs text-muted-foreground">
                             Leave empty for course types not offered. Add one tier for a flat rate
                             (no label needed), or multiple tiers with labels like "1-5", "6-15", "16+".
                         </p>
@@ -221,28 +230,28 @@ export const CommissionForm = ({
                 )}
 
                 {error && (
-                    <p className="text-xs text-red-500 font-medium border border-red-100 bg-red-50 rounded-lg px-3 py-2">
+                    <p className="text-xs text-destructive font-medium border border-destructive/20 bg-destructive/10 rounded-lg px-3 py-2">
                         {error}
                     </p>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-100">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-border">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="text-sm text-zinc-400 hover:text-zinc-900 transition-colors font-medium"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 bg-zinc-900 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 bg-primary text-primary-foreground text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSubmitting && (
-                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span className="w-3.5 h-3.5 border-2 border-card/30 border-t-white rounded-full animate-spin" />
                     )}
                     {mode === "create" ? "Create commission" : "Save changes"}
                 </button>

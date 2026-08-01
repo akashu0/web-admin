@@ -79,18 +79,18 @@ export function DocumentsRequiredSection({
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
                 <div className="flex items-center gap-3 mb-6">
-                    <FileText className="h-8 w-8 text-gray-900" />
+                    <FileText className="h-8 w-8 text-foreground" />
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Documents Required</h2>
-                        <p className="text-sm text-gray-600">List all documents needed for admission</p>
+                        <h2 className="text-2xl font-bold text-foreground">Documents Required</h2>
+                        <p className="text-sm text-muted-foreground">List all documents needed for admission</p>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     {documents.map((document, index) => (
-                        <Card key={document.id} className="p-6 bg-white border-gray-200">
+                        <Card key={document.id} className="p-6 bg-card border-border">
                             <div className="flex items-start justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-lg font-semibold text-foreground">
                                     Document {index + 1}
                                 </h3>
                                 {documents.length > 1 && (
@@ -99,7 +99,7 @@ export function DocumentsRequiredSection({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => removeDocument(index)}
-                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -144,7 +144,7 @@ export function DocumentsRequiredSection({
                                         onChange={(e) =>
                                             handleDocumentChange(index, 'isMandatory', e.target.checked)
                                         }
-                                        className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-primary focus:ring-ring border-input rounded"
                                     />
                                     <Label htmlFor={`isMandatory-${index}`} className="mb-0 cursor-pointer">
                                         This is a mandatory document
@@ -167,7 +167,7 @@ export function DocumentsRequiredSection({
             </div>
 
             <div className="flex justify-end gap-4 pt-6 border-t">
-                <Button type="submit" className="bg-gray-900 hover:bg-gray-800">
+                <Button type="submit" className="bg-primary hover:bg-primary">
                     Save & Continue
                 </Button>
             </div>

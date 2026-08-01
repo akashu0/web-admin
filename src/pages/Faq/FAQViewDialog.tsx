@@ -19,15 +19,15 @@ export const FAQViewDialog = ({
     const statusConfig = {
         active: {
             label: 'Active',
-            className: 'bg-green-100 text-green-800',
+            className: 'bg-accent text-primary',
         },
         inactive: {
             label: 'Inactive',
-            className: 'bg-gray-100 text-gray-800',
+            className: 'bg-muted text-foreground',
         },
         draft: {
             label: 'Draft',
-            className: 'bg-yellow-100 text-yellow-800',
+            className: 'bg-muted text-muted-foreground',
         },
     };
 
@@ -44,20 +44,20 @@ export const FAQViewDialog = ({
                     {/* Entity Info */}
                     <div className="flex gap-6 flex-wrap">
                         <div>
-                            <p className="text-sm text-zinc-500 mb-1">Entity Type</p>
-                            <Badge variant="outline" className="text-sm">
+                            <p className="text-sm text-muted-foreground mb-1">Entity Type</p>
+                            <Badge tone="red" className="text-sm">
                                 {faq.entityType}
                             </Badge>
                         </div>
                         <div>
-                            <p className="text-sm text-zinc-500 mb-1">Status</p>
-                            <Badge variant="secondary" className={config.className}>
+                            <p className="text-sm text-muted-foreground mb-1">Status</p>
+                            <Badge tone="neutral" className={config.className}>
                                 {config.label}
                             </Badge>
                         </div>
                         <div>
-                            <p className="text-sm text-zinc-500 mb-1">Total Questions</p>
-                            <Badge variant="secondary" className="text-sm">
+                            <p className="text-sm text-muted-foreground mb-1">Total Questions</p>
+                            <Badge tone="neutral" className="text-sm">
                                 {faq.questions.length} {faq.questions.length === 1 ? 'Question' : 'Questions'}
                             </Badge>
                         </div>
@@ -71,22 +71,22 @@ export const FAQViewDialog = ({
                         {faq.questions
                             .sort((a, b) => a.order - b.order)
                             .map((item, index) => (
-                                <div key={index} className="space-y-3 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                                <div key={index} className="space-y-3 p-4 bg-muted rounded-lg border border-border">
                                     <div className="flex items-start gap-3">
-                                        <Badge variant="outline" className="mt-1">
+                                        <Badge tone="red" className="mt-1">
                                             #{item.order}
                                         </Badge>
                                         <div className="flex-1">
-                                            <p className="text-sm text-zinc-500 mb-1">Question {index + 1}</p>
-                                            <p className="text-base font-semibold text-zinc-900">
+                                            <p className="text-sm text-muted-foreground mb-1">Question {index + 1}</p>
+                                            <p className="text-base font-semibold text-foreground">
                                                 {item.question}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="pl-12">
-                                        <p className="text-sm text-zinc-500 mb-1">Answer</p>
-                                        <p className="text-zinc-700 whitespace-pre-wrap leading-relaxed">
+                                        <p className="text-sm text-muted-foreground mb-1">Answer</p>
+                                        <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                                             {item.answer}
                                         </p>
                                     </div>
@@ -97,16 +97,16 @@ export const FAQViewDialog = ({
                     <Separator />
 
                     {/* Meta Info */}
-                    <div className="space-y-3 bg-zinc-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-semibold text-zinc-900">Metadata</h3>
+                    <div className="space-y-3 bg-muted p-4 rounded-lg">
+                        <h3 className="text-sm font-semibold text-foreground">Metadata</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <p className="text-sm text-zinc-500">FAQ ID</p>
-                                <p className="font-mono text-xs mt-1 text-zinc-700">{faq._id}</p>
+                                <p className="text-sm text-muted-foreground">FAQ ID</p>
+                                <p className="font-mono text-xs mt-1 text-foreground">{faq._id}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-zinc-500">Created At</p>
-                                <p className="text-sm mt-1 text-zinc-700">
+                                <p className="text-sm text-muted-foreground">Created At</p>
+                                <p className="text-sm mt-1 text-foreground">
                                     {new Date(faq.createdAt).toLocaleString('en-US', {
                                         month: 'short',
                                         day: 'numeric',
@@ -117,8 +117,8 @@ export const FAQViewDialog = ({
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-zinc-500">Last Updated</p>
-                                <p className="text-sm mt-1 text-zinc-700">
+                                <p className="text-sm text-muted-foreground">Last Updated</p>
+                                <p className="text-sm mt-1 text-foreground">
                                     {new Date(faq.updatedAt).toLocaleString('en-US', {
                                         month: 'short',
                                         day: 'numeric',

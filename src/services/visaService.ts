@@ -39,7 +39,7 @@ export const visaService = {
 
     async getAllVisasDropdown(): Promise<GetAllVisasResponse> {
         try {
-            const response = await apiClient.get<GetAllVisasResponse>('/visas/active-dropdown');
+            const response = await apiClient.get<GetAllVisasResponse>('/visas?status=active&limit=200');
             return response.data;
         } catch (error) {
             console.error('Error fetching visas:', error);

@@ -25,10 +25,10 @@ export const CommissionTierField = ({ label, value, onChange }: Props) => {
     const hasRanges = value.ranges.length > 0;
 
     return (
-        <div className="border border-zinc-200 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 bg-zinc-50 border-b border-zinc-200">
-                <span className="text-xs font-semibold tracking-widest uppercase text-zinc-500">
+            <div className="flex items-center justify-between px-3 py-2 bg-muted border-b border-border">
+                <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
                     {label}
                 </span>
                 <div className="flex items-center gap-3">
@@ -39,12 +39,12 @@ export const CommissionTierField = ({ label, value, onChange }: Props) => {
                             onChange={(e) => onChange({ ...value, isFullyFunded: e.target.checked })}
                             className="w-3 h-3 accent-zinc-900"
                         />
-                        <span className="text-[11px] text-zinc-500">Fully funded</span>
+                        <span className="text-[11px] text-muted-foreground">Fully funded</span>
                     </label>
                     <button
                         type="button"
                         onClick={addRange}
-                        className="text-[11px] font-semibold text-zinc-900 hover:text-zinc-600 transition-colors"
+                        className="text-[11px] font-semibold text-foreground hover:text-muted-foreground transition-colors"
                     >
                         + Add tier
                     </button>
@@ -52,9 +52,9 @@ export const CommissionTierField = ({ label, value, onChange }: Props) => {
             </div>
 
             {/* Ranges */}
-            <div className="divide-y divide-zinc-100">
+            <div className="divide-y divide-border">
                 {!hasRanges && (
-                    <div className="px-3 py-3 text-xs text-zinc-400 italic">
+                    <div className="px-3 py-3 text-xs text-muted-foreground italic">
                         No commission — leave empty or add a tier
                     </div>
                 )}
@@ -66,20 +66,20 @@ export const CommissionTierField = ({ label, value, onChange }: Props) => {
                             placeholder="Label (e.g. 1-5)"
                             value={range.label}
                             onChange={(e) => updateRange(i, "label", e.target.value)}
-                            className="w-28 text-xs font-mono border border-zinc-200 rounded px-2 py-1.5 bg-white text-zinc-900 placeholder-zinc-300 focus:outline-none focus:border-zinc-900 transition-colors"
+                            className="w-28 text-xs font-mono border border-border rounded px-2 py-1.5 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                         />
-                        <span className="text-zinc-300 text-xs">→</span>
+                        <span className="text-muted-foreground text-xs">→</span>
                         <input
                             type="text"
                             placeholder="Value (e.g. 20% or 600 EUR)"
                             value={range.value}
                             onChange={(e) => updateRange(i, "value", e.target.value)}
-                            className="flex-1 text-xs font-mono border border-zinc-200 rounded px-2 py-1.5 bg-white text-zinc-900 placeholder-zinc-300 focus:outline-none focus:border-zinc-900 transition-colors"
+                            className="flex-1 text-xs font-mono border border-border rounded px-2 py-1.5 bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                         />
                         <button
                             type="button"
                             onClick={() => removeRange(i)}
-                            className="text-zinc-300 hover:text-zinc-900 transition-colors text-sm leading-none"
+                            className="text-muted-foreground hover:text-foreground transition-colors text-sm leading-none"
                             aria-label="Remove tier"
                         >
                             ×

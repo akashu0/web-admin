@@ -1,16 +1,55 @@
 // pages/Course/CourseList.tsx
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Plus, RefreshCcw } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Plus, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/common/PageHeader";
+import { ResourceTable, type Column } from "@/components/common/ResourceTable";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { courseService } from "@/services/courseService";
 import type { Course } from "@/types/course";
-import { CourseDataTable } from "./CourseDataTable";
-import { createColumns } from "./columns";
 import { AddCourseModal } from "./AddCourseModal";
 
 const LIMIT = 10;
+
+const STREAM_OPTIONS = [
+    'Engineering & Technology',
+    'Business & Management Studies',
+    'Information Technology & Computing',
+    'Accounting & Finance',
+    'Education & Teaching',
+    'Social Sciences & Humanities',
+    'Medicine & Healthcare',
+    'Nursing & Allied Health Sciences',
+    'Artificial Intelligence & Data Science',
+    'Cyber Security & Networking',
+    'Software Engineering & Development',
+    'Hospitality & Tourism Management',
+    'Law & Legal Studies',
+    'Architecture & Interior Design',
+    'Aeronautical & Aviation Studies',
+    'Banking & Financial Technology (FinTech)',
+    'Public Health & Healthcare Management',
+    'Pharmacy & Pharmaceutical Sciences',
+] as const;
 
 interface CourseFilters {
     search?: string;
@@ -30,9 +69,16 @@ export function CourseList() {
     const [isFetching, setIsFetching] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const [searchInput, setSearchInput] = useState("");
+    const search = useDebounce(searchInput, 500);
+
     const [filters, setFilters] = useState<CourseFilters>({
         status: 'published',
     });
+
+    useEffect(() => {
+        setFilters((prev) => ({ ...prev, search: search || undefined }));
+    }, [search]);
 
     // Distinguishes a filter-driven reset (replace list) from a scroll-driven
     // next-page fetch (append to list).
@@ -63,6 +109,10 @@ export function CourseList() {
             );
         } catch (error) {
             console.error("Error fetching courses:", error);
+            // Stop the scroll sentinel: it is sitting in an empty viewport, and
+            // a `hasMore` left at true means it refires this failed request on
+            // every intersection — one error toast per frame.
+            setHasMore(false);
             toast.error("Failed to fetch courses");
         } finally {
             setIsLoading(false);
@@ -84,20 +134,11 @@ export function CourseList() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, filters]);
 
-    // Infinite scroll - this page is rendered inside MainLayout's <main>, but
-    // that element only has a min-height (not a fixed height), so the browser
-    // window is the actual scroll container.
-    const handleScroll = useCallback(() => {
-        if (isFetching || !hasMore) return;
-        if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 400) {
-            setPage((prev) => prev + 1);
-        }
-    }, [isFetching, hasMore]);
-
-    useEffect(() => {
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [handleScroll]);
+    // Infinite scroll against AppLayout's <main>, which is the scroll container.
+    const sentinelRef = useInfiniteScroll(() => setPage((prev) => prev + 1), {
+        hasMore,
+        loading: isFetching,
+    });
 
     // Re-fetches the current view from page 1, replacing the list. Used after
     // CRUD actions and manual refresh, where neither `page` nor `filters` change.
@@ -138,71 +179,174 @@ export function CourseList() {
         refreshList();
     };
 
-    const setSearch = useCallback((search: string) => {
-        setFilters((prev) => ({ ...prev, search: search || undefined }));
-    }, []);
-
-    const setSort = useCallback((sortBy: string, sortOrder: 'asc' | 'desc') => {
-        setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
-    }, []);
-
     const setStream = useCallback((stream: string) => {
         setFilters((prev) => ({ ...prev, stream: stream || undefined }));
+    }, []);
+
+    const setStatus = useCallback((status: string) => {
+        setFilters((prev) => ({ ...prev, status: status as CourseFilters["status"] }));
     }, []);
 
     const handleRefresh = () => {
         refreshList();
     };
 
-    const columns = createColumns({
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-    });
-
-    if (isLoading && !courses.length) {
-        return (
-            <div className="flex h-[400px] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-            </div>
-        );
-    }
+    const columns: Column<Course>[] = useMemo(() => [
+        {
+            key: "course",
+            header: "Course",
+            render: (course) => (
+                <div className="flex items-center gap-3">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border">
+                        <img
+                            src={course.courseImage || "/placeholder-course.jpg"}
+                            alt={course.courseName || "Course"}
+                            className="h-full w-full object-cover"
+                        />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="truncate font-medium">{course.courseName || "—"}</div>
+                        {course.slug && (
+                            <div className="truncate text-xs text-muted-foreground">{course.slug}</div>
+                        )}
+                    </div>
+                </div>
+            ),
+        },
+        {
+            key: "awardedBy",
+            header: "Awarded By",
+            render: (course) => <span className="capitalize">{course.awardedBy || "—"}</span>,
+        },
+        {
+            key: "level",
+            header: "Level",
+            render: (course) => <span className="capitalize">{course.level || "—"}</span>,
+        },
+        {
+            key: "studyMode",
+            header: "Study Mode",
+            render: (course) => <span className="capitalize">{course.studyMode || "—"}</span>,
+        },
+        {
+            key: "status",
+            header: "Status",
+            render: (course) => {
+                const status = course.status || "draft";
+                return (
+                    <Badge tone={status === "published" ? "green" : "neutral"}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </Badge>
+                );
+            },
+        },
+        {
+            key: "actions",
+            header: "",
+            align: "right",
+            render: (course) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigate(`/courses/view/${course.slug}`)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(course)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => handleDelete(course._id)}
+                            className="text-destructive focus:text-destructive"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ),
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], []);
 
     return (
-        <div className="space-y-6 p-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={handleRefresh}
-                        disabled={isFetching}
-                        className="border-gray-200 bg-white hover:bg-gray-50 cursor-pointer"
-                    >
-                        <RefreshCcw
-                            className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-                        />
-                        Refresh
-                    </Button>
-                    <Button
-                        className="bg-gray-900 hover:bg-gray-800 cursor-pointer"
-                        onClick={handleAddCourse}
-                    >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Course
-                    </Button>
-                </div>
-            </div>
-
-            <CourseDataTable
-                columns={columns}
-                data={courses}
-                total={total}
-                hasMore={hasMore}
-                isLoadingMore={isFetching}
-                onSearchChange={setSearch}
-                onSortChange={setSort}
-                onStreamChange={setStream}
+        <div>
+            <PageHeader
+                title="Courses"
+                subtitle="Course catalog published to the website"
+                actions={
+                    <>
+                        <Button variant="outline" onClick={handleRefresh} disabled={isFetching}>
+                            <RefreshCcw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                            Refresh
+                        </Button>
+                        <Button onClick={handleAddCourse}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Course
+                        </Button>
+                    </>
+                }
             />
+
+            <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+                <div className="relative min-w-[200px] flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search courses..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="pl-9"
+                    />
+                </div>
+
+                <Select value={filters.status ?? "published"} onValueChange={setStatus}>
+                    <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="published">Published</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Select
+                    value={filters.stream ?? "__all__"}
+                    onValueChange={(value) => setStream(value === "__all__" ? "" : value)}
+                >
+                    <SelectTrigger className="w-[220px]">
+                        <SelectValue placeholder="All Streams" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                        <SelectItem value="__all__">All Streams</SelectItem>
+                        {STREAM_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+                    {courses.length} of {total}
+                </span>
+            </Card>
+
+            <Card className="overflow-hidden">
+                <ResourceTable
+                    columns={columns}
+                    rows={courses}
+                    isLoading={isLoading}
+                    sentinelRef={sentinelRef}
+                    isFetchingNextPage={isFetching && courses.length > 0}
+                    hasNextPage={hasMore}
+                    emptyTitle="No courses found"
+                    emptyDescription="Try adjusting your search or filters."
+                />
+            </Card>
 
             <AddCourseModal
                 open={isModalOpen}

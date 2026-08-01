@@ -232,15 +232,15 @@ export function EgAcademyLearningCentersSection({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Learning Centers</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Learning Centers</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage learning centers and their fee structures for this course.
           </p>
         </div>
         {!isAddingNew && (
           <Button
             type="button"
-            className="bg-gray-900 hover:bg-gray-800"
+            className="bg-primary hover:bg-primary"
             onClick={() => setIsAddingNew(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -259,35 +259,35 @@ export function EgAcademyLearningCentersSection({
             const total = calculateTotal(fee);
 
             return (
-              <Card key={id} className="p-4 bg-gray-50 border-gray-200">
+              <Card key={id} className="p-4 bg-muted border-border">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{center.city}</span>
-                      <span className="text-gray-400">/</span>
-                      <span className="text-gray-700">{center.country}</span>
-                      <span className="text-gray-400">/</span>
-                      <Badge variant="outline" className="text-xs">{center.continent}</Badge>
+                      <span className="font-semibold text-foreground">{center.city}</span>
+                      <span className="text-muted-foreground">/</span>
+                      <span className="text-foreground">{center.country}</span>
+                      <span className="text-muted-foreground">/</span>
+                      <Badge tone="red" className="text-xs">{center.continent}</Badge>
                     </div>
 
                     {fee && (
                       <div className="mt-2 flex items-center gap-3 flex-wrap">
                         {fee.tuitionFeeType && (
-                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                          <Badge className="bg-accent text-primary border-primary/30 text-xs">
                             {fee.tuitionFeeType}
                           </Badge>
                         )}
                         {fee.currency && (
-                          <Badge variant="outline" className="text-xs">{fee.currency}</Badge>
+                          <Badge tone="red" className="text-xs">{fee.currency}</Badge>
                         )}
                         {total > 0 && (
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-foreground">
                             Total: {fee.currency} {total.toLocaleString()}
                           </span>
                         )}
                         <button
                           type="button"
-                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          className="text-xs text-primary hover:underline flex items-center gap-1"
                           onClick={() => toggleExpand(id)}
                         >
                           {isExpanded ? (
@@ -305,8 +305,8 @@ export function EgAcademyLearningCentersSection({
                           const val = fee[key] as number;
                           return val > 0 ? (
                             <div key={key}>
-                              <span className="text-gray-500">{label}:</span>
-                              <span className="ml-1 font-medium text-gray-800">
+                              <span className="text-muted-foreground">{label}:</span>
+                              <span className="ml-1 font-medium text-foreground">
                                 {fee.currency} {val.toLocaleString()}
                               </span>
                             </div>
@@ -315,8 +315,8 @@ export function EgAcademyLearningCentersSection({
                         {fee.otherFees?.map((f, i) =>
                           f.fieldValue ? (
                             <div key={i}>
-                              <span className="text-gray-500">{f.fieldName}:</span>
-                              <span className="ml-1 font-medium text-gray-800">
+                              <span className="text-muted-foreground">{f.fieldName}:</span>
+                              <span className="ml-1 font-medium text-foreground">
                                 {fee.currency} {f.fieldValue}
                               </span>
                             </div>
@@ -333,7 +333,7 @@ export function EgAcademyLearningCentersSection({
                       size="sm"
                       onClick={() => startEdit(center)}
                       disabled={isAddingNew && editingCenterId !== id}
-                      className="text-blue-600 hover:bg-blue-50"
+                      className="text-primary hover:bg-accent"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -343,7 +343,7 @@ export function EgAcademyLearningCentersSection({
                       size="sm"
                       onClick={() => handleDeleteCenter(id)}
                       disabled={isAddingNew}
-                      className="text-red-600 hover:bg-red-50"
+                      className="text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -356,7 +356,7 @@ export function EgAcademyLearningCentersSection({
       )}
 
       {learningCenters.length === 0 && !isAddingNew && (
-        <div className="text-center py-12 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+        <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg">
           <p className="text-sm">No learning centers added yet.</p>
           <p className="text-xs mt-1">Click "Add Learning Center" to get started.</p>
         </div>
@@ -364,7 +364,7 @@ export function EgAcademyLearningCentersSection({
 
       {/* Add / Edit Form */}
       {isAddingNew && (
-        <Card className="p-6 border-2 border-gray-200">
+        <Card className="p-6 border-2 border-border">
           <h3 className="font-semibold text-lg mb-6">
             {editingCenterId ? 'Edit Learning Center' : 'New Learning Center'}
           </h3>
@@ -399,7 +399,7 @@ export function EgAcademyLearningCentersSection({
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Select continent" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-card">
                     {CONTINENT_OPTIONS.map(c => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
@@ -410,7 +410,7 @@ export function EgAcademyLearningCentersSection({
 
             {/* Fee Structure Divider */}
             <div className="border-t pt-4">
-              <h4 className="font-medium text-gray-800 mb-4">Fee Structure</h4>
+              <h4 className="font-medium text-foreground mb-4">Fee Structure</h4>
             </div>
 
             {/* Tuition Fee Type + Scholarship */}
@@ -424,7 +424,7 @@ export function EgAcademyLearningCentersSection({
                   <SelectTrigger className="mt-2">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-card">
                     {TUITION_FEE_TYPES.map(t => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
@@ -440,7 +440,7 @@ export function EgAcademyLearningCentersSection({
                   <SelectTrigger className="mt-2">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-card">
                     {SCHOLARSHIP_PERCENTAGES.map(p => (
                       <SelectItem key={p} value={p}>{p}</SelectItem>
                     ))}
@@ -459,7 +459,7 @@ export function EgAcademyLearningCentersSection({
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
-                <SelectContent className="bg-white max-h-60">
+                <SelectContent className="bg-card max-h-60">
                   {CURRENCY_OPTIONS.map(c => (
                     <SelectItem key={c.code} value={c.code}>
                       {c.code} — {c.name}
@@ -495,13 +495,13 @@ export function EgAcademyLearningCentersSection({
             {/* Other Fees */}
             <div>
               <Label>Other Fees</Label>
-              <p className="text-xs text-gray-500 mt-0.5 mb-3">Add any additional fees below</p>
+              <p className="text-xs text-muted-foreground mt-0.5 mb-3">Add any additional fees below</p>
 
               {otherFees.length > 0 && (
                 <div className="space-y-2 mb-3">
                   {otherFees.map(fee => (
                     <div key={fee.id} className="flex items-center gap-2">
-                      <span className="text-sm text-gray-700 w-40 shrink-0">{fee.fieldName}</span>
+                      <span className="text-sm text-foreground w-40 shrink-0">{fee.fieldName}</span>
                       <Input
                         type="number"
                         min="0"
@@ -515,7 +515,7 @@ export function EgAcademyLearningCentersSection({
                         variant="ghost"
                         size="sm"
                         onClick={() => removeOtherFee(fee.id)}
-                        className="text-red-500 hover:bg-red-50 shrink-0"
+                        className="text-destructive hover:bg-destructive/10 shrink-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -556,7 +556,7 @@ export function EgAcademyLearningCentersSection({
               </Button>
               <Button
                 type="button"
-                className="bg-gray-900 hover:bg-gray-800"
+                className="bg-primary hover:bg-primary"
                 onClick={editingCenterId ? handleUpdateCenter : handleAddCenter}
                 disabled={isSaving}
               >

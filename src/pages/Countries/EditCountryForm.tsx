@@ -1,6 +1,6 @@
 // pages/CountryEdit/EditCountryPage.tsx
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from '@tanstack/react-form';
+import { useForm } from 'react-hook-form';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { ICountry } from '@/types/country';
 import { countryService } from '@/services/countryService';
@@ -10,6 +10,10 @@ import { CostOfLivingTab } from './CostOfLivingTab';
 import { ReferencesTab } from './ReferencesTab';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { PageHeader } from '@/components/common/PageHeader';
+import { emptyCountryForm, type CountryFormValues } from './country-form-values';
 
 export type TabType = 'basic' | 'costs' | 'references';
 
@@ -27,16 +31,37 @@ export function EditCountryForm() {
 
     const bannerInputRef = useRef<HTMLInputElement>(null);
 
+    const form = useForm<CountryFormValues>({ defaultValues: emptyCountryForm });
+
     useEffect(() => {
         fetchCountry();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [countryId]);
 
     const fetchCountry = async () => {
         try {
             setIsLoading(true);
             const response = await countryService.getCountryById(countryId);
-            setCountry(response.data);
-            setBannerPreview(response.data.banner || '');
+            const data: ICountry = response.data;
+            setCountry(data);
+            setBannerPreview(data.banner || '');
+            // One reset instead of a setFieldValue per key: it also clears the
+            // dirty state, so the form matches what was just loaded.
+            form.reset({
+                name: data.name ?? '',
+                capital: data.capital ?? '',
+                continent: data.continent ?? '',
+                currency: data.currency ?? '',
+                spokenLanguages: data.spokenLanguages ?? '',
+                population: data.population ?? '',
+                about: data.about ?? '',
+                status: data.status ?? 'draft',
+                slug: data.slug ?? '',
+                costOfLiving: data.costOfLiving ?? [],
+                visaProcessDocuments: data.visaProcessDocuments ?? '',
+                topUniversities: data.topUniversities ?? [],
+                topCourses: data.topCourses ?? [],
+            });
         } catch (error) {
             console.error('Error fetching country:', error);
             toast.error('Failed to load country data');
@@ -45,47 +70,7 @@ export function EditCountryForm() {
         }
     };
 
-    const form = useForm({
-        defaultValues: {
-            name: country?.name || '',
-            capital: country?.capital || '',
-            continent: country?.continent || '',
-            currency: country?.currency || '',
-            spokenLanguages: country?.spokenLanguages || '',
-            population: country?.population || '',
-            about: country?.about || '',
-            status: country?.status || 'draft',
-            slug: country?.slug || '',
-            costOfLiving: country?.costOfLiving || [],
-            visaProcessDocuments: country?.visaProcessDocuments || '',
-            topUniversities: country?.topUniversities || [],
-            topCourses: country?.topCourses || [],
-        },
-    });
-
-    // Update form when country data loads
-    useEffect(() => {
-        if (country) {
-            form.setFieldValue('name', country.name);
-            form.setFieldValue('capital', country.capital);
-            form.setFieldValue('continent', country.continent);
-            form.setFieldValue('currency', country.currency);
-            form.setFieldValue('spokenLanguages', country.spokenLanguages);
-            form.setFieldValue('population', country.population);
-            form.setFieldValue('about', country.about);
-            form.setFieldValue('status', country.status);
-            form.setFieldValue('slug', country.slug);
-            form.setFieldValue('costOfLiving', country.costOfLiving);
-            form.setFieldValue('visaProcessDocuments', country.visaProcessDocuments);
-            form.setFieldValue('topUniversities', country.topUniversities);
-            form.setFieldValue('topCourses', country.topCourses);
-        }
-    }, [country]);
-
-    const handleImageUpload = (
-        e: React.ChangeEvent<HTMLInputElement>,
-        _type: 'banner'
-    ) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -98,7 +83,7 @@ export function EditCountryForm() {
         reader.readAsDataURL(file);
     };
 
-    const handleRemoveImage = (_type: 'banner') => {
+    const handleRemoveImage = () => {
         setBannerPreview('');
         setBannerFile(null);
         if (bannerInputRef.current) {
@@ -114,11 +99,11 @@ export function EditCountryForm() {
         try {
             setIsSubmitting(true);
 
-            const values = form.state.values;
+            const values = form.getValues();
 
             switch (activeTab) {
-                case 'basic':
-                    const basicData: any = {
+                case 'basic': {
+                    const basicData: Record<string, unknown> = {
                         name: values.name,
                         capital: values.capital,
                         continent: values.continent,
@@ -134,6 +119,7 @@ export function EditCountryForm() {
 
                     await countryService.updateCountryBasicInfo(countryId, basicData);
                     break;
+                }
 
                 case 'costs':
                     await countryService.updateCountryCostOfLiving(countryId, values.costOfLiving);
@@ -183,75 +169,48 @@ export function EditCountryForm() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="bg-white rounded-lg p-8 shadow-lg">
-                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
-                    <p className="mt-4 text-gray-600">Loading country data...</p>
+            <div className="flex h-96 items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="mx-auto size-8 animate-spin text-primary" />
+                    <p className="mt-4 text-muted-foreground">Loading country data...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                {/* Page Header */}
-                <div className="mb-6">
-                    <button
-                        onClick={handleClose}
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back to Countries</span>
-                    </button>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Edit Country - {country?.name}
-                    </h1>
-                    <p className="mt-2 text-gray-600">
-                        Update country information and settings
-                    </p>
-                </div>
+        <div>
+            <Button variant="ghost" size="sm" onClick={handleClose} className="mb-3 -ml-2">
+                <ArrowLeft className="mr-2 size-4" />
+                Back to Countries
+            </Button>
 
-                {/* Main Content Card */}
-                <div className="bg-white rounded-lg shadow-sm">
-                    <FormTabs
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                    />
+            <PageHeader
+                title={`Edit Country — ${country?.name ?? ''}`}
+                subtitle="Update country information and settings"
+            />
 
-                    <div className="p-6">
-                        {renderTabContent()}
+            <Card className="overflow-hidden p-0">
+                <FormTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
+                <div className="p-6">{renderTabContent()}</div>
+
+                {/* Action Buttons */}
+                <div className="sticky bottom-0 flex items-center justify-between border-t border-border bg-muted/40 px-6 py-4">
+                    <div className="text-muted-foreground">
+                        Save changes for <span className="font-medium capitalize">{activeTab}</span> section
                     </div>
-
-                    {/* Action Buttons */}
-                    <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-between items-center rounded-b-lg">
-                        <div className="text-sm text-gray-600">
-                            Save changes for <span className="font-medium capitalize">{activeTab}</span> section
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                onClick={handleClose}
-                                disabled={isSubmitting}
-                                className="px-6 py-2 border border-gray-300 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSaveSection}
-                                disabled={isSubmitting}
-                                className="px-6 py-2 bg-gray-900 text-white cursor-pointer rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                                {isSubmitting && (
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                )}
-                                {isSubmitting ? 'Saving...' : 'Save Section'}
-                            </button>
-                        </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSaveSection} disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+                            {isSubmitting ? 'Saving...' : 'Save Section'}
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

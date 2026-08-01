@@ -99,3 +99,30 @@ export interface CommissionFormValues {
     tuitionFees: string;
     intakes: string;
 }
+
+// ── Record → form ────────────────────────────────────────────────────────────
+// Both editors (the standalone drawer and the university's Commission tab) fill
+// the same form from the same record shape, so the conversion lives here.
+
+export const toTierForm = (tier: CommissionTier | null | undefined): CommissionTierForm => ({
+    ranges: tier?.ranges?.map((r) => ({ label: r.label ?? "", value: r.value })) ?? [],
+    isFullyFunded: tier?.isFullyFunded ?? false,
+});
+
+export const toFormValues = (c: PartnerCommission): CommissionFormValues => ({
+    universityRef: c.universityRef?._id ?? "",
+    universityName: c.universityName,
+    location: c.location ?? "",
+    country: c.country ?? "",
+    bachelors: toTierForm(c.bachelors),
+    masters: toTierForm(c.masters),
+    certifications_ps: toTierForm(c.certifications_ps),
+    diploma_fopg: toTierForm(c.diploma_fopg),
+    diploma: toTierForm(c.diploma),
+    phd: toTierForm(c.phd),
+    additionalBonus: c.additionalBonus ?? "",
+    courseTypeRestrictions: c.courseTypeRestrictions ?? "",
+    importantNotes: c.importantNotes ?? "",
+    tuitionFees: c.tuitionFees ?? "",
+    intakes: c.intakes ?? "",
+});

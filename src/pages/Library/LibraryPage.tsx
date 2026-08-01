@@ -17,6 +17,9 @@ import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
+import { PageHeader } from '../../components/common/PageHeader';
+import { PageLoader } from '../../components/common/PageLoader';
+import { EmptyState } from '../../components/common/states';
 import { libraryService } from '../../services/libraryService';
 import { LIBRARY_CATEGORIES, LIBRARY_LEVELS, type ILibraryResource } from '../../types/library';
 
@@ -99,7 +102,9 @@ export const LibraryPage = () => {
 
     const handleToggle = async (id: string) => {
         try {
-            const res = await libraryService.toggleStatus(id);
+            const current = resources.find(r => r._id === id);
+            const next = current?.status === 'active' ? 'inactive' : 'active';
+            const res = await libraryService.setStatus(id, next);
             setResources(prev => prev.map(r => r._id === id ? res.data : r));
             toast.success('Status updated');
         } catch {
@@ -121,69 +126,67 @@ export const LibraryPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">eG Library</h1>
-                    <p className="text-sm text-zinc-500 mt-1">
-                        Upload and manage study resources shown on the public eG Library page.
-                    </p>
-                </div>
-                <Button onClick={() => setShowForm(true)} className="gap-2">
-                    <Plus size={16} /> Add Resource
-                </Button>
-            </div>
+        <div>
+            <PageHeader
+                title="eG Library"
+                subtitle="Upload and manage study resources shown on the public eG Library page."
+                actions={
+                    <Button onClick={() => setShowForm(true)} className="gap-2">
+                        <Plus size={16} /> Add Resource
+                    </Button>
+                }
+            />
 
             {/* Grid */}
             {loading ? (
-                <div className="flex items-center justify-center h-40 text-zinc-400">Loading...</div>
+                <PageLoader />
             ) : resources.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-60 border border-dashed border-zinc-200 rounded-xl text-zinc-400 gap-3">
-                    <FileText size={40} strokeWidth={1.2} />
-                    <p className="text-sm">No resources yet. Add one to get started.</p>
-                </div>
+                <EmptyState
+                    icon={<FileText size={32} strokeWidth={1.2} />}
+                    title="No resources yet"
+                    description="Add one to get started."
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {resources.map(r => (
-                        <div key={r._id} className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
-                            <div className="relative aspect-[2/1] bg-zinc-100">
+                        <div key={r._id} className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col">
+                            <div className="relative aspect-[2/1] bg-muted">
                                 {r.thumbnail
                                     ? <img src={r.thumbnail} alt={r.title} className="w-full h-full object-cover" />
-                                    : <div className="w-full h-full flex items-center justify-center text-zinc-300"><FileText size={40} /></div>}
+                                    : <div className="w-full h-full flex items-center justify-center text-muted-foreground"><FileText size={40} /></div>}
                                 <div className="absolute top-2 right-2 flex gap-1">
-                                    {r.featured && <Badge className="bg-purple-600 hover:bg-purple-600">Featured</Badge>}
-                                    <Badge variant={r.status === 'active' ? 'default' : 'secondary'} className={r.status === 'active' ? 'bg-green-600 hover:bg-green-600' : ''}>
+                                    {r.featured && <Badge className="bg-primary text-primary-foreground">Featured</Badge>}
+                                    <Badge tone={r.status === 'active' ? "green" : "neutral"} className={r.status === 'active' ? 'bg-primary text-primary-foreground' : ''}>
                                         {r.status}
                                     </Badge>
                                 </div>
                             </div>
 
                             <div className="p-4 flex flex-col gap-1 flex-1">
-                                <div className="flex items-center gap-2 text-[11px] text-zinc-400 uppercase tracking-wide">
-                                    <span className="text-purple-600 font-semibold">{r.category}</span>
+                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground uppercase tracking-wide">
+                                    <span className="text-primary font-semibold">{r.category}</span>
                                     <span>• {r.academicLevel}</span>
                                 </div>
-                                <p className="font-medium text-sm text-zinc-800 truncate">{r.title}</p>
-                                {r.author && <p className="text-xs text-zinc-500 truncate">{r.author}</p>}
-                                <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1">
+                                <p className="font-medium text-sm text-foreground truncate">{r.title}</p>
+                                {r.author && <p className="text-xs text-muted-foreground truncate">{r.author}</p>}
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                                     {typeof r.rating === 'number' && r.rating > 0 && (
-                                        <span className="flex items-center gap-1 text-amber-500"><Star size={12} fill="currentColor" /> {r.rating}</span>
+                                        <span className="flex items-center gap-1 text-muted-foreground"><Star size={12} fill="currentColor" /> {r.rating}</span>
                                     )}
                                     <span className="flex items-center gap-1"><Download size={12} /> {r.downloadCount}</span>
                                     {r.fileUrl
-                                        ? <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">file</a>
-                                        : <span className="text-red-400">no file</span>}
+                                        ? <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">file</a>
+                                        : <span className="text-destructive">no file</span>}
                                 </div>
                             </div>
 
                             <div className="px-4 pb-4 flex gap-2">
                                 <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => handleToggle(r._id)}>
                                     {r.status === 'active'
-                                        ? <><ToggleRight size={15} className="text-green-600" /> Deactivate</>
+                                        ? <><ToggleRight size={15} className="text-primary" /> Deactivate</>
                                         : <><ToggleLeft size={15} /> Activate</>}
                                 </Button>
-                                <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100" onClick={() => setDeleteId(r._id)}>
+                                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20" onClick={() => setDeleteId(r._id)}>
                                     <Trash2 size={15} />
                                 </Button>
                             </div>
@@ -200,13 +203,13 @@ export const LibraryPage = () => {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-1.5">
-                            <Label>Title <span className="text-red-500">*</span></Label>
+                            <Label>Title <span className="text-destructive">*</span></Label>
                             <Input placeholder="e.g. IELTS 2026 Prep Guide" value={form.title} onChange={e => set('title', e.target.value)} required />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
-                                <Label>Category <span className="text-red-500">*</span></Label>
+                                <Label>Category <span className="text-destructive">*</span></Label>
                                 <Select value={form.category} onValueChange={v => set('category', v)}>
                                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                                     <SelectContent>
@@ -215,7 +218,7 @@ export const LibraryPage = () => {
                                 </Select>
                             </div>
                             <div className="space-y-1.5">
-                                <Label>Academic Level <span className="text-red-500">*</span></Label>
+                                <Label>Academic Level <span className="text-destructive">*</span></Label>
                                 <Select value={form.academicLevel} onValueChange={v => set('academicLevel', v)}>
                                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                                     <SelectContent>
@@ -245,10 +248,10 @@ export const LibraryPage = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg border border-zinc-200 p-3">
+                        <div className="flex items-center justify-between rounded-lg border border-border p-3">
                             <div>
                                 <Label className="cursor-pointer">Featured</Label>
-                                <p className="text-xs text-zinc-400">Show in "Handpicked for You"</p>
+                                <p className="text-xs text-muted-foreground">Show in "Handpicked for You"</p>
                             </div>
                             <Switch checked={form.featured} onCheckedChange={v => set('featured', v)} />
                         </div>
@@ -260,10 +263,10 @@ export const LibraryPage = () => {
                                     ref={fileRef}
                                     type="file"
                                     accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,image/*,video/*"
-                                    className="block w-full text-xs text-zinc-600 file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-zinc-900 file:text-white"
+                                    className="block w-full text-xs text-muted-foreground file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground"
                                     onChange={e => setFile(e.target.files?.[0] ?? null)}
                                 />
-                                <p className="text-[11px] text-zinc-400">Needed for View/Download to work.</p>
+                                <p className="text-[11px] text-muted-foreground">Needed for View/Download to work.</p>
                             </div>
                             <div className="space-y-1.5">
                                 <Label>Cover Image</Label>
@@ -271,7 +274,7 @@ export const LibraryPage = () => {
                                     ref={thumbRef}
                                     type="file"
                                     accept="image/*"
-                                    className="block w-full text-xs text-zinc-600 file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-zinc-900 file:text-white"
+                                    className="block w-full text-xs text-muted-foreground file:mr-2 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground"
                                     onChange={e => {
                                         const f = e.target.files?.[0] ?? null;
                                         setThumbnail(f);
@@ -301,7 +304,7 @@ export const LibraryPage = () => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>Delete</AlertDialogAction>
+                        <AlertDialogAction className="bg-destructive hover:bg-destructive" onClick={handleDelete}>Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

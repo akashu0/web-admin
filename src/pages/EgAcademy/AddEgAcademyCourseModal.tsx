@@ -40,12 +40,12 @@ export function AddEgAcademyCourseModal({
 
   const handleSave = async (data: EgAcademyOverview) => {
     try {
-      const response = await egAcademyCourseService.createCourse(data);
-      toast.success(response.message || 'Course created successfully');
+      const created = await egAcademyCourseService.createCourse(data);
+      toast.success('Course created successfully');
       onOpenChange(false);
       onSuccess();
       // Navigate to the edit page for the new course
-      const slug = response.course.overview?.slug;
+      const slug = created.slug;
       if (slug) {
         navigate(`/eg-academy/courses/${slug}`);
       }

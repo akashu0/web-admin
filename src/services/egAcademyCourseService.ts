@@ -8,7 +8,7 @@ import type {
   EgAcademyQueryParams,
 } from '@/types/egAcademyCourse';
 
-const BASE = '/eg-academy/courses';
+const BASE = '/academy-courses';
 
 export const egAcademyCourseService = {
   // GET all (paginated)
@@ -32,110 +32,114 @@ export const egAcademyCourseService = {
     return response.data.data;
   },
 
-  // POST create course (multipart/form-data: courseImage + overview JSON)
-  createCourse: async (
-    overview: EgAcademyOverview
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const formData = new FormData();
-
-    if (overview.courseImage instanceof File) {
-      formData.append('courseImage', overview.courseImage);
+  // POST create course.
+  //
+  // JSON, not multipart: the API decodes the whole course document. The image is
+  // a separate PATCH because it goes through the media middleware, which is what
+  // uploads it to Cloudinary and hands the handler a finished URL.
+  createCourse: async (overview: EgAcademyOverview): Promise<EgAcademyCourse> => {
+    const { courseImage, ...rest } = overview;
+    const response = await apiClient.post<{ data: EgAcademyCourse }>(BASE, {
+      overview: rest,
+    });
+    const created = response.data.data;
+    if (courseImage instanceof File) {
+      return egAcademyCourseService.updateImage(created.slug, courseImage);
     }
+    return created;
+  },
 
-    const overviewData = { ...overview };
-    delete overviewData.courseImage;
-    formData.append('overview', JSON.stringify(overviewData));
-
-    const response = await apiClient.post<{ message: string; course: EgAcademyCourse }>(
-      BASE,
+  // PATCH the course image on its own.
+  updateImage: async (slug: string, file: File): Promise<EgAcademyCourse> => {
+    const formData = new FormData();
+    formData.append('courseImage', file);
+    const response = await apiClient.patch<{ data: EgAcademyCourse }>(
+      `${BASE}/${slug}/image`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
-    return response.data;
+    return response.data.data;
   },
 
-  // PUT update overview (multipart/form-data)
+  // PATCH the overview section. Only the fields the API accepts are sent — the
+  // slug is derived from the course name server-side, not posted.
   updateOverview: async (
     slug: string,
     overview: EgAcademyOverview
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const formData = new FormData();
-
-    if (overview.courseImage instanceof File) {
-      formData.append('courseImage', overview.courseImage);
-    }
-
-    const overviewData = { ...overview };
-    delete overviewData.courseImage;
-    formData.append('overview', JSON.stringify(overviewData));
-
-    const response = await apiClient.put<{ message: string; course: EgAcademyCourse }>(
-      `${BASE}/${slug}/overview`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+  ): Promise<EgAcademyCourse> => {
+    const { courseImage, ...rest } = overview;
+    // The slug is derived from the course name server-side; posting the form's
+    // computed one would be ignored at best and misleading at worst.
+    const fields = { ...rest, slug: undefined };
+    delete fields.slug;
+    const response = await apiClient.patch<{ data: EgAcademyCourse }>(
+      `${BASE}/${slug}/section/overview`,
+      fields
     );
-    return response.data;
+    const updated = response.data.data;
+    if (courseImage instanceof File) {
+      return egAcademyCourseService.updateImage(updated.slug, courseImage);
+    }
+    return updated;
   },
 
-  // POST add learning center
+  // POST add learning centre
   addLearningCenter: async (
     slug: string,
     data: Omit<EgAcademyLearningCenter, '_id'>
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const response = await apiClient.post<{ message: string; course: EgAcademyCourse }>(
-      `${BASE}/${slug}/learning-centers`,
+  ): Promise<EgAcademyCourse> => {
+    const response = await apiClient.post<{ data: EgAcademyCourse }>(
+      `${BASE}/${slug}/centers`,
       data
     );
-    return response.data;
+    return response.data.data;
   },
 
-  // PUT update learning center
+  // PUT update learning centre
   updateLearningCenter: async (
     slug: string,
     centerId: string,
     data: Partial<EgAcademyLearningCenter>
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const response = await apiClient.put<{ message: string; course: EgAcademyCourse }>(
-      `${BASE}/${slug}/learning-centers/${centerId}`,
+  ): Promise<EgAcademyCourse> => {
+    const response = await apiClient.put<{ data: EgAcademyCourse }>(
+      `${BASE}/${slug}/centers/${centerId}`,
       data
     );
-    return response.data;
+    return response.data.data;
   },
 
-  // DELETE learning center
-  deleteLearningCenter: async (
-    slug: string,
-    centerId: string
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const response = await apiClient.delete<{ message: string; course: EgAcademyCourse }>(
-      `${BASE}/${slug}/learning-centers/${centerId}`
+  // DELETE learning centre
+  deleteLearningCenter: async (slug: string, centerId: string): Promise<EgAcademyCourse> => {
+    const response = await apiClient.delete<{ data: EgAcademyCourse }>(
+      `${BASE}/${slug}/centers/${centerId}`
     );
-    return response.data;
+    return response.data.data;
   },
 
-  // PUT update fee structure of a center
+  // PATCH the fee table of one centre — its own endpoint, so a centre save that
+  // omits the fees cannot wipe them.
   updateLearningCenterFee: async (
     slug: string,
     centerId: string,
     fee: EgAcademyFeeStructure
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const response = await apiClient.put<{ message: string; course: EgAcademyCourse }>(
-      `${BASE}/${slug}/learning-centers/${centerId}/fee`,
+  ): Promise<EgAcademyCourse> => {
+    const response = await apiClient.patch<{ data: EgAcademyCourse }>(
+      `${BASE}/${slug}/centers/${centerId}/fee`,
       fee
     );
-    return response.data;
+    return response.data.data;
   },
 
-  // PUT update status
+  // PATCH publish state
   updateStatus: async (
     slug: string,
     status: 'draft' | 'published'
-  ): Promise<{ message: string; course: EgAcademyCourse }> => {
-    const response = await apiClient.put<{ message: string; course: EgAcademyCourse }>(
+  ): Promise<EgAcademyCourse> => {
+    const response = await apiClient.patch<{ data: EgAcademyCourse }>(
       `${BASE}/${slug}/status`,
       { status }
     );
-    return response.data;
+    return response.data.data;
   },
 
   // DELETE course by ID

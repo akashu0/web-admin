@@ -1,22 +1,133 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/*
+ * eduGuardian CRM — design tokens (single source of truth).
+ * Theme: WHITE + PURPLE only. Sidebar, canvas and cards share one cohesive
+ * purple-tinted white system; purple is the sole accent (neutrals are grey).
+ * Dense typography (13px base) so full screens fit without inner scrolling.
+ */
+
 @custom-variant dark (&:is(.dark *));
 
+:root {
+  /* --- Canvas & surfaces (white + faint purple) --- */
+  --canvas: #f6f4fc; /* app background — a whisper of purple */
+  --background: #ffffff; /* cards / raised surfaces */
+  --foreground: #1b1729;
+  --card: #ffffff;
+  --card-foreground: #1b1729;
+  --popover: #ffffff;
+  --popover-foreground: #1b1729;
+
+  /* --- Brand & primary action (purple) --- */
+  --brand: #6d28d9;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+
+  --secondary: #efe9fb;
+  --secondary-foreground: #5b21b6;
+
+  --muted: #f3f0fa;
+  --muted-foreground: #6c6580;
+
+  --accent: #efe9fb; /* hover / active purple tint */
+  --accent-foreground: #4c2f9e;
+
+  --destructive: #dc2626; /* reserved: destructive actions + errors only */
+  --destructive-foreground: #ffffff;
+
+  /* --- Lines & focus --- */
+  --border: #ebe6f5;
+  --input: #e2dcf0;
+  --ring: #7c3aed;
+
+  /* --- Purple/white surface scale --- */
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f6f4fc;
+  --surface-container: #f3f0fa;
+  --surface-container-high: #efe9fb;
+  --surface-container-highest: #e9e1f8;
+  --outline: #9a90b5;
+  --primary-container: #7c3aed;
+  --on-primary-container: #ffffff;
+  --secondary-container: #efe9fb;
+  --on-secondary-container: #5b21b6;
+  --tertiary: #7c3aed; /* score star etc. — purple, no brown */
+  --tertiary-fixed: #efe9fb;
+  --on-tertiary-fixed: #5b21b6;
+
+  /* --- Sidebar (white, purple active) --- */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #57516a;
+  --sidebar-accent: #efe9fb;
+  --sidebar-accent-foreground: #6d28d9;
+  --sidebar-border: #ece7f5;
+
+  /* --- Radii --- */
+  --radius: 0.5rem; /* 8px — buttons, inputs */
+  --radius-card: 12px;
+}
+
+.dark {
+  --canvas: #120e1f;
+  --background: #1a1530;
+  --foreground: #ece7f7;
+  --card: #1a1530;
+  --card-foreground: #ece7f7;
+  --popover: #1a1530;
+  --popover-foreground: #ece7f7;
+
+  --brand: #c4b5fd;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+
+  --secondary: #2a2147;
+  --secondary-foreground: #d6c8f7;
+
+  --muted: #221b3a;
+  --muted-foreground: #a79fc0;
+
+  --accent: #2a2147;
+  --accent-foreground: #d6c8f7;
+
+  --destructive: #f87171;
+  --destructive-foreground: #1b1729;
+
+  --border: #2c2548;
+  --input: #2c2548;
+  --ring: #8b5cf6;
+
+  --surface-container-lowest: #1a1530;
+  --surface-container-low: #171227;
+  --surface-container: #201a38;
+  --surface-container-high: #2a2147;
+  --surface-container-highest: #322858;
+  --outline: #6b6390;
+  --primary-container: #7c3aed;
+  --on-primary-container: #ffffff;
+  --secondary-container: #2a2147;
+  --on-secondary-container: #d6c8f7;
+  --tertiary: #a78bfa;
+  --tertiary-fixed: #2a2147;
+  --on-tertiary-fixed: #d6c8f7;
+
+  --sidebar: #150f28;
+  --sidebar-foreground: #a79fc0;
+  --sidebar-accent: #241d3f;
+  --sidebar-accent-foreground: #c4b5fd;
+  --sidebar-border: #241d3f;
+}
+
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --color-canvas: var(--canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-brand: var(--brand);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -26,110 +137,105 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+
+  --color-surface-lowest: var(--surface-container-lowest);
+  --color-surface-low: var(--surface-container-low);
+  --color-surface: var(--surface-container);
+  --color-surface-high: var(--surface-container-high);
+  --color-surface-highest: var(--surface-container-highest);
+  --color-outline: var(--outline);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
-}
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: calc(var(--radius) - 1px);
+  --radius-lg: var(--radius);
+  --radius-xl: 10px;
+  --radius-card: var(--radius-card);
 
-.dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --text-display: 40px;
+  --text-h1: 24px;
+  --text-h2: 19px;
+  --text-h3: 15px;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--color-border);
   }
-
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-canvas);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  :where(button, a, input, select, textarea, [role="button"]):focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 2px var(--color-ring);
+  }
+
+  /*
+   * Tailwind v4's Preflight sets `cursor: default` on buttons, matching the raw
+   * browser default rather than v3's behaviour. Every clickable control in this
+   * app is a <button> or carries role="button" — Radix triggers, dialog closes,
+   * tabs, select triggers and our own filter chips all render one — so restoring
+   * the hand pointer once here covers the whole UI, instead of sprinkling
+   * `cursor-pointer` on each component and missing the ones nobody remembered.
+   *
+   * Disabled controls are excluded: a hand pointer on something that will not
+   * respond is a lie about what a click will do.
+   */
+  :where(button, [role="button"]):not(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: pointer;
+  }
+  :where(button, [role="button"]):is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
   }
 }
 
-/* Hide number input spinners */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
+@layer components {
+  /* Rich, soft ambient card shadow tuned for the white+purple surface. */
+  .shadow-card {
+    box-shadow:
+      0 1px 2px 0 rgb(76 47 158 / 0.04),
+      0 4px 12px -2px rgb(76 47 158 / 0.06);
+  }
+  .shadow-drawer {
+    box-shadow: 0 24px 48px -12px rgb(46 26 94 / 0.22);
+  }
+  .brand-gradient {
+    background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+  }
+  .hide-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

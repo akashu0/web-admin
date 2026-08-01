@@ -3,14 +3,14 @@ import { apiClient } from './api';
 
 export const universityService = {
     getAllUniversities: async (params: UniversityQueryParams): Promise<UniversityListResponse> => {
-        const response = await apiClient.get<UniversityListResponse>(`/universities/get-all-universities`, {
+        const response = await apiClient.get<UniversityListResponse>(`/universities`, {
             params,
         });
         return response.data;
     },
     createUniversity: async (data: FormData): Promise<UniversityResponse> => {
         const response = await apiClient.post<UniversityResponse>(
-            `/universities/create-universities`,
+            `/universities`,
             data,
             {
                 headers: {
@@ -43,49 +43,49 @@ export const universityService = {
 
     // Delete university
     deleteUniversity: async (id: string): Promise<{ success: boolean; message: string }> => {
-        const response = await apiClient.delete(`/universities/delete-universities/${id}`);
+        const response = await apiClient.delete(`/universities/${id}`);
         return response.data;
     },
 
     // Get university by slug
     getUniversityBySlug: async (slug: string): Promise<UniversityResponse> => {
-        const response = await apiClient.get<UniversityResponse>(`/universities/get-universities-slug/${slug}`);
+        const response = await apiClient.get<UniversityResponse>(`/universities/${slug}`);
         return response.data;
     },
 
     // Update Basic Information
     updateBasicInfo: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/basic-info/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/basic-info`, data);
         return response.data;
     },
 
     // Update Fee Structure
     updateFees: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/fees/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/fees`, data);
         return response.data;
     },
 
     // Update Admissions
     updateAdmissions: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/admissions/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/admissions`, data);
         return response.data;
     },
 
     // Update Student Life
     updateStudentLife: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/student-life/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/student-life`, data);
         return response.data;
     },
 
     // Update Student Reviews
     updateReviews: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/reviews/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/reviews`, data);
         return response.data;
     },
 
     // Update Images (with FormData for file uploads)
     updateImages: async (slug: string, data: FormData) => {
-        const response = await apiClient.patch(`/universities/images/${slug}`, data, {
+        const response = await apiClient.patch(`/universities/${slug}/images`, data, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
@@ -95,13 +95,13 @@ export const universityService = {
 
     // Update Media (YouTube video link)
     updateMedia: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/media/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/media`, data);
         return response.data;
     },
 
     // Update Refrences
     updateReferences: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/references/${slug}`, data);
+        const response = await apiClient.patch(`/universities/${slug}/section/references`, data);
         return response.data;
     },
 

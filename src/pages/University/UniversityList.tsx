@@ -1,9 +1,25 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, RefreshCcw, Loader2, FileQuestion, MoreHorizontal, Pencil, Trash2, Eye, ChevronDown, Check, CheckCircle2, FileEdit, X } from "lucide-react";
+import {
+    Plus,
+    Percent,
+    RefreshCcw,
+    MoreHorizontal,
+    Pencil,
+    Trash2,
+    Eye,
+    ChevronDown,
+    Check,
+    CheckCircle2,
+    FileEdit,
+    Search,
+    X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
@@ -12,7 +28,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import type { ColumnDef } from "@tanstack/react-table";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,11 +35,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PageHeader } from "@/components/common/PageHeader";
+import { ResourceTable, type Column } from "@/components/common/ResourceTable";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import type { University, UniversityQueryParams } from "@/types/university";
 import { universityService } from "@/services/universityService";
-import { UniversityDataTable } from "./UniversityDataTable";
 import { AddUniversityModal } from "./AddUniversityModal";
-import { ViewUniversityModal } from "./ViewUniversityModal";
 
 const LIMIT = 10;
 
@@ -40,14 +56,10 @@ export function UniversityList() {
     const [isLoading, setIsLoading] = useState(true);
     const [isFetching, setIsFetching] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
     const [error, setError] = useState<boolean>(false);
 
-    // Bulk-action selection: ids lifted from the data table + a signal we bump
-    // to clear the table's row selection after a successful bulk update.
+    // Bulk-action selection, keyed by _id so it survives infinite-scroll appends.
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [selectionResetSignal, setSelectionResetSignal] = useState(0);
 
     const [filters, setFilters] = useState<UniversityFilters>({
         status: "all",
@@ -55,6 +67,7 @@ export function UniversityList() {
 
     // Text-filter inputs are kept local and pushed into `filters` on a short
     // debounce, so typing doesn't fire a request on every keystroke.
+    const [searchInput, setSearchInput] = useState("");
     const [countryInput, setCountryInput] = useState("");
     const [cityInput, setCityInput] = useState("");
     const [locationInput, setLocationInput] = useState("");
@@ -63,13 +76,14 @@ export function UniversityList() {
         const t = setTimeout(() => {
             setFilters((prev) => ({
                 ...prev,
+                search: searchInput.trim() || undefined,
                 country: countryInput.trim() || undefined,
                 city: cityInput.trim() || undefined,
                 location: locationInput.trim() || undefined,
             }));
         }, 400);
         return () => clearTimeout(t);
-    }, [countryInput, cityInput, locationInput]);
+    }, [searchInput, countryInput, cityInput, locationInput]);
 
     const hasActiveFilters = Boolean(
         (filters.status && filters.status !== "all") ||
@@ -96,12 +110,12 @@ export function UniversityList() {
     }, []);
 
     const clearFilters = useCallback(() => {
+        setSearchInput("");
         setCountryInput("");
         setCityInput("");
         setLocationInput("");
         setFilters((prev) => ({
             status: "all",
-            search: prev.search,
             sortBy: prev.sortBy,
             sortOrder: prev.sortOrder,
         }));
@@ -137,6 +151,9 @@ export function UniversityList() {
             console.error("Error fetching universities:", error);
             setError(true);
             if (!append) setUniversities([]);
+            // See CourseList: without this the sentinel refires the failed
+            // request forever and stacks a toast each time.
+            setHasMore(false);
             toast.error("Failed to fetch universities");
         } finally {
             setIsLoading(false);
@@ -158,19 +175,12 @@ export function UniversityList() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, filters]);
 
-    // Infinite scroll - this page renders inside MainLayout's <main>, which only
-    // has a min-height (not a fixed height), so the window is the real scroller.
-    const handleScroll = useCallback(() => {
-        if (isFetching || !hasMore) return;
-        if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 400) {
-            setPage((prev) => prev + 1);
-        }
-    }, [isFetching, hasMore]);
-
-    useEffect(() => {
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [handleScroll]);
+    // Infinite scroll. The scroll container is AppLayout's <main>, not the
+    // window, so the sentinel is observed against that root by the shared hook.
+    const sentinelRef = useInfiniteScroll(() => setPage((prev) => prev + 1), {
+        hasMore,
+        loading: isFetching,
+    });
 
     // Re-fetches the current view from page 1, replacing the list. Used after
     // CRUD actions and manual refresh, where neither `page` nor `filters` change.
@@ -189,8 +199,9 @@ export function UniversityList() {
     };
 
     const handleView = (university: University) => {
-        setSelectedUniversity(university);
-        setIsViewModalOpen(true);
+        // A page, not a modal: the record has seven sections, and the view has to
+        // be linkable and to read the full document rather than the list row.
+        navigate(`/universities/view/${university.slug}`);
     };
 
     const handleDelete = async (id: string) => {
@@ -226,7 +237,6 @@ export function UniversityList() {
                     : `${noun} moved to draft`
             );
             setSelectedIds([]);
-            setSelectionResetSignal((s) => s + 1);
             refreshList();
         } catch (error) {
             console.error("Error updating university status:", error);
@@ -236,8 +246,10 @@ export function UniversityList() {
         }
     };
 
-    const handleSelectionChange = useCallback((ids: string[]) => {
-        setSelectedIds(ids);
+    const toggleRow = useCallback((id: string) => {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
     }, []);
 
     const handleRefresh = () => {
@@ -253,125 +265,96 @@ export function UniversityList() {
         refreshList();
     };
 
-    const setSearch = useCallback((search: string) => {
-        setFilters((prev) => ({ ...prev, search: search || undefined }));
-    }, []);
+    const allSelected =
+        universities.length > 0 && selectedIds.length === universities.length;
 
-    const setSort = useCallback((sortBy: string, sortOrder: "asc" | "desc") => {
-        setFilters((prev) => ({ ...prev, sortBy, sortOrder }));
-    }, []);
-
-    // Use useMemo to prevent columns from being recreated on every render
-    const columns: ColumnDef<University>[] = useMemo(() => [
+    const columns: Column<University>[] = useMemo(() => [
         {
-            id: "select",
-            header: ({ table }) => (
+            key: "select",
+            header: (
                 <Checkbox
-                    checked={table.getIsAllPageRowsSelected()}
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    checked={allSelected}
+                    onCheckedChange={(value) =>
+                        setSelectedIds(value ? universities.map((u) => u._id) : [])
+                    }
                     aria-label="Select all"
                 />
             ),
-            cell: ({ row }) => (
+            render: (university) => (
                 <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    checked={selectedIds.includes(university._id)}
+                    onCheckedChange={() => toggleRow(university._id)}
                     aria-label="Select row"
                     onClick={(e) => e.stopPropagation()}
                 />
             ),
-            enableSorting: false,
-            enableHiding: false,
         },
         {
-            accessorKey: "logo",
+            key: "logo",
             header: "Logo",
-            cell: ({ row }) => {
-                const logoUrl = row.getValue("logo") as string;
-                return (
-                    <div className="flex items-center justify-center">
-                        {logoUrl ? (
-                            <img
-                                src={logoUrl}
-                                alt={row.original.name}
-                                className="h-10 w-10 rounded-full object-cover border border-gray-200"
-                            />
-                        ) : (
-                            <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-medium">
-                                {row.original.name.charAt(0).toUpperCase()}
-                            </div>
-                        )}
-                    </div>
-                );
-            },
-            enableSorting: false,
+            render: (university) => (
+                <div className="flex items-center justify-center">
+                    {university.logo ? (
+                        <img
+                            src={university.logo}
+                            alt={university.name}
+                            className="h-10 w-10 rounded-full border border-border object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                            {university.name.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                </div>
+            ),
         },
         {
-            accessorKey: "name",
+            key: "name",
             header: "University Name",
-            cell: ({ row }) => (
+            render: (university) => (
                 <div className="max-w-xs">
-                    <div
-                        className="font-medium text-gray-900 truncate max-w-[140px]"
-                        title={row.getValue("name")}
-                    >
-                        {row.getValue("name")}
+                    <div className="max-w-[140px] truncate font-medium" title={university.name}>
+                        {university.name}
                     </div>
-
                     <div
-                        className="text-sm text-gray-500 truncate max-w-[100px]"
-                        title={row.original.fullName}
+                        className="max-w-[100px] truncate text-xs text-muted-foreground"
+                        title={university.fullName}
                     >
-                        {row.original.fullName}
+                        {university.fullName}
                     </div>
                 </div>
             ),
         },
         {
-            accessorKey: "location",
+            key: "location",
             header: "Location",
-            cell: ({ row }) => (
-                <div className="text-sm">
-                    <div className="font-medium text-gray-900 truncate max-w-[150px]">
-                        {row.original.city}
-                    </div>
-                    <div className="text-gray-500 truncate max-w-[150px]">
-                        {row.original.country}
+            render: (university) => (
+                <div>
+                    <div className="max-w-[150px] truncate font-medium">{university.city}</div>
+                    <div className="max-w-[150px] truncate text-xs text-muted-foreground">
+                        {university.country}
                     </div>
                 </div>
             ),
         },
-
-
         {
-            accessorKey: "founded",
+            key: "founded",
             header: "Founded",
-            cell: ({ row }) => {
-                const founded = row.getValue("founded") as string;
-                return (
-                    <div className="text-sm text-gray-900">{founded || "N/A"}</div>
-                );
-            },
+            render: (university) => <span className="tabular-nums">{university.founded || "—"}</span>,
         },
         {
-            accessorKey: "status",
+            key: "status",
             header: "Status",
-            cell: ({ row }) => {
-                const status = row.getValue("status") as string;
-                const university = row.original;
+            render: (university) => {
+                const status = university.status;
                 return (
                     <div onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button type="button" className="focus:outline-none">
                                     <Badge
-                                        variant={status === "published" ? "default" : "secondary"}
-                                        className={
-                                            "cursor-pointer gap-1 " +
-                                            (status === "published"
-                                                ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                                : "bg-yellow-100 text-yellow-800 hover:bg-yellow-200")
-                                        }
+                                        tone={status === "published" ? "green" : "neutral"}
+                                        className="gap-1"
                                     >
                                         {status === "published" ? "Published" : "Draft"}
                                         <ChevronDown className="h-3 w-3" />
@@ -410,170 +393,81 @@ export function UniversityList() {
             },
         },
         {
-            id: "actions",
+            key: "actions",
             header: "Actions",
-            cell: ({ row }) => {
-                const university = row.original;
-
-                return (
-                    <div onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0"
-                                >
-                                    <span className="sr-only">Open menu</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onSelect={() => handleView(university)}
-                                >
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onSelect={() => handleEdit(university)}
-                                >
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onSelect={() => handleDelete(university.slug)}
-                                    className="text-red-600"
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
+            align: "right",
+            render: (university) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => handleView(university)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleEdit(university)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={() => handleDelete(university.slug)}
+                                className="text-destructive"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            ),
         },
-    ], []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [allSelected, selectedIds, universities, toggleRow]);
 
-    // Initial loading state
-    if (isLoading) {
-        return (
-            <div className="flex h-96 items-center justify-center">
-                <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
-            </div>
-        );
-    }
-
-    // Error or No universities found state. When filters/search are active we
-    // keep the normal layout (so the filter bar stays reachable and the table
-    // shows an inline "No results") instead of this full-page empty screen.
-    if (error || (!universities.length && !isFetching && !hasActiveFilters)) {
-        return (
-            <div className="space-y-8 p-6">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Universities</h1>
-                        <p className="text-gray-600 mt-1">
-                            Manage university listings and information
-                        </p>
-                    </div>
-
-                    <div className="flex gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={handleRefresh}
-                            disabled={isFetching}
-                        >
-                            <RefreshCcw
-                                className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-                            />
+    return (
+        <div>
+            <PageHeader
+                title="Universities"
+                subtitle="Manage university listings and information"
+                actions={
+                    <>
+                        {/* Commission is edited on each university's own tab;
+                            this is the cross-university table. */}
+                        <Button variant="outline" onClick={() => navigate("/universities/commission")}>
+                            <Percent className="mr-2 h-4 w-4" />
+                            All commissions
+                        </Button>
+                        <Button variant="outline" onClick={handleRefresh} disabled={isFetching}>
+                            <RefreshCcw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                             Refresh
                         </Button>
-
                         <Button onClick={handleAddUniversity}>
                             <Plus className="mr-2 h-4 w-4" />
                             Add University
                         </Button>
-                    </div>
-                </div>
-
-                {/* Empty State */}
-                <div className="flex flex-col items-center justify-center h-96 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                    <FileQuestion className="h-16 w-16 text-gray-400 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        {error ? "Failed to Load Universities" : "No Universities Found"}
-                    </h3>
-                    <p className="text-gray-600 mb-6 text-center max-w-md">
-                        {error
-                            ? "There was an error loading universities. Please try refreshing the page."
-                            : "Get started by adding your first university to the system."}
-                    </p>
-                    <div className="flex gap-3">
-                        {error ? (
-                            <Button onClick={handleRefresh} disabled={isFetching}>
-                                <RefreshCcw className="mr-2 h-4 w-4" />
-                                Try Again
-                            </Button>
-                        ) : (
-                            <Button onClick={handleAddUniversity}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Your First University
-                            </Button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Add Modal */}
-                <AddUniversityModal
-                    open={isModalOpen}
-                    onOpenChange={setIsModalOpen}
-                    onSuccess={handleModalSuccess}
-                />
-
-                <ViewUniversityModal
-                    open={isViewModalOpen}
-                    onOpenChange={setIsViewModalOpen}
-                    university={selectedUniversity}
-                />
-            </div>
-        );
-    }
-
-    return (
-        <div className="space-y-8 p-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Universities</h1>
-                    <p className="text-gray-600 mt-1">
-                        Manage university listings and information
-                    </p>
-                </div>
-
-                <div className="flex gap-3">
-                    <Button
-                        variant="outline"
-                        onClick={handleRefresh}
-                        disabled={isFetching}
-                    >
-                        <RefreshCcw
-                            className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
-                        />
-                        Refresh
-                    </Button>
-
-                    <Button onClick={handleAddUniversity}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add University
-                    </Button>
-                </div>
-            </div>
+                    </>
+                }
+            />
 
             {/* Filter bar */}
-            <div className="flex flex-wrap items-end gap-3 rounded-md border bg-white p-4">
+            <Card className="mb-4 flex flex-wrap items-end gap-3 p-3">
+                <div className="relative min-w-[200px] flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder="Search universities..."
+                        className="pl-9"
+                    />
+                </div>
+
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-600">Status</label>
+                    <Label className="text-xs text-muted-foreground">Status</Label>
                     <Select value={filters.status ?? "all"} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-[150px]">
                             <SelectValue placeholder="All Status" />
@@ -587,11 +481,8 @@ export function UniversityList() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-600">Type</label>
-                    <Select
-                        value={filters.universityType ?? "all"}
-                        onValueChange={setTypeFilter}
-                    >
+                    <Label className="text-xs text-muted-foreground">Type</Label>
+                    <Select value={filters.universityType ?? "all"} onValueChange={setTypeFilter}>
                         <SelectTrigger className="w-[140px]">
                             <SelectValue placeholder="All Types" />
                         </SelectTrigger>
@@ -604,7 +495,7 @@ export function UniversityList() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-600">Country</label>
+                    <Label className="text-xs text-muted-foreground">Country</Label>
                     <Input
                         value={countryInput}
                         onChange={(e) => setCountryInput(e.target.value)}
@@ -614,7 +505,7 @@ export function UniversityList() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-600">City</label>
+                    <Label className="text-xs text-muted-foreground">City</Label>
                     <Input
                         value={cityInput}
                         onChange={(e) => setCityInput(e.target.value)}
@@ -624,7 +515,7 @@ export function UniversityList() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-gray-600">Location</label>
+                    <Label className="text-xs text-muted-foreground">Location</Label>
                     <Input
                         value={locationInput}
                         onChange={(e) => setLocationInput(e.target.value)}
@@ -634,24 +525,25 @@ export function UniversityList() {
                 </div>
 
                 {hasActiveFilters && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-600">
+                    <Button variant="ghost" size="sm" onClick={clearFilters}>
                         <X className="mr-1 h-4 w-4" />
                         Clear filters
                     </Button>
                 )}
-            </div>
+
+                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+                    {universities.length} of {total}
+                </span>
+            </Card>
 
             {/* Bulk action toolbar - only visible when rows are selected */}
             {selectedIds.length > 0 && (
-                <div className="flex flex-wrap items-center gap-3 rounded-md border bg-gray-50 px-4 py-3">
-                    <span className="text-sm font-medium text-gray-700">
-                        {selectedIds.length} selected
-                    </span>
+                <Card className="mb-4 flex flex-wrap items-center gap-3 bg-accent/40 px-4 py-3">
+                    <span className="font-medium">{selectedIds.length} selected</span>
                     <div className="ml-auto flex gap-2">
                         <Button
                             size="sm"
                             variant="outline"
-                            className="text-green-700 border-green-200 hover:bg-green-50"
                             onClick={() => handleStatusChange(selectedIds, "published")}
                         >
                             <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -660,41 +552,39 @@ export function UniversityList() {
                         <Button
                             size="sm"
                             variant="outline"
-                            className="text-yellow-700 border-yellow-200 hover:bg-yellow-50"
                             onClick={() => handleStatusChange(selectedIds, "draft")}
                         >
                             <FileEdit className="mr-2 h-4 w-4" />
                             Move to Draft
                         </Button>
                     </div>
-                </div>
+                </Card>
             )}
 
-            {/* Data Table */}
-            <UniversityDataTable
-                columns={columns}
-                data={universities}
-                total={total}
-                hasMore={hasMore}
-                isLoadingMore={isFetching}
-                onSearchChange={setSearch}
-                onSortChange={setSort}
-                onSelectionChange={handleSelectionChange}
-                resetSelectionSignal={selectionResetSignal}
-            />
+            <Card className="overflow-hidden">
+                <ResourceTable
+                    columns={columns}
+                    rows={universities}
+                    isLoading={isLoading}
+                    sentinelRef={sentinelRef}
+                    isFetchingNextPage={isFetching && universities.length > 0}
+                    hasNextPage={hasMore}
+                    emptyTitle={error ? "Failed to load universities" : "No universities found"}
+                    emptyDescription={
+                        error
+                            ? "There was an error loading universities. Try refreshing."
+                            : hasActiveFilters
+                                ? "Try adjusting your search or filters."
+                                : "Get started by adding your first university."
+                    }
+                />
+            </Card>
 
             {/* Add Modal */}
             <AddUniversityModal
                 open={isModalOpen}
                 onOpenChange={setIsModalOpen}
                 onSuccess={handleModalSuccess}
-            />
-
-            {/* View Modal */}
-            <ViewUniversityModal
-                university={selectedUniversity}
-                open={isViewModalOpen}
-                onOpenChange={setIsViewModalOpen}
             />
         </div>
     );

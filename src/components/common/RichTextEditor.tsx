@@ -81,7 +81,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         <button
             type="button"
             onClick={onClick}
-            className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-700"
+            className="p-2 rounded hover:bg-muted transition-colors text-foreground"
             title={title}
             onMouseDown={(e) => e.preventDefault()} // Prevent losing focus
         >
@@ -90,9 +90,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     );
 
     return (
-        <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+        <div className="border border-input rounded-lg overflow-hidden bg-card">
             {/* Toolbar */}
-            <div className="flex flex-wrap gap-1 p-2 bg-gray-50 border-b border-gray-300">
+            <div className="flex flex-wrap gap-1 p-2 bg-muted border-b border-input">
                 {/* Headings */}
                 <ToolbarButton
                     onClick={() => formatBlock('h1')}
@@ -115,7 +115,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     <Type className="w-4 h-4" />
                 </ToolbarButton>
 
-                <div className="w-px bg-gray-300 mx-1" />
+                <div className="w-px bg-border mx-1" />
 
                 {/* Text Formatting */}
                 <ToolbarButton
@@ -139,7 +139,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     <Underline className="w-4 h-4" />
                 </ToolbarButton>
 
-                <div className="w-px bg-gray-300 mx-1" />
+                <div className="w-px bg-border mx-1" />
 
                 {/* Lists */}
                 <ToolbarButton
@@ -156,7 +156,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     <ListOrdered className="w-4 h-4" />
                 </ToolbarButton>
 
-                <div className="w-px bg-gray-300 mx-1" />
+                <div className="w-px bg-border mx-1" />
 
                 {/* Text Alignment */}
                 <ToolbarButton
@@ -180,7 +180,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                     <AlignRight className="w-4 h-4" />
                 </ToolbarButton>
 
-                <div className="w-px bg-gray-300 mx-1" />
+                <div className="w-px bg-border mx-1" />
 
                 {/* Link */}
                 <ToolbarButton
@@ -196,7 +196,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                         <input
                             type="color"
                             onChange={setTextColor}
-                            className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                            className="w-8 h-8 rounded cursor-pointer border border-input"
                             onMouseDown={(e) => e.preventDefault()}
                         />
                     </label>
@@ -205,7 +205,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                         <input
                             type="color"
                             onChange={setBackgroundColor}
-                            className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                            className="w-8 h-8 rounded cursor-pointer border border-input"
                             onMouseDown={(e) => e.preventDefault()}
                         />
                     </label>
@@ -219,7 +219,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 onInput={handleInput}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                className={`p-4 outline-none ${!content && !isFocused ? 'text-gray-400' : ''
+                className={`p-4 outline-none ${!content && !isFocused ? 'text-muted-foreground' : ''
                     }`}
                 style={{
                     minHeight,

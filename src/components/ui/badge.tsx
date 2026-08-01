@@ -1,46 +1,67 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-
+/*
+ * Status pill — WHITE + PURPLE palette only. Semantics are conveyed by
+ * intensity, not hue: filled purple = done/positive, soft purple = active/info,
+ * grey = pending/neutral, outline = attention. The tone names are kept for API
+ * stability across the app but all map onto this purple/grey scale.
+ */
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap leading-tight",
   {
     variants: {
-      variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+      tone: {
+        // grey / neutral
+        neutral: "bg-muted text-muted-foreground",
+        gray: "bg-muted text-muted-foreground",
+        // soft purple (active / informational)
+        primary: "bg-accent text-accent-foreground",
+        blue: "bg-accent text-accent-foreground",
+        violet: "bg-accent text-accent-foreground",
+        cyan: "bg-accent text-accent-foreground",
+        amber: "bg-accent text-accent-foreground",
+        // filled purple (done / positive)
+        green: "bg-primary text-primary-foreground",
+        // outline purple (attention / exception)
+        red: "border border-primary/40 bg-transparent text-primary",
       },
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
+    defaultVariants: { tone: "neutral" },
+  },
+);
 
-function Badge({
-  className,
-  variant,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"span"> &
-  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : "span"
+const dotColor: Record<NonNullable<VariantProps<typeof badgeVariants>["tone"]>, string> = {
+  neutral: "bg-muted-foreground",
+  gray: "bg-muted-foreground",
+  primary: "bg-primary",
+  blue: "bg-primary",
+  violet: "bg-primary",
+  cyan: "bg-primary",
+  amber: "bg-primary",
+  green: "bg-primary-foreground",
+  red: "bg-primary",
+};
 
-  return (
-    <Comp
-      data-slot="badge"
-      className={cn(badgeVariants({ variant }), className)}
-      {...props}
-    />
-  )
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {
+  dot?: boolean;
 }
 
-export { Badge, badgeVariants }
+export function Badge({ className, tone = "neutral", dot, children, ...props }: BadgeProps) {
+  return (
+    <span className={cn(badgeVariants({ tone }), className)} {...props}>
+      {dot && (
+        <span
+          className={cn("size-1.5 shrink-0 rounded-full", dotColor[tone ?? "neutral"])}
+          aria-hidden
+        />
+      )}
+      {children}
+    </span>
+  );
+}
+
+export { badgeVariants };

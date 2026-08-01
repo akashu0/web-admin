@@ -2,11 +2,23 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types/auth';
 
+/** module → action → allowed, exactly as the API resolves it. */
+export type PermissionMap = Record<string, Record<string, boolean>>;
+
 interface AuthState {
     user: User | null;
     token: string | null;
+    refreshToken: string | null;
+    /**
+     * The resolved permission map from the login response.
+     *
+     * web-admin signs in with a CRM employee account now, so what someone may
+     * author is a permission (`cms`), not a job title. The sidebar hides what
+     * the API would refuse — a menu item that 403s is worse than no menu item.
+     */
+    permissions: PermissionMap;
     isAuthenticated: boolean;
-    login: (user: User, token: string) => void;
+    login: (user: User, token: string, extra?: { refreshToken?: string; permissions?: PermissionMap }) => void;
     logout: () => void;
 }
 
@@ -15,12 +27,33 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             user: null,
             token: null,
+            refreshToken: null,
+            permissions: {},
             isAuthenticated: false,
-            login: (user, token) => set({ user, token, isAuthenticated: true }),
-            logout: () => set({ user: null, token: null, isAuthenticated: false }),
+            login: (user, token, extra) => set({
+                user,
+                token,
+                refreshToken: extra?.refreshToken ?? null,
+                permissions: extra?.permissions ?? {},
+                isAuthenticated: true,
+            }),
+            logout: () => set({
+                user: null, token: null, refreshToken: null,
+                permissions: {}, isAuthenticated: false,
+            }),
         }),
         {
             name: 'auth-storage',
         }
     )
 );
+
+/**
+ * Whether the signed-in employee may do this.
+ *
+ * One helper, checked the same way the server checks it, so the UI and the API
+ * cannot disagree about who may publish a course.
+ */
+export function useCan(module: string, action: string): boolean {
+    return useAuthStore((s) => Boolean(s.permissions?.[module]?.[action]));
+}

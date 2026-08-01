@@ -88,10 +88,10 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                         type="button"
                         onClick={() => handleUniversityDropdownOpen()}
                         disabled={isUniversitiesLoading}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-left flex items-center justify-between hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 border border-input rounded-lg bg-card text-left flex items-center justify-between hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <span className="text-gray-700 flex items-center gap-2">
-                            <GraduationCap className="w-5 h-5 text-purple-600" />
+                        <span className="text-foreground flex items-center gap-2">
+                            <GraduationCap className="w-5 h-5 text-primary" />
                             {isUniversitiesLoading
                                 ? "Loading universities..."
                                 : selectedUniversity
@@ -114,23 +114,23 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                     </button>
 
                     {universityDropdownOpen && (
-                        <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+                        <div className="absolute z-10 w-full mt-2 bg-card border border-border rounded-lg shadow-lg max-h-80 overflow-hidden">
                             {/* Search Input */}
-                            <div className="sticky top-0 bg-white border-b border-gray-200 p-3">
+                            <div className="sticky top-0 bg-card border-b border-border p-3">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <input
                                         type="text"
                                         placeholder="Search by name, country, or city..."
                                         value={universitySearchQuery}
                                         onChange={(e) => setUniversitySearchQuery(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                        className="w-full pl-9 pr-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-sm"
                                         autoFocus
                                     />
                                     {universitySearchQuery && (
                                         <button
                                             onClick={() => setUniversitySearchQuery("")}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
@@ -144,18 +144,18 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                 {selectedUniversityId && (
                                     <button
                                         onClick={() => handleUniversitySelect("")}
-                                        className="w-full px-4 py-3 hover:bg-gray-50 text-left border-b text-sm text-gray-600 italic"
+                                        className="w-full px-4 py-3 hover:bg-muted text-left border-b text-sm text-muted-foreground italic"
                                     >
                                         Clear selection
                                     </button>
                                 )}
 
                                 {isUniversitiesLoading ? (
-                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                    <div className="px-4 py-3 text-muted-foreground text-center">
                                         Loading universities...
                                     </div>
                                 ) : universities.length === 0 ? (
-                                    <div className="px-4 py-3 text-gray-500 text-center">
+                                    <div className="px-4 py-3 text-muted-foreground text-center">
                                         {universitySearchQuery ? "No matching universities found" : "No universities available"}
                                     </div>
                                 ) : (
@@ -163,20 +163,20 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                         <button
                                             key={university._id}
                                             onClick={() => handleUniversitySelect(university._id)}
-                                            className={`w-full flex items-start px-4 py-3 hover:bg-purple-50 cursor-pointer border-b last:border-b-0 text-left ${selectedUniversityId === university._id ? 'bg-purple-50' : ''
+                                            className={`w-full flex items-start px-4 py-3 hover:bg-accent cursor-pointer border-b last:border-b-0 text-left ${selectedUniversityId === university._id ? 'bg-accent' : ''
                                                 }`}
                                         >
                                             <div className="flex-1">
                                                 <div
                                                     className={`font-medium ${selectedUniversityId === university._id
-                                                        ? 'text-purple-700'
-                                                        : 'text-gray-900'
+                                                        ? 'text-primary'
+                                                        : 'text-foreground'
                                                         }`}
                                                 >
                                                     {university.name}
                                                 </div>
 
-                                                <div className="text-sm text-gray-500 flex items-center gap-3 mt-1">
+                                                <div className="text-sm text-muted-foreground flex items-center gap-3 mt-1">
                                                     {university.city && (
                                                         <span className="flex items-center gap-1">
                                                             <MapPin className="w-3 h-3" />
@@ -193,7 +193,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                                             </div>
 
                                             {selectedUniversityId === university._id && (
-                                                <div className="ml-2 text-purple-600">
+                                                <div className="ml-2 text-primary">
                                                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path
                                                             fillRule="evenodd"
@@ -210,7 +210,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
 
                             {/* Results Count */}
                             {!isUniversitiesLoading && universities.length > 0 && (
-                                <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-4 py-2 text-xs text-gray-600">
+                                <div className="sticky bottom-0 bg-muted border-t border-border px-4 py-2 text-xs text-muted-foreground">
                                     Showing {universities.length} of {universities.length} universities
                                 </div>
                             )}
@@ -220,12 +220,12 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
 
                 {/* Selected University Display */}
                 {selectedUniversity && (
-                    <div className="mt-3 p-4 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
+                    <div className="mt-3 p-4 bg-accent border border-primary/30 rounded-lg flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <GraduationCap className="w-5 h-5 text-purple-600" />
+                            <GraduationCap className="w-5 h-5 text-primary" />
                             <div>
-                                <div className="font-semibold text-gray-900">{selectedUniversity.name}</div>
-                                <div className="text-sm text-gray-600">
+                                <div className="font-semibold text-foreground">{selectedUniversity.name}</div>
+                                <div className="text-sm text-muted-foreground">
                                     {selectedUniversity.city && selectedUniversity.country && (
                                         <span>{selectedUniversity.city}, {selectedUniversity.country}</span>
                                     )}
@@ -235,7 +235,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                         <button
                             type="button"
                             onClick={() => setSelectedUniversityId("")}
-                            className="p-1 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                            className="p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -248,7 +248,7 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
                 <button
                     type="button"
                     onClick={handleSave}
-                    className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition-colors font-medium"
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/80 transition-colors font-medium"
                 >
                     Save & Continue
                 </button>

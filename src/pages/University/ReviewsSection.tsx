@@ -112,13 +112,13 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
 
                 <CardContent className="space-y-4">
                     {fields.map((field, index) => (
-                        <div key={field.id} className="p-5 border rounded-xl space-y-4 bg-gray-50">
+                        <div key={field.id} className="p-5 border rounded-xl space-y-4 bg-muted">
                             <div className="flex items-center justify-between">
-                                <h4 className="font-semibold text-sm text-gray-700">
+                                <h4 className="font-semibold text-sm text-foreground">
                                     Review #{index + 1}
                                 </h4>
                                 <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                             </div>
 
@@ -130,7 +130,7 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
                                         placeholder="e.g., John Doe"
                                     />
                                     {errors.reviews?.[index]?.studentName && (
-                                        <p className="text-xs text-red-500">{errors.reviews[index]?.studentName?.message}</p>
+                                        <p className="text-xs text-destructive">{errors.reviews[index]?.studentName?.message}</p>
                                     )}
                                 </div>
 
@@ -147,14 +147,14 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
                                             {RATING_OPTIONS.map((r) => (
                                                 <SelectItem key={r} value={r}>
                                                     <span className="flex items-center gap-1">
-                                                        {r} <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                        {r} <Star className="h-3 w-3 fill-tertiary text-tertiary" />
                                                     </span>
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     {errors.reviews?.[index]?.rating && (
-                                        <p className="text-xs text-red-500">{errors.reviews[index]?.rating?.message}</p>
+                                        <p className="text-xs text-destructive">{errors.reviews[index]?.rating?.message}</p>
                                     )}
                                 </div>
                             </div>
@@ -175,14 +175,14 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
                                     rows={3}
                                 />
                                 {errors.reviews?.[index]?.comment && (
-                                    <p className="text-xs text-red-500">{errors.reviews[index]?.comment?.message}</p>
+                                    <p className="text-xs text-destructive">{errors.reviews[index]?.comment?.message}</p>
                                 )}
                             </div>
                         </div>
                     ))}
 
                     {fields.length === 0 && (
-                        <p className="text-sm text-gray-500 text-center py-10">
+                        <p className="text-sm text-muted-foreground text-center py-10">
                             No reviews added yet. Click "Add Review" to get started.
                         </p>
                     )}

@@ -82,18 +82,18 @@ export function CareerOpportunitiesSection({
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
                 <div className="flex items-center gap-3 mb-6">
-                    <Briefcase className="h-8 w-8 text-gray-900" />
+                    <Briefcase className="h-8 w-8 text-foreground" />
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Career Opportunities</h2>
-                        <p className="text-sm text-gray-600">Potential career paths after completing this course</p>
+                        <h2 className="text-2xl font-bold text-foreground">Career Opportunities</h2>
+                        <p className="text-sm text-muted-foreground">Potential career paths after completing this course</p>
                     </div>
                 </div>
 
                 <div className="space-y-4">
                     {careers.map((career, index) => (
-                        <Card key={career.id} className="p-6 bg-white border-gray-200">
+                        <Card key={career.id} className="p-6 bg-card border-border">
                             <div className="flex items-start justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-lg font-semibold text-foreground">
                                     Career Path {index + 1}
                                 </h3>
                                 {careers.length > 1 && (
@@ -102,7 +102,7 @@ export function CareerOpportunitiesSection({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => removeCareer(index)}
-                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -174,7 +174,7 @@ export function CareerOpportunitiesSection({
             </div>
 
             <div className="flex justify-end gap-4 pt-6 border-t">
-                <Button type="submit" className="bg-gray-900 hover:bg-gray-800">
+                <Button type="submit" className="bg-primary hover:bg-primary">
                     Save & Continue
                 </Button>
             </div>

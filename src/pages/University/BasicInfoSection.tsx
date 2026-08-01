@@ -110,7 +110,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                             <Label htmlFor="name">University Name *</Label>
                             <Input id="name" {...register("name")} placeholder="e.g., MIT" />
                             {errors.name && (
-                                <p className="text-sm text-red-500">{errors.name.message}</p>
+                                <p className="text-sm text-destructive">{errors.name.message}</p>
                             )}
                         </div>
 
@@ -122,7 +122,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 placeholder="Massachusetts Institute of Technology"
                             />
                             {errors.fullName && (
-                                <p className="text-sm text-red-500">{errors.fullName.message}</p>
+                                <p className="text-sm text-destructive">{errors.fullName.message}</p>
                             )}
                         </div>
                     </div>
@@ -136,7 +136,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 placeholder="United States"
                             />
                             {errors.country && (
-                                <p className="text-sm text-red-500">{errors.country.message}</p>
+                                <p className="text-sm text-destructive">{errors.country.message}</p>
                             )}
                         </div>
 
@@ -144,7 +144,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                             <Label htmlFor="city">City *</Label>
                             <Input id="city" {...register("city")} placeholder="Cambridge" />
                             {errors.city && (
-                                <p className="text-sm text-red-500">{errors.city.message}</p>
+                                <p className="text-sm text-destructive">{errors.city.message}</p>
                             )}
                         </div>
                     </div>
@@ -159,7 +159,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select continent" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white">
+                                <SelectContent className="bg-card">
                                     {CONTINENT_OPTIONS.map(c => (
                                         <SelectItem key={c} value={c}>{c}</SelectItem>
                                     ))}
@@ -176,7 +176,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white">
+                                <SelectContent className="bg-card">
                                     <SelectItem value="Public">Public</SelectItem>
                                     <SelectItem value="Private">Private</SelectItem>
                                 </SelectContent>
@@ -191,10 +191,10 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 id="slug"
                                 {...register("slug")}
                                 placeholder="massachusetts-institute-of-technology"
-                                className="bg-gray-50"
+                                className="bg-muted"
                                 disabled
                             />
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                                 Used in the URL (cannot be changed)
                             </p>
                         </div>
@@ -207,7 +207,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 placeholder="77 Massachusetts Ave, Cambridge, MA 02139"
                             />
                             {errors.location && (
-                                <p className="text-sm text-red-500">{errors.location.message}</p>
+                                <p className="text-sm text-destructive">{errors.location.message}</p>
                             )}
                         </div>
                     </div>
@@ -221,7 +221,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                             rows={4}
                         />
                         {errors.about && (
-                            <p className="text-sm text-red-500">{errors.about.message}</p>
+                            <p className="text-sm text-destructive">{errors.about.message}</p>
                         )}
                     </div>
 
@@ -237,7 +237,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 onWheel={(e) => e.currentTarget.blur()}
                             />
                             {errors.founded && (
-                                <p className="text-sm text-red-500">{errors.founded.message}</p>
+                                <p className="text-sm text-destructive">{errors.founded.message}</p>
                             )}
                         </div>
                     </div>
@@ -254,7 +254,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 onWheel={(e) => e.currentTarget.blur()}
                             />
                             {errors.totalStudents && (
-                                <p className="text-sm text-red-500">{errors.totalStudents.message}</p>
+                                <p className="text-sm text-destructive">{errors.totalStudents.message}</p>
                             )}
                         </div>
 
@@ -269,7 +269,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                                 onWheel={(e) => e.currentTarget.blur()}
                             />
                             {errors.internationalStudents && (
-                                <p className="text-sm text-red-500">{errors.internationalStudents.message}</p>
+                                <p className="text-sm text-destructive">{errors.internationalStudents.message}</p>
                             )}
                         </div>
                     </div>

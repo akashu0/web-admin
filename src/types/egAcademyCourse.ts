@@ -180,7 +180,13 @@ export interface EgAcademyOverview {
   courseImage?: File | string | null;
   courseName: string;
   headingDescription?: string;
-  slug: string;
+  /**
+   * Kept only because the form still computes one from the course name for
+   * display. The API derives the real slug itself and returns it on the COURSE,
+   * not in here — reading `overview.slug` is what sent the editor to
+   * /eg-academy/courses/undefined.
+   */
+  slug?: string;
   description?: string;
   durationYears?: string;
   durationMonths?: string;
@@ -193,6 +199,7 @@ export interface EgAcademyOverview {
 
 export interface EgAcademyCourse {
   _id: string;
+  slug: string;
   overview: EgAcademyOverview;
   learningCenters: EgAcademyLearningCenter[];
   status: 'draft' | 'published';

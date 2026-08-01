@@ -1,24 +1,33 @@
+import { BookMarked, BookOpen, FileText, GraduationCap } from 'lucide-react';
+import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
+
+// ponytail: counts are still hardcoded placeholders — swap for the list
+// endpoints' pagination totals (they already return `total`) when the dashboard
+// gets real numbers.
+const STATS = [
+    { icon: BookOpen, label: 'Total Courses', value: 12 },
+    { icon: GraduationCap, label: 'Universities', value: 24 },
+    { icon: FileText, label: 'Active Visas', value: 145 },
+    { icon: BookMarked, label: 'Learning Centers', value: 8 },
+];
+
 export const Dashboard = () => {
     return (
-        <div className="space-y-4">
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div>
+            <PageHeader
+                title="Dashboard"
+                subtitle="Content published across the eduGuardian surfaces"
+            />
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
-                    <div className="text-sm font-medium">Total Courses</div>
-                    <div className="text-2xl font-bold">12</div>
-                </div>
-                <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
-                    <div className="text-sm font-medium">Universities</div>
-                    <div className="text-2xl font-bold">24</div>
-                </div>
-                <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
-                    <div className="text-sm font-medium">Active Visas</div>
-                    <div className="text-2xl font-bold">145</div>
-                </div>
-                <div className="rounded-xl border bg-card text-card-foreground shadow p-6">
-                    <div className="text-sm font-medium">Learning Centers</div>
-                    <div className="text-2xl font-bold">8</div>
-                </div>
+                {STATS.map((stat) => (
+                    <StatCard
+                        key={stat.label}
+                        icon={stat.icon}
+                        value={stat.value}
+                        label={stat.label}
+                    />
+                ))}
             </div>
         </div>
     );

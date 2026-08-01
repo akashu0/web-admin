@@ -1,6 +1,6 @@
 
 import { apiClient } from "./api";
-import type { Brochure, Course, CourseFormData, PaginationMeta } from "@/types/course";
+import type { Course, CourseFormData, PaginationMeta } from "@/types/course";
 
 export interface CourseQueryParams {
     page?: number;
@@ -37,173 +37,137 @@ export const courseService = {
             }, {} as Record<string, string>)
         ).toString();
 
-        const response = await apiClient.get(`/courses/get-course-admin?${queryString}`);
+        const response = await apiClient.get(`/courses?${queryString}`);
         return response.data;
     },
 
+    // Both of these unwrap the shared envelope — the API answers
+    // { success, data }, and returning the envelope made `course.overview`
+    // undefined, which is what threw in the editor before it could render.
     getCourseById: async (id: string): Promise<Course> => {
-        const response = await apiClient.get<Course>(`/courses/get-course-details${id}`);
-        return response.data;
+        const response = await apiClient.get<{ data: Course }>(`/courses/${id}`);
+        return response.data.data;
     },
 
     getCourseBySlug: async (slug: string): Promise<Course> => {
-        const response = await apiClient.get<Course>(`/courses/slug/${slug}`);
-        return response.data;
+        const response = await apiClient.get<{ data: Course }>(`/courses/${slug}`);
+        return response.data.data;
     },
 
     updateCourseStatus: async (
         slug: string,
         status: 'draft' | 'published'
     ): Promise<Course> => {
-        const response = await apiClient.put<Course>(
-            `/courses/courses-status/${slug}`,
+        const response = await apiClient.patch<{ data: Course }>(
+            `/courses/${slug}/status`,
             { status }
         );
-        return response.data;
+        return response.data.data;
     },
 
 
     deleteCourse: async (id: string): Promise<void> => {
-        await apiClient.delete(`/courses/delete-course/${id}`);
+        await apiClient.delete(`/courses/${id}`);
     },
 
     // ============= COURSE CREATION FLOW =============
 
-    // Step 1: Create course with overview only
-    createCourseOverview: async (overview: CourseFormData['overview']): Promise<{ message: string; course: Course }> => {
-        const formData = new FormData();
-
-        // Add file if present
-        if (overview.courseImage instanceof File) {
-            formData.append('courseImage', overview.courseImage);
+    // Step 1: create with the overview only.
+    //
+    // JSON, not multipart: the API decodes the whole course document. The image
+    // goes through the media middleware on its own endpoint, which is what
+    // uploads it and hands the handler a finished URL.
+    createCourseOverview: async (overview: CourseFormData['overview']): Promise<Course> => {
+        const { courseImage, ...rest } = overview;
+        const response = await apiClient.post<{ data: Course }>('/courses', {
+            overview: rest,
+        });
+        const created = response.data.data;
+        if (courseImage instanceof File) {
+            return courseService.updateCourseImage(created.slug, courseImage);
         }
+        return created;
+    },
 
-        // Add other fields as JSON
-        const overviewData = { ...overview };
-        delete overviewData.courseImage;
-
-        formData.append('overview', JSON.stringify(overviewData));
-
-        const response = await apiClient.post<{ message: string; course: Course }>(
-            '/courses/courses-overview',
+    updateCourseImage: async (slug: string, file: File): Promise<Course> => {
+        const formData = new FormData();
+        formData.append('courseImage', file);
+        const response = await apiClient.patch<{ data: Course }>(
+            `/courses/${slug}/image`,
             formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            }
+            { headers: { 'Content-Type': 'multipart/form-data' } }
         );
-        return response.data;
+        return response.data.data;
     },
 
     // Step 2: Update individual sections by slug
     updateCourseOverview: async (slug: string, data: CourseFormData['overview']) => {
-        const formData = new FormData();
-
-        // Mirror the create path: send the whole overview as ONE JSON blob so the
-        // backend parses nested arrays/objects (intakes, dynamicFields, etc.) intact.
-        // Appending each field individually stringifies arrays into raw strings that
-        // the backend never re-parses, corrupting `[String]` paths like `intakes`.
-        const overviewData = { ...data };
-
-        // A newly-picked image must go as a file part, not inside the JSON blob
-        // (a File serializes to "{}"). An unchanged image is a string URL and is
-        // safely carried inside the blob.
-        if (overviewData.courseImage instanceof File) {
-            formData.append('courseImage', overviewData.courseImage);
-            delete overviewData.courseImage;
-        }
-
-        formData.append('overview', JSON.stringify(overviewData));
-
-        const response = await apiClient.put(
-            `/courses/courses-overview/${slug}`,
-            formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } }
+        // The overview is a section save like every other tab: PATCH the fields,
+        // and send a newly-picked image to the image endpoint. The old route
+        // (PUT /courses/courses-overview/:slug) does not exist on this API.
+        const { courseImage, ...fields } = data;
+        const response = await apiClient.patch<{ data: Course }>(
+            `/courses/${slug}/section/overview`,
+            fields
         );
-
-        return response.data;
+        const updated = response.data.data;
+        if (courseImage instanceof File) {
+            return courseService.updateCourseImage(updated.slug, courseImage);
+        }
+        return updated;
     },
 
     updateDocumentsRequired: async (slug: string, data: CourseFormData['documentsRequired']) => {
-        const response = await apiClient.put(`/courses/courses-documents-required/${slug}`, data);
+        const response = await apiClient.patch(`/courses/${slug}/section/documents-required`, data);
         return response.data;
     },
 
     updateVisaProcess: async (slug: string, data: CourseFormData['visaProcess']) => {
-        const response = await apiClient.put(`/courses/courses-visa-process/${slug}`, data);
+        const response = await apiClient.patch(`/courses/${slug}/section/visa-process`, data);
         return response.data;
     },
     updateFeeStructure: async (slug: string, data: CourseFormData['feeStructures']) => {
-        const response = await apiClient.put(`/courses/courses-fee-structures/${slug}`, data);
+        const response = await apiClient.patch(`/courses/${slug}/section/fee-structures`, data);
         return response.data;
     },
 
     updateCareerOpportunities: async (slug: string, data: CourseFormData['careerOpportunities']) => {
-        const response = await apiClient.put(`/courses/courses-career-opportunities/${slug}`, data);
+        const response = await apiClient.patch(`/courses/${slug}/section/career-opportunities`, data);
         return response.data;
     },
 
     updateStudyCenters: async (slug: string, data: { studyCenters?: string[], universityId?: string }) => {
 
-        const response = await apiClient.put(`/courses/courses-study-centers/${slug}`, data);
+        const response = await apiClient.patch(`/courses/${slug}/section/study-centers`, data);
         return response.data;
     },
-
-    // updateBrochure: async (slug: string, data: CourseFormData['brochure']) => {
-    //   const response = await apiClient.put(`/courses/courses-brochure/${slug}`, data);
-    //   return response.data;
-    // },
 
     updateDynamicFields: async (slug: string, data: CourseFormData['dynamicFields']) => {
-        const response = await apiClient.put(`/courses/courses-dynamicFields/${slug}`, data);
+        const response = await apiClient.patch(`/courses/${slug}/section/dynamic-fields`, data);
         return response.data;
     },
 
-    uploadBrochure: async (file: File, slug: string): Promise<{ url: string }> => {
+    // Uploading appends the brochure to the course server-side and returns the
+    // whole updated course, so there is nothing for the client to assemble — and
+    // no wholesale PUT of the list (that route does not exist).
+    uploadBrochure: async (file: File, slug: string): Promise<Course> => {
         const formData = new FormData();
         formData.append('file', file);
-        const response = await apiClient.post<{ url: string }>(`/courses/courses-upload/brochure/${slug}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data;
+        const response = await apiClient.post<{ data: Course }>(
+            `/courses/${slug}/brochure`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+        return response.data.data;
     },
 
-    updateBrochure: async (slug: string, brochures: Brochure[]): Promise<void> => {
-        await apiClient.put(`/courses/courses-brochure/${slug}`, { brochures });
+    // Deleted by Cloudinary public id, which is also what lets the file itself be
+    // removed rather than orphaned.
+    deleteBrochure: async (slug: string, publicId: string): Promise<Course> => {
+        const response = await apiClient.delete<{ data: Course }>(
+            `/courses/${slug}/brochure/${publicId}`
+        );
+        return response.data.data;
     },
 
-    deleteBrochure: async (slug: string, fileUrl: string): Promise<void> => {
-        await apiClient.delete(`/courses/courses-brochure/${slug}`, {
-            data: { fileUrl }
-        });
-    },
-
-
-
-    // // Upload course image
-    // uploadCourseImage: async (file: File): Promise<{ url: string }> => {
-    //   const formData = new FormData();
-    //   formData.append('file', file);
-    //   const response = await apiClient.post<{ url: string }>('/courses/upload/image', formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data',
-    //     },
-    //   });
-    //   return response.data;
-    // },
-
-    // Upload brochure
-    // uploadBrochure: async (file: File): Promise<{ url: string }> => {
-    //   const formData = new FormData();
-    //   formData.append('file', file);
-    //   const response = await apiClient.post<{ url: string }>('/courses/upload/brochure', formData, {
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data',
-    //     },
-    //   });
-    //   return response.data;
-    // },
 };

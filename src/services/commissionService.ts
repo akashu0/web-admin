@@ -11,9 +11,40 @@ const BASE = '/partner-commissions';
 // ── List ──────────────────────────────────────────────────────────────────────
 
 export const commissionService = {
+    // The API answers with the shared envelope — { data, pagination } — so the
+    // page/total the list needs live one level down, not on the body.
     getAll: async (params: ListCommissionsParams = {}): Promise<CommissionsResponse> => {
-        const { data } = await apiClient.get<CommissionsResponse>(BASE, { params });
-        return data;
+        const { data } = await apiClient.get<{
+            data: PartnerCommission[];
+            pagination?: { page: number; limit: number; total: number };
+        }>(BASE, { params });
+        const p = data.pagination;
+        return {
+            data: data.data ?? [],
+            total: p?.total ?? data.data?.length ?? 0,
+            page: p?.page ?? 1,
+            limit: p?.limit ?? params.limit ?? 20,
+        };
+    },
+
+    // The university editor's Commission tab. One record per university, so the
+    // API upserts and the client never has to decide between create and update.
+    getForUniversity: async (slug: string): Promise<PartnerCommission | null> => {
+        const { data } = await apiClient.get<{ data: PartnerCommission | null }>(
+            `/universities/${slug}/commission`
+        );
+        return data.data ?? null;
+    },
+
+    saveForUniversity: async (
+        slug: string,
+        payload: Partial<CommissionFormValues>
+    ): Promise<PartnerCommission> => {
+        const { data } = await apiClient.put<{ data: PartnerCommission }>(
+            `/universities/${slug}/commission`,
+            payload
+        );
+        return data.data;
     },
 
     getById: async (id: string): Promise<PartnerCommission> => {
@@ -39,24 +70,4 @@ export const commissionService = {
         return data;
     },
 
-    bulkUpload: async (records: unknown[]): Promise<{
-        message: string;
-        total: number;
-        upserted: number;
-        modified: number;
-        matched: number;
-    }> => {
-        const { data } = await apiClient.post(`${BASE}/bulk`, { records });
-        return data;
-    },
-
-    bulkUploadFile: async (file: File) => {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const { data } = await apiClient.post(`${BASE}/bulk/file`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return data;
-    },
 };

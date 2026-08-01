@@ -47,7 +47,9 @@ type AdmissionsFormData = z.infer<typeof admissionsSchema>;
 
 // ── Fixed requirements list ───────────────────────────────────────────────────
 
-const FIXED_REQUIREMENTS: { key: keyof Omit<AdmissionsFormData, "customRequirements">; label: string }[] = [
+// Exported: the view page lists the same requirements in the same order, and a
+// second copy of this table is how the two screens drift apart.
+export const FIXED_REQUIREMENTS: { key: keyof Omit<AdmissionsFormData, "customRequirements">; label: string }[] = [
     { key: "sat",                           label: "SAT" },
     { key: "ielts",                         label: "IELTS" },
     { key: "act",                           label: "ACT" },
@@ -135,7 +137,7 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-border">
                         {FIXED_REQUIREMENTS.map(({ key, label }) => {
                             const isRequired = watch(`${key}.required` as any) ?? false;
                             return (
@@ -146,10 +148,10 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                                     {/* Left — label + details input */}
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-purple-500 shrink-0" />
-                                            <span className="text-sm font-semibold text-gray-800">{label}</span>
+                                            <FileText className="h-4 w-4 text-primary shrink-0" />
+                                            <span className="text-sm font-semibold text-foreground">{label}</span>
                                             {isRequired && (
-                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                                                <span className="text-[10px] font-bold bg-accent text-primary px-2 py-0.5 rounded-full">
                                                     Required
                                                 </span>
                                             )}
@@ -170,7 +172,7 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                                                 setValue(`${key}.required` as any, checked)
                                             }
                                         />
-                                        <span className="text-[10px] text-gray-400 font-medium">
+                                        <span className="text-[10px] text-muted-foreground font-medium">
                                             {isRequired ? "On" : "Off"}
                                         </span>
                                     </div>
@@ -202,7 +204,7 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {customFields.length === 0 && (
-                        <p className="text-sm text-gray-400 text-center py-6">
+                        <p className="text-sm text-muted-foreground text-center py-6">
                             No additional requirements. Click "Add Another" to add one.
                         </p>
                     )}
@@ -210,17 +212,17 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                     {customFields.map((field, idx) => (
                         <div
                             key={field.id}
-                            className="p-4 border rounded-xl bg-gray-50 space-y-3"
+                            className="p-4 border rounded-xl bg-muted space-y-3"
                         >
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex-1 space-y-1">
-                                    <Label className="text-xs text-gray-500">Requirement Name *</Label>
+                                    <Label className="text-xs text-muted-foreground">Requirement Name *</Label>
                                     <Input
                                         {...register(`customRequirements.${idx}.name`)}
                                         placeholder="e.g. Portfolio, Work Experience Letter…"
                                     />
                                     {errors.customRequirements?.[idx]?.name && (
-                                        <p className="text-xs text-red-500">
+                                        <p className="text-xs text-destructive">
                                             {errors.customRequirements[idx]?.name?.message}
                                         </p>
                                     )}
@@ -232,11 +234,11 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
                                     className="mt-5 shrink-0"
                                     onClick={() => removeCustom(idx)}
                                 >
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-xs text-gray-500">Details</Label>
+                                <Label className="text-xs text-muted-foreground">Details</Label>
                                 <Textarea
                                     {...register(`customRequirements.${idx}.details`)}
                                     placeholder="Additional details or instructions…"

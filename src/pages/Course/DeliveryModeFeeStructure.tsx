@@ -221,8 +221,8 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Fee Structure</h2>
-                <p className="text-sm text-gray-600">
+                <h2 className="text-2xl font-bold text-foreground mb-2">Fee Structure</h2>
+                <p className="text-sm text-muted-foreground">
                     Add fee details for this course. Each fee structure entry shows all applicable fees.
                 </p>
             </div>
@@ -231,30 +231,30 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
             {savedFees.length > 0 && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900">Saved Fee Structures</h3>
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        <h3 className="text-lg font-semibold text-foreground">Saved Fee Structures</h3>
+                        <Badge tone="neutral" className="bg-accent text-primary">
                             {savedFees.length} {savedFees.length === 1 ? 'Entry' : 'Entries'}
                         </Badge>
                     </div>
 
                     <div className="space-y-4">
                         {savedFees.map((fee, index) => (
-                            <Card key={index} className="p-5 bg-gray-50 border-gray-200">
+                            <Card key={index} className="p-5 bg-muted border-border">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {fee.tuitionFeeType && (
-                                                <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+                                                <Badge className="bg-accent text-primary border-primary/30">
                                                     {fee.tuitionFeeType}
                                                 </Badge>
                                             )}
                                             {fee.scholarshipPercentage && fee.scholarshipPercentage !== 'Not Applicable' && (
-                                                <Badge className="bg-green-100 text-green-700 border-green-200">
+                                                <Badge className="bg-accent text-primary border-primary/30">
                                                     {fee.scholarshipPercentage} Scholarship
                                                 </Badge>
                                             )}
                                             {fee.currency && (
-                                                <Badge variant="outline">{fee.currency}</Badge>
+                                                <Badge tone="red">{fee.currency}</Badge>
                                             )}
                                         </div>
 
@@ -263,8 +263,8 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                                 const val = fee[key] as number;
                                                 return val > 0 ? (
                                                     <div key={key}>
-                                                        <span className="text-gray-500">{label}:</span>
-                                                        <span className="ml-1 font-medium text-gray-800">
+                                                        <span className="text-muted-foreground">{label}:</span>
+                                                        <span className="ml-1 font-medium text-foreground">
                                                             {fee.currency} {val.toLocaleString()}
                                                         </span>
                                                     </div>
@@ -273,8 +273,8 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                             {(fee.dynamicFields as OtherFee[] | undefined)?.map(f => (
                                                 f.fieldValue ? (
                                                     <div key={f.id}>
-                                                        <span className="text-gray-500">{f.fieldName}:</span>
-                                                        <span className="ml-1 font-medium text-gray-800">
+                                                        <span className="text-muted-foreground">{f.fieldName}:</span>
+                                                        <span className="ml-1 font-medium text-foreground">
                                                             {fee.currency} {f.fieldValue}
                                                         </span>
                                                     </div>
@@ -283,8 +283,8 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                         </div>
 
                                         <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 font-medium">Total:</span>
-                                            <span className="text-lg font-bold text-purple-600">
+                                            <span className="text-sm text-muted-foreground font-medium">Total:</span>
+                                            <span className="text-lg font-bold text-primary">
                                                 {fee.currency} {calculateTotal(fee).toLocaleString()}
                                             </span>
                                         </div>
@@ -297,7 +297,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                             size="sm"
                                             onClick={() => handleEditFee(fee, index)}
                                             disabled={isAddingNew}
-                                            className="text-blue-600 hover:bg-blue-50"
+                                            className="text-primary hover:bg-accent"
                                         >
                                             <Edit className="h-4 w-4" />
                                         </Button>
@@ -307,7 +307,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                             size="sm"
                                             onClick={() => handleRemoveFee(index)}
                                             disabled={isAddingNew}
-                                            className="text-red-600 hover:bg-red-50"
+                                            className="text-destructive hover:bg-destructive/10"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -334,7 +334,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
 
             {/* Add/Edit Form */}
             {isAddingNew && (
-                <Card className="p-6 border-2 border-gray-200">
+                <Card className="p-6 border-2 border-border">
                     <h3 className="font-semibold text-lg mb-6">
                         {editingIndex !== null ? 'Edit Fee Structure' : 'New Fee Structure'}
                     </h3>
@@ -351,7 +351,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                     <SelectTrigger className="mt-2">
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white">
+                                    <SelectContent className="bg-card">
                                         {TUITION_FEE_TYPES.map(t => (
                                             <SelectItem key={t} value={t}>{t}</SelectItem>
                                         ))}
@@ -368,7 +368,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                     <SelectTrigger className="mt-2">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-white">
+                                    <SelectContent className="bg-card">
                                         {SCHOLARSHIP_PERCENTAGES.map(p => (
                                             <SelectItem key={p} value={p}>{p}</SelectItem>
                                         ))}
@@ -387,7 +387,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                 <SelectTrigger className="mt-2">
                                     <SelectValue placeholder="Select currency" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white max-h-60">
+                                <SelectContent className="bg-card max-h-60">
                                     {CURRENCY_OPTIONS.map(c => (
                                         <SelectItem key={c.code} value={c.code}>
                                             {c.code} — {c.name}
@@ -417,13 +417,13 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                         {/* Other Fees (dynamic) */}
                         <div>
                             <Label>Other Fees</Label>
-                            <p className="text-xs text-gray-500 mt-0.5 mb-3">Add any additional fees below</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 mb-3">Add any additional fees below</p>
 
                             {otherFees.length > 0 && (
                                 <div className="space-y-2 mb-3">
                                     {otherFees.map(fee => (
                                         <div key={fee.id} className="flex items-center gap-2">
-                                            <span className="text-sm text-gray-700 w-40 shrink-0">{fee.fieldName}</span>
+                                            <span className="text-sm text-foreground w-40 shrink-0">{fee.fieldName}</span>
                                             <Input
                                                 type="number"
                                                 min="0"
@@ -437,7 +437,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => removeOtherFee(fee.id)}
-                                                className="text-red-500 hover:bg-red-50 shrink-0"
+                                                className="text-destructive hover:bg-destructive/10 shrink-0"
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -477,7 +477,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                             </Button>
                             <Button
                                 type="button"
-                                className="bg-gray-900 hover:bg-gray-800"
+                                className="bg-primary hover:bg-primary"
                                 onClick={handleSaveFee}
                             >
                                 {editingIndex !== null ? 'Update' : 'Add Fee Structure'}
@@ -491,7 +491,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
             <div className="flex justify-end gap-4 pt-6 border-t">
                 <Button
                     type="button"
-                    className="bg-gray-900 hover:bg-gray-800"
+                    className="bg-primary hover:bg-primary"
                     onClick={handleFinalSave}
                     disabled={isSubmitting}
                 >

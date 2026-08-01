@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Plus, RefreshCcw, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Plus, RefreshCcw, Pencil, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,6 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/common/PageHeader';
+import { ResourceTable, type Column } from '@/components/common/ResourceTable';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 import { egAcademyCourseService } from '@/services/egAcademyCourseService';
 import { STREAM_OPTIONS } from '@/types/egAcademyCourse';
 import type { EgAcademyCourse, EgAcademyQueryParams } from '@/types/egAcademyCourse';
@@ -61,6 +65,8 @@ export function EgAcademyCourseList() {
       );
     } catch (error) {
       console.error('Error fetching courses:', error);
+      // Without this the scroll sentinel refires the failed request forever.
+      setHasMore(false);
       toast.error('Failed to fetch courses');
     } finally {
       setIsLoading(false);
@@ -90,19 +96,11 @@ export function EgAcademyCourseList() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Infinite scroll - this page renders inside MainLayout's <main>, which only
-  // has a min-height (not a fixed height), so the window is the real scroller.
-  const handleScroll = useCallback(() => {
-    if (isFetching || !hasMore) return;
-    if (window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 400) {
-      setPage((prev) => prev + 1);
-    }
-  }, [isFetching, hasMore]);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+  // Infinite scroll against AppLayout's <main>, which is the scroll container.
+  const sentinelRef = useInfiniteScroll(() => setPage((prev) => prev + 1), {
+    hasMore,
+    loading: isFetching,
+  });
 
   // Re-fetches the current view from page 1, replacing the list. Used after
   // CRUD actions and manual refresh, where neither `page` nor `filters` change.
@@ -116,7 +114,7 @@ export function EgAcademyCourseList() {
   };
 
   const handleEdit = (course: EgAcademyCourse) => {
-    navigate(`/eg-academy/courses/${course.overview.slug}`);
+    navigate(`/eg-academy/courses/${course.slug}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -142,47 +140,105 @@ export function EgAcademyCourseList() {
     refreshList();
   };
 
-  if (isLoading && !courses.length) {
-    return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">eG Academy Courses</h1>
-        <div className="flex gap-2">
+  const columns: Column<EgAcademyCourse>[] = useMemo(() => [
+    {
+      key: 'courseName',
+      header: 'Course Name',
+      render: (course) => (
+        <div className="min-w-0">
+          <p className="truncate font-medium">{course.overview.courseName}</p>
+          <p className="truncate text-xs text-muted-foreground">{course.slug}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'stream',
+      header: 'Stream',
+      render: (course) => (
+        <span className="block max-w-[180px] truncate">{course.overview.stream || '—'}</span>
+      ),
+    },
+    {
+      key: 'level',
+      header: 'Level',
+      render: (course) => <span>{course.overview.level || '—'}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (course) => (
+        <Badge tone={course.status === 'published' ? 'green' : 'neutral'}>{course.status}</Badge>
+      ),
+    },
+    {
+      key: 'centers',
+      header: 'Centers',
+      render: (course) => (
+        <span className="tabular-nums">{course.learningCenters?.length ?? 0}</span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      align: 'right',
+      render: (course) => (
+        <div className="flex justify-end gap-1">
           <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isFetching}
-            className="border-gray-200 bg-white hover:bg-gray-50"
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/eg-academy/courses/view/${course.slug}`)}
+            title="View"
           >
-            <RefreshCcw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-            Refresh
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleEdit(course)} title="Edit">
+            <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            className="bg-gray-900 hover:bg-gray-800"
-            onClick={() => setIsModalOpen(true)}
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDelete(course._id)}
+            title="Delete"
+            className="text-destructive hover:text-destructive"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Course
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      </div>
+      ),
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], []);
+
+  return (
+    <div>
+      <PageHeader
+        title="eG Academy Courses"
+        subtitle="Academy catalog and learning centers"
+        actions={
+          <>
+            <Button variant="outline" onClick={handleRefresh} disabled={isFetching}>
+              <RefreshCcw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Course
+            </Button>
+          </>
+        }
+      />
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <Input
-          placeholder="Search by name, slug, or awarded by..."
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          className="max-w-xs"
-        />
+      <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, slug, or awarded by..."
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Select
           value={filters.stream ?? '__all__'}
           onValueChange={v => setStream(v === '__all__' ? '' : v)}
@@ -190,7 +246,7 @@ export function EgAcademyCourseList() {
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Filter by stream" />
           </SelectTrigger>
-          <SelectContent className="bg-white max-h-60">
+          <SelectContent className="max-h-60">
             <SelectItem value="__all__">All Streams</SelectItem>
             {STREAM_OPTIONS.map(s => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
@@ -206,107 +262,30 @@ export function EgAcademyCourseList() {
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className="bg-white">
+          <SelectContent>
             <SelectItem value="__all__">All Status</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
             <SelectItem value="published">Published</SelectItem>
           </SelectContent>
         </Select>
-      </div>
 
-      {/* Results summary */}
-      <p className="text-sm text-gray-600">
-        Showing {courses.length} of {total} courses
-      </p>
+        <span className="ml-auto pr-1 text-xs text-muted-foreground">
+          {courses.length} of {total}
+        </span>
+      </Card>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Course Name</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Stream</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Level</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Centers</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center py-12 text-gray-500">
-                  {isFetching ? 'Loading...' : 'No courses found'}
-                </td>
-              </tr>
-            ) : (
-              courses.map(course => (
-                <tr key={course._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-gray-900">{course.overview.courseName}</p>
-                      <p className="text-xs text-gray-500">{course.overview.slug}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700 max-w-[180px] truncate">
-                    {course.overview.stream || '—'}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {course.overview.level || '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      className={
-                        course.status === 'published'
-                          ? 'bg-green-100 text-green-700 border-green-200'
-                          : 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                      }
-                    >
-                      {course.status}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {course.learningCenters?.length ?? 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(course)}
-                        className="text-blue-600 hover:bg-blue-50"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(course._id)}
-                        className="text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Infinite scroll status */}
-      {courses.length > 0 && isFetching && (
-        <div className="flex items-center justify-center gap-2 py-4 text-sm text-gray-500">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading more courses...
-        </div>
-      )}
-      {courses.length > 0 && !hasMore && !isFetching && (
-        <div className="py-4 text-center text-sm text-gray-400">
-          All {total} courses loaded
-        </div>
-      )}
+      <Card className="overflow-hidden">
+        <ResourceTable
+          columns={columns}
+          rows={courses}
+          isLoading={isLoading}
+          sentinelRef={sentinelRef}
+          isFetchingNextPage={isFetching && courses.length > 0}
+          hasNextPage={hasMore}
+          emptyTitle="No courses found"
+          emptyDescription="Try adjusting your search or filters."
+        />
+      </Card>
 
       <AddEgAcademyCourseModal
         open={isModalOpen}

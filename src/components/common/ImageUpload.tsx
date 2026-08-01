@@ -146,11 +146,11 @@ export function ImageUpload({
     if (value) {
         return (
             <>
-                <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                <div className="border border-border rounded-lg p-4 bg-card">
                     {/* Folder-style preview */}
                     <div className="flex items-start gap-4">
                         {/* Thumbnail */}
-                        <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                        <div className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-border bg-muted">
                             {displayUrl && (
                                 <img
                                     src={displayUrl}
@@ -165,12 +165,12 @@ export function ImageUpload({
                             <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <FileImage className="h-4 w-4 text-gray-400 shrink-0" />
-                                        <p className="text-sm font-medium text-gray-900 truncate">
+                                        <FileImage className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <p className="text-sm font-medium text-foreground truncate">
                                             {fileInfo.name}
                                         </p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs text-muted-foreground mt-1">
                                         {fileInfo.size}
                                     </p>
                                 </div>
@@ -182,7 +182,7 @@ export function ImageUpload({
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-gray-600 hover:text-gray-900"
+                                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                                             onClick={() => setPreviewOpen(true)}
                                         >
                                             <Eye className="h-4 w-4" />
@@ -192,7 +192,7 @@ export function ImageUpload({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                         onClick={handleRemove}
                                     >
                                         <X className="h-4 w-4" />
@@ -203,10 +203,10 @@ export function ImageUpload({
                             {/* Upload Status */}
                             <div className="mt-2">
                                 <div className="flex items-center gap-2">
-                                    <div className="flex-1 bg-green-100 rounded-full h-1.5">
-                                        <div className="bg-green-500 h-1.5 rounded-full w-full"></div>
+                                    <div className="flex-1 bg-accent rounded-full h-1.5">
+                                        <div className="bg-primary h-1.5 rounded-full w-full"></div>
                                     </div>
-                                    <span className="text-xs text-green-600 font-medium">Ready</span>
+                                    <span className="text-xs text-primary font-medium">Ready</span>
                                 </div>
                             </div>
                         </div>
@@ -220,14 +220,14 @@ export function ImageUpload({
                             <DialogHeader>
                                 <DialogTitle>Image Preview</DialogTitle>
                             </DialogHeader>
-                            <div className="relative w-full h-[500px] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            <div className="relative w-full h-[500px] bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                                 <img
                                     src={displayUrl}
                                     alt="Preview"
                                     className="max-w-full max-h-full object-contain"
                                 />
                             </div>
-                            <div className="text-sm text-gray-600 space-y-1">
+                            <div className="text-sm text-muted-foreground space-y-1">
                                 <p><span className="font-medium">File name:</span> {fileInfo.name}</p>
                                 <p><span className="font-medium">File size:</span> {fileInfo.size}</p>
                                 <p><span className="font-medium">File type:</span> {fileInfo.type}</p>
@@ -249,8 +249,8 @@ export function ImageUpload({
             className={`
                 border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
                 transition-colors duration-200
-                ${isDragActive ? 'border-gray-900 bg-gray-50' : 'border-gray-200 bg-white'}
-                hover:border-gray-400
+                ${isDragActive ? 'border-primary bg-muted' : 'border-border bg-card'}
+                hover:border-input
             `}
         >
             <input
@@ -260,19 +260,19 @@ export function ImageUpload({
                 onChange={handleInputChange}
                 className="hidden"
             />
-            <div className="relative w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Upload className="h-8 w-8 text-gray-400" />
+            <div className="relative w-16 h-16 mx-auto mb-4 bg-muted rounded-lg flex items-center justify-center">
+                <Upload className="h-8 w-8 text-muted-foreground" />
             </div>
-            <p className="text-gray-900 font-medium mb-1">
+            <p className="text-foreground font-medium mb-1">
                 {isDragActive
                     ? 'Drop the image here'
                     : 'Click to upload or drag and drop'}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
                 PNG, JPG, JPEG, WEBP or GIF (MAX. 5MB)
             </p>
             {ratioHint && (
-                <p className="text-sm text-amber-600 font-medium mt-1">
+                <p className="text-sm text-muted-foreground font-medium mt-1">
                     Required image ratio: {ratioHint}
                 </p>
             )}

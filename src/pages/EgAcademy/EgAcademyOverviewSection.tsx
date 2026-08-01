@@ -82,7 +82,7 @@ export function EgAcademyOverviewSection({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Course Overview</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-6">Course Overview</h2>
 
         <div className="space-y-6">
           {/* Course Image */}
@@ -109,7 +109,7 @@ export function EgAcademyOverviewSection({
               disabled={isSubmitting}
             />
             {errors.courseName && (
-              <p className="text-sm text-red-600 mt-1">{errors.courseName.message}</p>
+              <p className="text-sm text-destructive mt-1">{errors.courseName.message}</p>
             )}
           </div>
 
@@ -132,11 +132,11 @@ export function EgAcademyOverviewSection({
               id="slug"
               {...register('slug', { required: 'Slug is required' })}
               placeholder="auto-generated-from-name"
-              className="mt-2 bg-gray-50"
+              className="mt-2 bg-muted"
               disabled={isSubmitting}
             />
             {errors.slug && (
-              <p className="text-sm text-red-600 mt-1">{errors.slug.message}</p>
+              <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
             )}
           </div>
 
@@ -198,7 +198,7 @@ export function EgAcademyOverviewSection({
               <SelectTrigger className="mt-2">
                 <SelectValue placeholder="Select delivery mode" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent className="bg-card">
                 <SelectItem value="online">Online</SelectItem>
                 <SelectItem value="on-campus">On Campus</SelectItem>
                 <SelectItem value="hybrid">Hybrid</SelectItem>
@@ -221,7 +221,7 @@ export function EgAcademyOverviewSection({
           {/* Intakes */}
           <div>
             <Label>Intakes</Label>
-            <p className="text-xs text-gray-500 mt-1 mb-2">Select all applicable intake months</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-2">Select all applicable intake months</p>
             <div className="flex flex-wrap gap-2 mt-2">
               {INTAKE_OPTIONS.map((intake) => {
                 const isSelected = selectedIntakes.includes(intake);
@@ -233,8 +233,8 @@ export function EgAcademyOverviewSection({
                     disabled={isSubmitting}
                     className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                       isSelected
-                        ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-foreground border-input hover:border-input'
                     }`}
                   >
                     {intake}
@@ -256,7 +256,7 @@ export function EgAcademyOverviewSection({
               <SelectTrigger className="mt-2">
                 <SelectValue placeholder="Select level" />
               </SelectTrigger>
-              <SelectContent className="bg-white">
+              <SelectContent className="bg-card">
                 {LEVEL_OPTIONS.map((level) => (
                   <SelectItem key={level} value={level}>
                     {level}
@@ -277,7 +277,7 @@ export function EgAcademyOverviewSection({
               <SelectTrigger className="mt-2">
                 <SelectValue placeholder="Select stream" />
               </SelectTrigger>
-              <SelectContent className="bg-white max-h-60">
+              <SelectContent className="bg-card max-h-60">
                 {STREAM_OPTIONS.map((stream) => (
                   <SelectItem key={stream} value={stream}>
                     {stream}
@@ -292,7 +292,7 @@ export function EgAcademyOverviewSection({
       <div className="flex justify-end gap-4 pt-6 border-t">
         <Button
           type="submit"
-          className="bg-gray-900 hover:bg-gray-800"
+          className="bg-primary hover:bg-primary"
           disabled={isSubmitting}
         >
           {isSubmitting ? (

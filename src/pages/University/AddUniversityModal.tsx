@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -65,6 +66,7 @@ export function AddUniversityModal({
     onOpenChange,
     onSuccess,
 }: AddUniversityModalProps) {
+    const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -196,7 +198,7 @@ export function AddUniversityModal({
                 formData.append("banner", bannerFile);
             }
 
-            await universityService.createUniversity(formData);
+            const created = await universityService.createUniversity(formData);
 
             toast.success("University created successfully! You can now add more details.");
             reset();
@@ -206,6 +208,11 @@ export function AddUniversityModal({
             setBannerPreview(null);
             setSelectedStreams([]);
             onSuccess();
+            // Straight into the editor, where fees, commission and the rest of
+            // the sections are — a new university with no commission is the
+            // whole reason someone opened this form.
+            const slug = created?.data?.slug;
+            if (slug) navigate(`/universities/edit/${slug}`);
         } catch (error: any) {
             console.error("Error creating university:", error);
             toast.error(error.response?.data?.message || "Failed to create university");
@@ -238,7 +245,7 @@ export function AddUniversityModal({
                                     placeholder="e.g., MIT"
                                 />
                                 {errors.name && (
-                                    <p className="text-sm text-red-500">{errors.name.message}</p>
+                                    <p className="text-sm text-destructive">{errors.name.message}</p>
                                 )}
                             </div>
 
@@ -250,7 +257,7 @@ export function AddUniversityModal({
                                     placeholder="Massachusetts Institute of Technology"
                                 />
                                 {errors.fullName && (
-                                    <p className="text-sm text-red-500">
+                                    <p className="text-sm text-destructive">
                                         {errors.fullName.message}
                                     </p>
                                 )}
@@ -266,7 +273,7 @@ export function AddUniversityModal({
                                     placeholder="United States"
                                 />
                                 {errors.country && (
-                                    <p className="text-sm text-red-500">
+                                    <p className="text-sm text-destructive">
                                         {errors.country.message}
                                     </p>
                                 )}
@@ -278,14 +285,14 @@ export function AddUniversityModal({
                                     id="slug"
                                     {...register("slug")}
                                     placeholder="study-in-country-name"
-                                    className="bg-gray-50"
+                                    className="bg-muted"
                                 />
                                 {errors.slug && (
-                                    <p className="text-sm text-red-500">
+                                    <p className="text-sm text-destructive">
                                         {errors.slug.message}
                                     </p>
                                 )}
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-muted-foreground">
                                     Auto-generated from country name
                                 </p>
                             </div>
@@ -296,7 +303,7 @@ export function AddUniversityModal({
                                 <Label htmlFor="city">City *</Label>
                                 <Input id="city" {...register("city")} placeholder="Cambridge" />
                                 {errors.city && (
-                                    <p className="text-sm text-red-500">{errors.city.message}</p>
+                                    <p className="text-sm text-destructive">{errors.city.message}</p>
                                 )}
                             </div>
 
@@ -308,7 +315,7 @@ export function AddUniversityModal({
                                     placeholder="77 Massachusetts Ave, Cambridge, MA 02139"
                                 />
                                 {errors.location && (
-                                    <p className="text-sm text-red-500">{errors.location.message}</p>
+                                    <p className="text-sm text-destructive">{errors.location.message}</p>
                                 )}
                             </div>
                         </div>
@@ -322,7 +329,7 @@ export function AddUniversityModal({
                                 rows={4}
                             />
                             {errors.about && (
-                                <p className="text-sm text-red-500">{errors.about.message}</p>
+                                <p className="text-sm text-destructive">{errors.about.message}</p>
                             )}
                         </div>
 
@@ -338,7 +345,7 @@ export function AddUniversityModal({
                                     onWheel={(e) => e.currentTarget.blur()}
                                 />
                                 {errors.founded && (
-                                    <p className="text-sm text-red-500">{errors.founded.message}</p>
+                                    <p className="text-sm text-destructive">{errors.founded.message}</p>
                                 )}
                             </div>
                         </div>
@@ -355,7 +362,7 @@ export function AddUniversityModal({
                                     onWheel={(e) => e.currentTarget.blur()}
                                 />
                                 {errors.totalStudents && (
-                                    <p className="text-sm text-red-500">{errors.totalStudents.message}</p>
+                                    <p className="text-sm text-destructive">{errors.totalStudents.message}</p>
                                 )}
                             </div>
 
@@ -372,7 +379,7 @@ export function AddUniversityModal({
                                     onWheel={(e) => e.currentTarget.blur()}
                                 />
                                 {errors.internationalStudents && (
-                                    <p className="text-sm text-red-500">{errors.internationalStudents.message}</p>
+                                    <p className="text-sm text-destructive">{errors.internationalStudents.message}</p>
                                 )}
                             </div>
                         </div>
@@ -398,7 +405,7 @@ export function AddUniversityModal({
                         {/* Streams (multi-select) */}
                         <div className="space-y-2">
                             <Label>Streams</Label>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                                 Select the fields of study this university offers. You can pick more than one.
                             </p>
 
@@ -407,7 +414,7 @@ export function AddUniversityModal({
                                     {selectedStreams.map((stream) => (
                                         <Badge
                                             key={stream}
-                                            variant="secondary"
+                                            tone="neutral"
                                             className="gap-1 cursor-pointer"
                                             onClick={() => toggleStream(stream)}
                                         >
@@ -453,13 +460,13 @@ export function AddUniversityModal({
                                         <button
                                             type="button"
                                             onClick={removeLogo}
-                                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                            className="absolute -top-2 -right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                                    <div className="border-2 border-dashed border-input rounded-lg p-6">
                                         <input
                                             type="file"
                                             id="logo"
@@ -471,11 +478,11 @@ export function AddUniversityModal({
                                             htmlFor="logo"
                                             className="flex flex-col items-center cursor-pointer"
                                         >
-                                            <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                            <span className="text-sm text-gray-600">
+                                            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                                            <span className="text-sm text-muted-foreground">
                                                 Click to upload logo
                                             </span>
-                                            <span className="text-xs text-amber-600 font-medium mt-1">
+                                            <span className="text-xs text-muted-foreground font-medium mt-1">
                                                 Required image ratio: 1:1 square (e.g., 400 x 400 px)
                                             </span>
                                         </label>
@@ -496,13 +503,13 @@ export function AddUniversityModal({
                                         <button
                                             type="button"
                                             onClick={removeBanner}
-                                            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                                            className="absolute top-2 right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
                                         >
                                             <X className="h-4 w-4" />
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                                    <div className="border-2 border-dashed border-input rounded-lg p-6">
                                         <input
                                             type="file"
                                             id="banner"
@@ -514,11 +521,11 @@ export function AddUniversityModal({
                                             htmlFor="banner"
                                             className="flex flex-col items-center cursor-pointer"
                                         >
-                                            <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                                            <span className="text-sm text-gray-600">
+                                            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                                            <span className="text-sm text-muted-foreground">
                                                 Click to upload banner
                                             </span>
-                                            <span className="text-xs text-amber-600 font-medium mt-1">
+                                            <span className="text-xs text-muted-foreground font-medium mt-1">
                                                 Required image ratio: 16:9 (e.g., 1280 x 720 px)
                                             </span>
                                         </label>

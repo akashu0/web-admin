@@ -20,34 +20,14 @@ class FAQService {
         if (filters?.page) params.append('page', filters.page.toString());
         if (filters?.limit) params.append('limit', filters.limit.toString());
 
-        const response = await apiClient.get(
-            `/faqs/get-all-faqs?${params.toString()}`,
-        );
+        const response = await apiClient.get(`/faqs?${params.toString()}`);
         return response.data;
     }
 
     // Get all FAQs with filters
     async getFAQDropdown(): Promise<PaginationResponse<IFAQ[]>> {
         const response = await apiClient.get(
-            `/faqs/get-all-faqs-dropdown`,
-        );
-        return response.data;
-    }
-
-    // Get FAQ by ID
-    async getFAQById(id: string): Promise<{ success: boolean; data: IFAQ }> {
-        const response = await apiClient.get(
-            `/faqs/get-faq/${id}`,
-        );
-        return response.data;
-    }
-
-    // Get FAQs by entity
-    async getFAQsByEntity(
-        entityType: string,
-    ): Promise<PaginationResponse<IFAQ[]>> {
-        const response = await apiClient.get(
-            `/faqs/get-faq/${entityType}`,
+            `/faqs?limit=200`,
         );
         return response.data;
     }
@@ -57,7 +37,7 @@ class FAQService {
         data: CreateFAQInput
     ): Promise<{ success: boolean; message: string; data: IFAQ }> {
         const response = await apiClient.post(
-            `/faqs/create-faq`,
+            `/faqs`,
             data,
         );
         return response.data;
@@ -69,7 +49,7 @@ class FAQService {
         data: UpdateFAQInput
     ): Promise<{ success: boolean; message: string; data: IFAQ }> {
         const response = await apiClient.put(
-            `/faqs/update-faq/${id}`,
+            `/faqs/${id}`,
             data,
         );
         return response.data;
@@ -78,43 +58,37 @@ class FAQService {
     // Delete FAQ
     async deleteFAQ(id: string): Promise<{ success: boolean; message: string }> {
         const response = await apiClient.delete(
-            `/faqs/delete-faq/${id}`,
+            `/faqs/${id}`,
         );
         return response.data;
     }
 
-    // Bulk delete FAQs
+    // Bulk delete.
+    //
+    // The API has no bulk endpoint for FAQs and does not need one — there are a
+    // handful of documents, and fanning the per-record DELETE out concurrently is
+    // one round trip in wall-clock terms. Promise.all rejects on the first
+    // failure, which is what the caller's error toast expects.
     async bulkDeleteFAQs(
         faqIds: string[]
     ): Promise<{ success: boolean; message: string; data: { deletedCount: number } }> {
-        const response = await apiClient.post(
-            `/faqs/bulk-delete`,
-            { faqIds },
-        );
-        return response.data;
+        await Promise.all(faqIds.map((id) => this.deleteFAQ(id)));
+        return {
+            success: true,
+            message: `${faqIds.length} FAQs deleted`,
+            data: { deletedCount: faqIds.length },
+        };
     }
 
-    // Update FAQ order
-    async updateFAQOrder(
-        faqs: Array<{ id: string; order: number }>
-    ): Promise<{ success: boolean; message: string }> {
-        const response = await apiClient.patch(
-            `/faqs/reorder`,
-            { faqs },
-        );
-        return response.data;
-    }
-
-    // Bulk update status
+    // Bulk status, same shape: one PATCH per record.
     async bulkUpdateStatus(
         faqIds: string[],
         status: 'active' | 'inactive' | 'draft'
     ): Promise<{ success: boolean; message: string }> {
-        const response = await apiClient.patch(
-            `faqs/bulk-status`,
-            { faqIds, status },
+        await Promise.all(
+            faqIds.map((id) => apiClient.patch(`/faqs/${id}/status`, { status }))
         );
-        return response.data;
+        return { success: true, message: `${faqIds.length} FAQs updated` };
     }
 }
 

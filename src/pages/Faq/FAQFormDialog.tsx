@@ -120,7 +120,7 @@ export const FAQFormDialog = ({
                             </SelectContent>
                         </Select>
                         {errors.entityType && (
-                            <p className="text-sm text-red-500">{errors.entityType.message}</p>
+                            <p className="text-sm text-destructive">{errors.entityType.message}</p>
                         )}
                     </div>
 
@@ -133,7 +133,7 @@ export const FAQFormDialog = ({
                             placeholder="Enter FAQ title (e.g., 'Admission Requirements')"
                         />
                         {errors.title && (
-                            <p className="text-sm text-red-500">{errors.title.message}</p>
+                            <p className="text-sm text-destructive">{errors.title.message}</p>
                         )}
                     </div>
 
@@ -157,7 +157,7 @@ export const FAQFormDialog = ({
                                 </SelectContent>
                             </Select>
                             {errors.status && (
-                                <p className="text-sm text-red-500">{errors.status.message}</p>
+                                <p className="text-sm text-destructive">{errors.status.message}</p>
                             )}
                         </div>
 
@@ -180,15 +180,15 @@ export const FAQFormDialog = ({
                         </div>
 
                         {errors.questions && typeof errors.questions === 'object' && !Array.isArray(errors.questions) && 'message' in errors.questions && (
-                            <p className="text-sm text-red-500">{errors.questions.message as string}</p>
+                            <p className="text-sm text-destructive">{errors.questions.message as string}</p>
                         )}
 
                         <div className="space-y-4">
                             {fields.map((field, index) => (
-                                <div key={field.id} className="p-4 border border-zinc-200 rounded-lg space-y-4 bg-zinc-50">
+                                <div key={field.id} className="p-4 border border-border rounded-lg space-y-4 bg-muted">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-2">
-                                            <GripVertical className="h-5 w-5 text-zinc-400" />
+                                            <GripVertical className="h-5 w-5 text-muted-foreground" />
                                             <span className="font-medium text-sm">Question {index + 1}</span>
                                         </div>
                                         {fields.length > 1 && (
@@ -197,7 +197,7 @@ export const FAQFormDialog = ({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => remove(index)}
-                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -212,7 +212,7 @@ export const FAQFormDialog = ({
                                             rows={2}
                                         />
                                         {errors.questions?.[index]?.question && (
-                                            <p className="text-sm text-red-500">
+                                            <p className="text-sm text-destructive">
                                                 {errors.questions[index]?.question?.message}
                                             </p>
                                         )}
@@ -226,7 +226,7 @@ export const FAQFormDialog = ({
                                             rows={4}
                                         />
                                         {errors.questions?.[index]?.answer && (
-                                            <p className="text-sm text-red-500">
+                                            <p className="text-sm text-destructive">
                                                 {errors.questions[index]?.answer?.message}
                                             </p>
                                         )}
@@ -240,7 +240,7 @@ export const FAQFormDialog = ({
                                             placeholder="0"
                                         />
                                         {errors.questions?.[index]?.order && (
-                                            <p className="text-sm text-red-500">
+                                            <p className="text-sm text-destructive">
                                                 {errors.questions[index]?.order?.message}
                                             </p>
                                         )}

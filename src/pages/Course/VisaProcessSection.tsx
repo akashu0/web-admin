@@ -101,8 +101,8 @@ export function VisaProcessSection({
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                <span className="ml-3 text-gray-600">Loading visa processes...</span>
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <span className="ml-3 text-muted-foreground">Loading visa processes...</span>
             </div>
         );
     }
@@ -112,18 +112,18 @@ export function VisaProcessSection({
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                     <div className="flex items-center gap-3 mb-6">
-                        <Plane className="h-8 w-8 text-gray-900" />
+                        <Plane className="h-8 w-8 text-foreground" />
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Visa Process</h2>
-                            <p className="text-sm text-gray-600">Select the visa process for this course</p>
+                            <h2 className="text-2xl font-bold text-foreground">Visa Process</h2>
+                            <p className="text-sm text-muted-foreground">Select the visa process for this course</p>
                         </div>
                     </div>
 
                     {/* Visa Selection Dropdown */}
-                    <Card className="p-6 bg-white border-gray-200 mb-6">
+                    <Card className="p-6 bg-card border-border mb-6">
                         <div>
                             <Label htmlFor="visaId" className="text-base font-semibold mb-3 block">
-                                Select Visa Process <span className="text-red-500">*</span>
+                                Select Visa Process <span className="text-destructive">*</span>
                             </Label>
 
                             <Select
@@ -152,7 +152,7 @@ export function VisaProcessSection({
                             </Select>
 
                             {!visaId && (
-                                <p className="text-sm text-gray-500 mt-2">
+                                <p className="text-sm text-muted-foreground mt-2">
                                     Select a visa process that matches your course destination country
                                 </p>
                             )}
@@ -163,15 +163,15 @@ export function VisaProcessSection({
                     {selectedVisa && (
                         <div>
                             <h3 className="text-lg font-semibold mb-3">Selected Visa Process</h3>
-                            <Card className="p-6 bg-white border-gray-200 hover:shadow-lg transition-all">
+                            <Card className="p-6 bg-card border-border hover:shadow-lg transition-all">
                                 <div className="flex items-start justify-between mb-4">
                                     <div>
-                                        <h4 className="text-xl font-bold text-gray-900">
+                                        <h4 className="text-xl font-bold text-foreground">
                                             {selectedVisa.country} Visa Process
                                         </h4>
                                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${selectedVisa.status === 'active'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-gray-100 text-gray-800'
+                                            ? 'bg-accent text-primary'
+                                            : 'bg-muted text-foreground'
                                             }`}>
                                             {selectedVisa.status}
                                         </span>
@@ -190,40 +190,40 @@ export function VisaProcessSection({
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     <div className="flex items-start gap-2">
-                                        <DollarSign className="h-5 w-5 text-purple-600 mt-0.5" />
+                                        <DollarSign className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Visa Fee</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Visa Fee</p>
+                                            <p className="font-semibold text-foreground">
                                                 {selectedVisa.currency} {selectedVisa.visaFee}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start gap-2">
-                                        <Clock className="h-5 w-5 text-purple-600 mt-0.5" />
+                                        <Clock className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Processing Time</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Processing Time</p>
+                                            <p className="font-semibold text-foreground">
                                                 {selectedVisa.visaProcessingTime} {selectedVisa.visaProcessingTimeUnit}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start gap-2">
-                                        <TrendingUp className="h-5 w-5 text-purple-600 mt-0.5" />
+                                        <TrendingUp className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Success Rate</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Success Rate</p>
+                                            <p className="font-semibold text-foreground">
                                                 {selectedVisa.visaSuccessRate}%
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start gap-2">
-                                        <FileText className="h-5 w-5 text-purple-600 mt-0.5" />
+                                        <FileText className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-500">Documents</p>
-                                            <p className="font-semibold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Documents</p>
+                                            <p className="font-semibold text-foreground">
                                                 {selectedVisa.visaDocuments.length} Required
                                             </p>
                                         </div>
@@ -235,7 +235,7 @@ export function VisaProcessSection({
                 </div>
 
                 <div className="flex justify-end gap-4 pt-6 border-t">
-                    <Button type="submit" className="bg-black hover:bg-black/80">
+                    <Button type="submit" className="bg-primary hover:bg-primary/80">
                         Save & Continue
                     </Button>
                 </div>
@@ -243,24 +243,24 @@ export function VisaProcessSection({
 
             {/* Modal for Full Visa Details */}
             {modalVisa && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-card rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
-                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900">
+                                <h3 className="text-2xl font-bold text-foreground">
                                     {modalVisa.country} Visa Process
                                 </h3>
                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mt-2 ${modalVisa.status === 'active'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-accent text-primary'
+                                    : 'bg-muted text-foreground'
                                     }`}>
                                     {modalVisa.status}
                                 </span>
                             </div>
                             <button
                                 onClick={() => setModalVisa(null)}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                className="p-2 hover:bg-muted rounded-full transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -270,48 +270,48 @@ export function VisaProcessSection({
                         <div className="p-6">
                             {/* Key Metrics */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <Card className="p-4 bg-purple-50 border-purple-200">
+                                <Card className="p-4 bg-accent border-primary/30">
                                     <div className="flex items-start gap-3">
-                                        <DollarSign className="h-5 w-5 text-purple-600 mt-0.5" />
+                                        <DollarSign className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-600">Visa Fee</p>
-                                            <p className="text-lg font-bold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Visa Fee</p>
+                                            <p className="text-lg font-bold text-foreground">
                                                 {modalVisa.currency} {modalVisa.visaFee}
                                             </p>
                                         </div>
                                     </div>
                                 </Card>
 
-                                <Card className="p-4 bg-blue-50 border-blue-200">
+                                <Card className="p-4 bg-accent border-primary/30">
                                     <div className="flex items-start gap-3">
-                                        <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
+                                        <Clock className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-600">Processing Time</p>
-                                            <p className="text-lg font-bold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Processing Time</p>
+                                            <p className="text-lg font-bold text-foreground">
                                                 {modalVisa.visaProcessingTime} {modalVisa.visaProcessingTimeUnit}
                                             </p>
                                         </div>
                                     </div>
                                 </Card>
 
-                                <Card className="p-4 bg-green-50 border-green-200">
+                                <Card className="p-4 bg-accent border-primary/30">
                                     <div className="flex items-start gap-3">
-                                        <TrendingUp className="h-5 w-5 text-green-600 mt-0.5" />
+                                        <TrendingUp className="h-5 w-5 text-primary mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-600">Success Rate</p>
-                                            <p className="text-lg font-bold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Success Rate</p>
+                                            <p className="text-lg font-bold text-foreground">
                                                 {modalVisa.visaSuccessRate}%
                                             </p>
                                         </div>
                                     </div>
                                 </Card>
 
-                                <Card className="p-4 bg-orange-50 border-orange-200">
+                                <Card className="p-4 bg-muted border-border">
                                     <div className="flex items-start gap-3">
-                                        <DollarSign className="h-5 w-5 text-orange-600 mt-0.5" />
+                                        <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                                         <div>
-                                            <p className="text-xs text-gray-600">Renewal Cost</p>
-                                            <p className="text-lg font-bold text-gray-900">
+                                            <p className="text-xs text-muted-foreground">Renewal Cost</p>
+                                            <p className="text-lg font-bold text-foreground">
                                                 {modalVisa.currency} {modalVisa.visaRenewalCost}
                                             </p>
                                         </div>
@@ -323,26 +323,26 @@ export function VisaProcessSection({
                             {modalVisa.visaSteps && modalVisa.visaSteps.length > 0 && (
                                 <div className="mb-6">
                                     <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-gray-700" />
+                                        <FileText className="h-5 w-5 text-foreground" />
                                         Visa Process Steps ({modalVisa.visaSteps.length})
                                     </h4>
                                     <div className="space-y-3">
                                         {modalVisa.visaSteps.map((step) => (
-                                            <Card key={step._id} className="p-4 bg-gray-50">
+                                            <Card key={step._id} className="p-4 bg-muted">
                                                 <div className="flex items-start gap-3">
-                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm font-bold shrink-0">
+                                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold shrink-0">
                                                         {step.stepNumber}
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="flex items-center justify-between">
-                                                            <h5 className="font-semibold text-gray-900">{step.title}</h5>
+                                                            <h5 className="font-semibold text-foreground">{step.title}</h5>
                                                             {step.estimatedDays && (
-                                                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                                                <span className="text-xs bg-accent text-primary px-2 py-1 rounded-full">
                                                                     ~{step.estimatedDays} days
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-sm text-gray-600 mt-1">{step.description}</p>
+                                                        <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
                                                     </div>
                                                 </div>
                                             </Card>
@@ -355,23 +355,23 @@ export function VisaProcessSection({
                             {modalVisa.visaDocuments && modalVisa.visaDocuments.length > 0 && (
                                 <div className="mb-6">
                                     <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-gray-700" />
+                                        <FileText className="h-5 w-5 text-foreground" />
                                         Required Documents ({modalVisa.visaDocuments.length})
                                     </h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {modalVisa.visaDocuments.map((doc) => (
-                                            <Card key={doc._id} className="p-4 bg-gray-50">
+                                            <Card key={doc._id} className="p-4 bg-muted">
                                                 <div className="flex items-start gap-3">
                                                     <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium shrink-0 ${doc.isMandatory
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-destructive/10 text-destructive'
+                                                        : 'bg-accent text-primary'
                                                         }`}>
                                                         {doc.isMandatory ? 'Required' : 'Optional'}
                                                     </span>
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{doc.name}</p>
+                                                        <p className="font-medium text-foreground">{doc.name}</p>
                                                         {doc.description && (
-                                                            <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
+                                                            <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -385,23 +385,23 @@ export function VisaProcessSection({
                             {modalVisa.renewalDocuments && modalVisa.renewalDocuments.length > 0 && (
                                 <div>
                                     <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                        <FileText className="h-5 w-5 text-gray-700" />
+                                        <FileText className="h-5 w-5 text-foreground" />
                                         Renewal Documents ({modalVisa.renewalDocuments.length})
                                     </h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {modalVisa.renewalDocuments.map((doc) => (
-                                            <Card key={doc._id} className="p-4 bg-gray-50">
+                                            <Card key={doc._id} className="p-4 bg-muted">
                                                 <div className="flex items-start gap-3">
                                                     <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium shrink-0 ${doc.isMandatory
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-destructive/10 text-destructive'
+                                                        : 'bg-accent text-primary'
                                                         }`}>
                                                         {doc.isMandatory ? 'Required' : 'Optional'}
                                                     </span>
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{doc.name}</p>
+                                                        <p className="font-medium text-foreground">{doc.name}</p>
                                                         {doc.description && (
-                                                            <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
+                                                            <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
                                                         )}
                                                     </div>
                                                 </div>

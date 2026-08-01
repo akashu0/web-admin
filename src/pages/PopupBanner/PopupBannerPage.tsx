@@ -22,6 +22,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '../../components/ui/alert-dialog';
+import { PageHeader } from '../../components/common/PageHeader';
+import { PageLoader } from '../../components/common/PageLoader';
+import { EmptyState } from '../../components/common/states';
 import { popupBannerService } from '../../services/popupBannerService';
 import type { IPopupBanner } from '../../types/popupBanner';
 
@@ -101,7 +104,8 @@ export const PopupBannerPage = () => {
 
     const handleToggle = async (id: string) => {
         try {
-            const res = await popupBannerService.toggleStatus(id);
+            const current = banners.find(b => b._id === id);
+            const res = await popupBannerService.setActive(id, !current?.isActive);
             setBanners(prev => prev.map(b => b._id === id ? res.data : b));
             toast.success('Banner status updated');
         } catch {
@@ -123,37 +127,35 @@ export const PopupBannerPage = () => {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Popup Banners</h1>
-                    <p className="text-sm text-zinc-500 mt-1">
-                        Manage homepage popup banners. The most recent active banner is shown to website visitors.
-                    </p>
-                </div>
-                <Button onClick={() => setShowForm(true)} className="gap-2">
-                    <Plus size={16} />
-                    Upload Banner
-                </Button>
-            </div>
+        <div>
+            <PageHeader
+                title="Popup Banners"
+                subtitle="Manage homepage popup banners. The most recent active banner is shown to website visitors."
+                actions={
+                    <Button onClick={() => setShowForm(true)} className="gap-2">
+                        <Plus size={16} />
+                        Upload Banner
+                    </Button>
+                }
+            />
 
             {/* Banner Grid */}
             {loading ? (
-                <div className="flex items-center justify-center h-40 text-zinc-400">Loading...</div>
+                <PageLoader />
             ) : banners.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-60 border border-dashed border-zinc-200 rounded-xl text-zinc-400 gap-3">
-                    <ImageIcon size={40} strokeWidth={1.2} />
-                    <p className="text-sm">No banners yet. Upload one to get started.</p>
-                </div>
+                <EmptyState
+                    icon={<ImageIcon size={32} strokeWidth={1.2} />}
+                    title="No banners yet"
+                    description="Upload one to get started."
+                />
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {banners.map(banner => (
                         <div
                             key={banner._id}
-                            className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm flex flex-col"
+                            className="bg-card border border-border rounded-xl overflow-hidden shadow-sm flex flex-col"
                         >
-                            <div className="relative aspect-[2/1] bg-zinc-100">
+                            <div className="relative aspect-[2/1] bg-muted">
                                 <img
                                     src={banner.imageUrl}
                                     alt={banner.title}
@@ -161,8 +163,8 @@ export const PopupBannerPage = () => {
                                 />
                                 <div className="absolute top-2 right-2">
                                     <Badge
-                                        variant={banner.isActive ? 'default' : 'secondary'}
-                                        className={banner.isActive ? 'bg-green-600 hover:bg-green-600' : ''}
+                                        tone={banner.isActive ? "green" : "neutral"}
+                                        className={banner.isActive ? 'bg-primary text-primary-foreground' : ''}
                                     >
                                         {banner.isActive ? 'Active' : 'Inactive'}
                                     </Badge>
@@ -170,19 +172,19 @@ export const PopupBannerPage = () => {
                             </div>
 
                             <div className="p-4 flex flex-col gap-2 flex-1">
-                                <p className="font-medium text-sm text-zinc-800 truncate">{banner.title}</p>
+                                <p className="font-medium text-sm text-foreground truncate">{banner.title}</p>
                                 {banner.linkUrl && (
                                     <a
                                         href={banner.linkUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-xs text-blue-500 hover:underline truncate"
+                                        className="flex items-center gap-1 text-xs text-primary hover:underline truncate"
                                     >
                                         <ExternalLink size={12} />
                                         {banner.linkUrl}
                                     </a>
                                 )}
-                                <p className="text-xs text-zinc-400 mt-auto">
+                                <p className="text-xs text-muted-foreground mt-auto">
                                     {new Date(banner.createdAt).toLocaleDateString('en-GB', {
                                         day: 'numeric', month: 'short', year: 'numeric',
                                     })}
@@ -197,14 +199,14 @@ export const PopupBannerPage = () => {
                                     onClick={() => handleToggle(banner._id)}
                                 >
                                     {banner.isActive
-                                        ? <><ToggleRight size={15} className="text-green-600" /> Deactivate</>
+                                        ? <><ToggleRight size={15} className="text-primary" /> Deactivate</>
                                         : <><ToggleLeft size={15} /> Activate</>
                                     }
                                 </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
                                     onClick={() => setDeleteId(banner._id)}
                                 >
                                     <Trash2 size={15} />
@@ -223,7 +225,7 @@ export const PopupBannerPage = () => {
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
                             <Input
                                 id="title"
                                 placeholder="e.g. Summer Intake 2025"
@@ -234,7 +236,7 @@ export const PopupBannerPage = () => {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="linkUrl">Link URL <span className="text-zinc-400 text-xs">(optional)</span></Label>
+                            <Label htmlFor="linkUrl">Link URL <span className="text-muted-foreground text-xs">(optional)</span></Label>
                             <Input
                                 id="linkUrl"
                                 placeholder="https://myeduguardian.com/..."
@@ -244,9 +246,9 @@ export const PopupBannerPage = () => {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label htmlFor="image">Banner Image <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="image">Banner Image <span className="text-destructive">*</span></Label>
                             <div
-                                className="border-2 border-dashed border-zinc-200 rounded-lg p-4 cursor-pointer hover:border-zinc-400 transition-colors"
+                                className="border-2 border-dashed border-border rounded-lg p-4 cursor-pointer hover:border-input transition-colors"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {preview ? (
@@ -256,7 +258,7 @@ export const PopupBannerPage = () => {
                                         className="w-full rounded-md object-cover max-h-44"
                                     />
                                 ) : (
-                                    <div className="flex flex-col items-center justify-center gap-2 py-4 text-zinc-400">
+                                    <div className="flex flex-col items-center justify-center gap-2 py-4 text-muted-foreground">
                                         <ImageIcon size={32} strokeWidth={1.2} />
                                         <p className="text-sm">Click to select image</p>
                                         <p className="text-xs">JPG, PNG, WEBP up to 5MB</p>
@@ -301,7 +303,7 @@ export const PopupBannerPage = () => {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-destructive hover:bg-destructive"
                             onClick={handleDelete}
                         >
                             Delete

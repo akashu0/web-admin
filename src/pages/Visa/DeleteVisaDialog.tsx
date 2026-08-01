@@ -57,7 +57,7 @@ export function DeleteVisaDialog({
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the visa
                         for{" "}
-                        <span className="font-semibold text-gray-900">"{visa?.country}"</span>{" "}
+                        <span className="font-semibold text-foreground">"{visa?.country}"</span>{" "}
                         and remove all associated data.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -66,7 +66,7 @@ export function DeleteVisaDialog({
                     <AlertDialogAction
                         onClick={handleDelete}
                         disabled={isDeleting}
-                        className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        className="bg-destructive hover:bg-destructive focus:ring-destructive"
                     >
                         {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Delete

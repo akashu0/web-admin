@@ -79,7 +79,7 @@ export function MediaSection({ slug, initialData, onSuccess }: MediaSectionProps
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="youtubeVideoUrl" className="flex items-center gap-2">
-                            <Youtube className="h-4 w-4 text-red-500" />
+                            <Youtube className="h-4 w-4 text-destructive" />
                             YouTube Video URL
                         </Label>
                         <Input
@@ -88,11 +88,11 @@ export function MediaSection({ slug, initialData, onSuccess }: MediaSectionProps
                             placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                         />
                         {errors.youtubeVideoUrl && (
-                            <p className="text-sm text-red-500">
+                            <p className="text-sm text-destructive">
                                 {errors.youtubeVideoUrl.message}
                             </p>
                         )}
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                             Supported formats: youtube.com/watch?v=VIDEO_ID or youtu.be/VIDEO_ID
                         </p>
                     </div>

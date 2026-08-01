@@ -1,32 +1,27 @@
 // components/CountryList.tsx
-import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-    Search,
-    Plus,
-    Edit,
-    Trash2,
-    Loader2,
-    Globe,
-    MapPin,
-    Eye
-} from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Search, Plus, Edit, Trash2, MapPin, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { PageHeader } from '@/components/common/PageHeader';
+import { ResourceTable, type Column } from '@/components/common/ResourceTable';
+import { useDebounce } from '@/hooks/use-debounce';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 import { countryService } from '@/services/countryService';
 import type { ICountry } from '@/types/country';
 import { CountryForm } from './CountryForm';
-import {
-    useReactTable,
-    getCoreRowModel,
-    flexRender,
-    createColumnHelper,
-} from '@tanstack/react-table';
-import { useNavigate } from 'react-router-dom';
 
 export default function CountryList() {
     const navigate = useNavigate();
     const [countries, setCountries] = useState<ICountry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const searchTerm = useDebounce(searchInput);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [total, setTotal] = useState(0);
@@ -71,6 +66,9 @@ export default function CountryList() {
         } catch (error) {
             console.error('Error fetching countries:', error);
             if (!append) setCountries([]);
+            // Without this the scroll sentinel refires the failed request forever.
+            setHasMore(false);
+            toast.error('Failed to fetch countries');
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -87,19 +85,11 @@ export default function CountryList() {
         }
     };
 
-    const handleScroll = useCallback(() => {
-        if (loadingRef.current || !hasMore) return;
-        const scrollTop = window.innerHeight + window.scrollY;
-        const threshold = document.documentElement.scrollHeight - 300;
-        if (scrollTop >= threshold) {
-            setPage((p) => p + 1);
-        }
-    }, [hasMore]);
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [handleScroll]);
+    // The scroll container is AppLayout's <main>, which the shared hook observes.
+    const sentinelRef = useInfiniteScroll(() => setPage((p) => p + 1), {
+        hasMore,
+        loading: isLoadingMore || isLoading,
+    });
 
     const handleEdit = (country: ICountry) => {
         navigate(`/countries/edit/${country._id}`);
@@ -114,10 +104,11 @@ export default function CountryList() {
 
         try {
             await countryService.deleteCountry(id);
+            toast.success('Country deleted');
             refetch();
         } catch (error) {
             console.error('Error deleting country:', error);
-            alert('Failed to delete country');
+            toast.error('Failed to delete country');
         }
     };
 
@@ -130,199 +121,115 @@ export default function CountryList() {
         refetch();
     };
 
-    const columnHelper = createColumnHelper<ICountry>();
-
-    const columns = [
-        columnHelper.accessor('name', {
+    const columns: Column<ICountry>[] = useMemo(() => [
+        {
+            key: 'name',
             header: 'Country',
-            cell: (info) => (
+            render: (country) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-gray-600 font-semibold text-xs">
-                            {info.getValue()?.slice(0, 2).toUpperCase()}
-                        </span>
+                    <div className="flex size-9 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                        {country.name?.slice(0, 2).toUpperCase()}
                     </div>
-                    <div>
-                        <div className="font-medium text-gray-900">{info.getValue()}</div>
-                    </div>
+                    <span className="font-medium">{country.name}</span>
                 </div>
             ),
-        }),
-        columnHelper.accessor('capital', {
+        },
+        {
+            key: 'capital',
             header: 'Capital',
-            cell: (info) => (
+            render: (country) => (
                 <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-900">{info.getValue()}</span>
+                    <MapPin className="size-4 text-muted-foreground" />
+                    <span>{country.capital}</span>
                 </div>
             ),
-        }),
-        columnHelper.accessor('continent', {
+        },
+        {
+            key: 'continent',
             header: 'Continent',
-            cell: (info) => <span className="text-gray-900">{info.getValue()}</span>,
-        }),
-        // columnHelper.accessor('spokenLanguages', {
-        //     header: 'Language',
-        //     cell: (info) => <span className="text-gray-600">{info.getValue()}</span>,
-        // }),
-        columnHelper.accessor('currency', {
+            render: (country) => <span>{country.continent}</span>,
+        },
+        {
+            key: 'currency',
             header: 'Currency',
-            cell: (info) => <span className="font-mono text-gray-900">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor('status', {
+            render: (country) => <span className="font-mono">{country.currency}</span>,
+        },
+        {
+            key: 'status',
             header: 'Status',
-            cell: (info) => (
-                <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${info.getValue() === 'published'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                >
-                    {info.getValue()}
-                </span>
+            render: (country) => (
+                <Badge tone={country.status === 'published' ? 'green' : 'neutral'}>
+                    {country.status}
+                </Badge>
             ),
-        }),
-        columnHelper.display({
-            id: 'actions',
+        },
+        {
+            key: 'actions',
             header: 'Actions',
-            cell: (info) => (
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => handleView(info.row.original)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg cursor-pointer transition-colors"
-                        title="View"
-                    >
-                        <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => handleEdit(info.row.original)}
-                        className="p-2 text-purple-600 hover:bg-purple-50 cursor-pointer rounded-lg transition-colors"
-                        title="Edit"
-                    >
-                        <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => handleDelete(info.row.original._id)}
-                        className="p-2 text-red-600 hover:bg-red-50 cursor-pointer rounded-lg transition-colors"
+            align: 'right',
+            render: (country) => (
+                <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" title="View" onClick={() => handleView(country)}>
+                        <Eye className="size-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Edit" onClick={() => handleEdit(country)}>
+                        <Edit className="size-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         title="Delete"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDelete(country._id)}
                     >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                        <Trash2 className="size-4" />
+                    </Button>
                 </div>
             ),
-        }),
-    ];
-
-    const table = useReactTable({
-        data: countries,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-    });
-
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], []);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                                <Globe className="w-8 h-8 text-black" />
-                                Country Management
-                            </h1>
-                            <p className="text-gray-600 mt-2">Manage study abroad destinations</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setIsFormOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-black text-white rounded-lg hover:bg-black transition-colors"
-                            >
-                                <Plus className="w-5 h-5" />
-                                Add Country
-                            </button>
-                        </div>
-                    </div>
+        <div>
+            <PageHeader
+                title="Countries"
+                subtitle="Manage study abroad destinations"
+                actions={
+                    <Button onClick={() => setIsFormOpen(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Country
+                    </Button>
+                }
+            />
 
-                    {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search countries..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black-500 focus:border-black-500"
-                            />
-                        </div>
-
-
-                    </div>
+            <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+                <div className="relative min-w-[200px] flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search countries..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="pl-9"
+                    />
                 </div>
+                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+                    {countries.length} of {total}
+                </span>
+            </Card>
 
-                {/* Table */}
-                {isLoading ? (
-                    <div className="flex items-center justify-center py-12 bg-white rounded-lg">
-                        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
-                    </div>
-                ) : countries.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-                        <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No countries found</h3>
-                        <p className="text-gray-600 mb-6">Get started by adding your first country</p>
-                        <button
-                            onClick={() => setIsFormOpen(true)}
-                            className="px-6 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg  transition-colors"
-                        >
-                            Add Country
-                        </button>
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-200">
-                                    {table.getHeaderGroups().map((headerGroup) => (
-                                        <tr key={headerGroup.id}>
-                                            {headerGroup.headers.map((header) => (
-                                                <th
-                                                    key={header.id}
-                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                >
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {table.getRowModel().rows.map((row) => (
-                                        <tr key={row.id} className="hover:bg-gray-50">
-                                            {row.getVisibleCells().map((cell) => (
-                                                <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Infinite scroll status */}
-                        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-center">
-                            {isLoadingMore ? (
-                                <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
-                            ) : !hasMore && countries.length > 0 ? (
-                                <span className="text-sm text-gray-500">
-                                    All {total} countries loaded
-                                </span>
-                            ) : null}
-                        </div>
-                    </div>
-                )}
-            </div>
+            <Card className="overflow-hidden">
+                <ResourceTable
+                    columns={columns}
+                    rows={countries}
+                    isLoading={isLoading}
+                    sentinelRef={sentinelRef}
+                    isFetchingNextPage={isLoadingMore}
+                    hasNextPage={hasMore}
+                    emptyTitle="No countries found"
+                    emptyDescription="Get started by adding your first country."
+                />
+            </Card>
 
             {/* Form Modal */}
             {isFormOpen && (

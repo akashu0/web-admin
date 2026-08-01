@@ -73,10 +73,10 @@ export default function EditEgAcademyCourse() {
 
   const handleOverviewSave = async (data: EgAcademyOverview) => {
     try {
-      const response = await egAcademyCourseService.updateOverview(slug!, data);
+      const updated = await egAcademyCourseService.updateOverview(slug!, data);
       toast.success('Course overview updated successfully');
-      // If slug changed, navigate to new URL
-      const newSlug = response.course.overview?.slug;
+      // The API renames the slug when the course name changes.
+      const newSlug = updated.slug;
       if (newSlug && newSlug !== slug) {
         navigate(`/eg-academy/courses/${newSlug}`, { replace: true });
       } else {
@@ -91,28 +91,28 @@ export default function EditEgAcademyCourse() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (!courseData) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-gray-500">Course not found</p>
+      <div className="flex h-96 items-center justify-center">
+        <p className="text-muted-foreground">Course not found</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="-m-4 flex h-[calc(100dvh-3.5rem)] bg-canvas lg:-m-5">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 overflow-y-auto shrink-0">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Edit Course</h2>
+      <aside className="w-64 bg-card border-r border-border overflow-y-auto shrink-0">
+        <div className="p-6 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">Edit Course</h2>
           <p
-            className="text-sm text-gray-500 mt-1 truncate"
+            className="text-sm text-muted-foreground mt-1 truncate"
             title={courseData.overview.courseName}
           >
             {courseData.overview.courseName}
@@ -127,8 +127,8 @@ export default function EditEgAcademyCourse() {
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
                 activeTab === item.id
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-foreground hover:bg-muted'
               )}
             >
               {item.icon}
@@ -141,13 +141,13 @@ export default function EditEgAcademyCourse() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-8 py-4">
+        <div className="sticky top-0 z-10 bg-card border-b border-border px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 {sidebarItems.find(item => item.id === activeTab)?.label}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Update course information and publish when ready
               </p>
             </div>
@@ -158,8 +158,8 @@ export default function EditEgAcademyCourse() {
               className={cn(
                 'gap-2',
                 courseData.status === 'published'
-                  ? 'bg-gray-600 hover:bg-gray-700'
-                  : 'bg-green-600 hover:bg-green-700'
+                  ? 'bg-muted-foreground hover:bg-primary'
+                  : 'bg-primary hover:bg-primary/90'
               )}
             >
               {isPublishing ? (
@@ -178,7 +178,7 @@ export default function EditEgAcademyCourse() {
         </div>
 
         <div className="p-8">
-          <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="max-w-5xl mx-auto bg-card rounded-lg shadow-sm border border-border p-6">
             {activeTab === 'overview' && (
               <EgAcademyOverviewSection
                 data={courseData.overview}

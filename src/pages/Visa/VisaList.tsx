@@ -1,43 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-    type ColumnDef,
-    type ColumnFiltersState,
-    type SortingState,
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getSortedRowModel,
-    useReactTable,
-} from "@tanstack/react-table";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Eye, Plus, MoreHorizontal, Pencil, Trash2, Search } from "lucide-react";
 
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "../../components/ui/table";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import { Badge } from "../../components/ui/badge";
+} from "@/components/ui/dropdown-menu";
+import { PageHeader } from "@/components/common/PageHeader";
+import { ResourceTable, type Column } from "@/components/common/ResourceTable";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
-import {
-    Plus,
-    MoreHorizontal,
-    Pencil,
-    Trash2,
-    Search,
-    Loader2,
-} from "lucide-react";
-
-import { visaService } from "../../services/visaService";
+import { visaService } from "@/services/visaService";
 import { toast } from "sonner";
 import { DeleteVisaDialog } from "./DeleteVisaDialog";
 import { AddEditVisaModal } from "./AddEditVisaModal";
@@ -53,11 +32,12 @@ interface PaginationInfo {
 }
 
 const VisaList: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [visas, setVisas] = useState<Visa[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [search, setSearch] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
     const [editingVisa, setEditingVisa] = useState<Visa | null>(null);
     const [deletingVisa, setDeletingVisa] = useState<Visa | null>(null);
@@ -75,6 +55,17 @@ const VisaList: React.FC = () => {
 
     const isReset = useRef(true);
     const loadingRef = useRef(false);
+
+    // The view page's Edit button sends the record back here, because the editor
+    // is a modal on this list and a modal has no URL of its own. The state is
+    // cleared straight away so a refresh does not reopen it.
+    useEffect(() => {
+        const incoming = (location.state as { editVisa?: Visa } | null)?.editVisa;
+        if (incoming) {
+            setEditingVisa(incoming);
+            navigate(location.pathname, { replace: true, state: null });
+        }
+    }, [location, navigate]);
 
     useEffect(() => {
         fetchVisas(page, !isReset.current);
@@ -98,6 +89,10 @@ const VisaList: React.FC = () => {
             setPagination(response.pagination);
         } catch (error) {
             console.error("Error fetching visas:", error);
+            // The previous page's hasNextPage is still true, so leaving it alone
+            // lets the scroll sentinel refire this failed request forever — one
+            // error toast per intersection.
+            setPagination((prev) => ({ ...prev, hasNextPage: false }));
             toast.error("Failed to fetch visas");
         } finally {
             setIsLoading(false);
@@ -115,218 +110,138 @@ const VisaList: React.FC = () => {
         }
     };
 
-    const handleScroll = useCallback(() => {
-        if (loadingRef.current || !pagination.hasNextPage) return;
-        const scrollTop = window.innerHeight + window.scrollY;
-        const threshold = document.documentElement.scrollHeight - 300;
-        if (scrollTop >= threshold) {
-            setPage((p) => p + 1);
-        }
-    }, [pagination.hasNextPage]);
+    const sentinelRef = useInfiniteScroll(() => setPage((p) => p + 1), {
+        hasMore: pagination.hasNextPage,
+        loading: isLoadingMore || isLoading,
+    });
 
-    useEffect(() => {
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [handleScroll]);
+    // Country search filters the rows already loaded — the visa endpoint takes no
+    // search param, so this stays a client-side narrowing of the current list.
+    const rows = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        return q ? visas.filter((v) => v.country?.toLowerCase().includes(q)) : visas;
+    }, [visas, search]);
 
-    const columns: ColumnDef<Visa>[] = [
+    const columns: Column<Visa>[] = useMemo(() => [
         {
-            accessorKey: "country",
+            key: "country",
             header: "Country",
-            cell: ({ row }) => (
-                <div className="font-medium">{row.getValue("country")}</div>
+            render: (visa) => <span className="font-medium">{visa.country}</span>,
+        },
+        {
+            key: "visaFee",
+            header: "Visa Fee",
+            render: (visa) => (
+                <span className="tabular-nums">
+                    {visa.currency} {visa.visaFee.toLocaleString()}
+                </span>
             ),
         },
         {
-            accessorKey: "visaFee",
-            header: "Visa Fee",
-            cell: ({ row }) => {
-                const visa = row.original;
-                return (
-                    <div>
-                        {visa.currency} {visa.visaFee.toLocaleString()}
-                    </div>
-                );
-            },
-        },
-        {
-            accessorKey: "visaSuccessRate",
+            key: "visaSuccessRate",
             header: "Success Rate",
-            cell: ({ row }) => {
-                const rate = row.getValue<number>("visaSuccessRate");
-                return <span className="font-medium">{rate}%</span>;
-            },
+            render: (visa) => <span className="font-medium tabular-nums">{visa.visaSuccessRate}%</span>,
         },
         {
-            accessorKey: "visaProcessingTime",
+            key: "visaProcessingTime",
             header: "Processing Time",
-            cell: ({ row }) => {
-                const visa = row.original;
-                return (
-                    <div>
-                        {visa.visaProcessingTime} {visa.visaProcessingTimeUnit}
-                    </div>
-                );
-            },
+            render: (visa) => (
+                <span>
+                    {visa.visaProcessingTime} {visa.visaProcessingTimeUnit}
+                </span>
+            ),
         },
         {
-            accessorKey: "visaRenewalCost",
+            key: "visaRenewalCost",
             header: "Renewal Cost",
-            cell: ({ row }) => {
-                const visa = row.original;
-                return (
-                    <div>
-                        {visa.currency} {visa.visaRenewalCost.toLocaleString()}
-                    </div>
-                );
-            },
+            render: (visa) => (
+                <span className="tabular-nums">
+                    {visa.currency} {visa.visaRenewalCost.toLocaleString()}
+                </span>
+            ),
         },
         {
-            accessorKey: "status",
+            key: "status",
             header: "Status",
-            cell: ({ row }) => {
-                const status = row.getValue<string>("status");
-                return (
-                    <Badge variant={status === "active" ? "default" : "secondary"}>
-                        {status}
-                    </Badge>
-                );
-            },
+            render: (visa) => (
+                <Badge tone={visa.status === "active" ? "green" : "neutral"}>{visa.status}</Badge>
+            ),
         },
         {
-            id: "actions",
+            key: "actions",
             header: "Actions",
-            cell: ({ row }) => {
-                const visa = row.original;
-
-                return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white">
-                            <DropdownMenuItem onClick={() => setEditingVisa(visa)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => setDeletingVisa(visa)}
-                                className="text-red-600"
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                );
-            },
+            align: "right",
+            render: (visa) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigate(`/visas/view/${visa._id}`)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditingVisa(visa)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => setDeletingVisa(visa)}
+                            className="text-destructive focus:text-destructive"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ),
         },
-    ];
-
-    const table = useReactTable({
-        data: visas,
-        columns,
-        state: { sorting, columnFilters },
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-    });
+        // navigate is stable in react-router v6
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], []);
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold">Visa Management</h1>
-                        <p className="text-sm text-gray-500">
-                            Manage visa requirements and processing details
-                        </p>
-                    </div>
+        <div>
+            <PageHeader
+                title="Visa Management"
+                subtitle="Manage visa requirements and processing details"
+                actions={
                     <Button onClick={() => setIsAddModalOpen(true)}>
                         <Plus className="mr-2 h-4 w-4" />
                         Add Visa
                     </Button>
-                </div>
+                }
+            />
 
-                {/* Search */}
-                <div className="relative max-w-sm">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+                <div className="relative min-w-[200px] flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search by country..."
-                        value={
-                            (table.getColumn("country")?.getFilterValue() as string) ?? ""
-                        }
-                        onChange={(e) =>
-                            table.getColumn("country")?.setFilterValue(e.target.value)
-                        }
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         className="pl-9"
                     />
                 </div>
+                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+                    {visas.length} of {pagination.total}
+                </span>
+            </Card>
 
-                {/* Table */}
-                <div className="rounded-lg border bg-white shadow">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((group) => (
-                                <TableRow key={group.id}>
-                                    {group.headers.map((header) => (
-                                        <TableHead key={header.id}>
-                                            {flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-                                        </TableHead>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="text-center">
-                                        <Loader2 className="inline h-6 w-6 animate-spin" />
-                                    </TableCell>
-                                </TableRow>
-                            ) : table.getRowModel().rows.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="text-center">
-                                        No visas found
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-
-                {/* Infinite scroll status */}
-                <div className="flex items-center justify-center py-4">
-                    {isLoadingMore ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
-                    ) : !pagination.hasNextPage && visas.length > 0 ? (
-                        <span className="text-sm text-gray-500">
-                            All {pagination.total} visas loaded
-                        </span>
-                    ) : null}
-                </div>
-            </div>
+            <Card className="overflow-hidden">
+                <ResourceTable
+                    columns={columns}
+                    rows={rows}
+                    isLoading={isLoading}
+                    sentinelRef={sentinelRef}
+                    isFetchingNextPage={isLoadingMore}
+                    hasNextPage={pagination.hasNextPage}
+                    emptyTitle="No visas found"
+                    emptyDescription={search ? "No country matches that search." : undefined}
+                />
+            </Card>
 
             <AddEditVisaModal
                 isOpen={isAddModalOpen || !!editingVisa}
