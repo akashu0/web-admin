@@ -51,6 +51,11 @@ const STREAM_OPTIONS = [
     'Pharmacy & Pharmaceutical Sciences',
 ] as const;
 
+// Card fields live under `overview` — the Go API keeps the document's nesting
+// (only the portal list flattens it). Reading them off the row is what left
+// every column, image included, blank after the cutover.
+const ov = (course: Course) => course.overview ?? ({} as Course["overview"]);
+
 interface CourseFilters {
     search?: string;
     sortBy?: string;
@@ -199,13 +204,13 @@ export function CourseList() {
                 <div className="flex items-center gap-3">
                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border">
                         <img
-                            src={course.courseImage || "/placeholder-course.jpg"}
-                            alt={course.courseName || "Course"}
+                            src={(ov(course).courseImage as string) || "/placeholder-course.jpg"}
+                            alt={ov(course).courseName || "Course"}
                             className="h-full w-full object-cover"
                         />
                     </div>
                     <div className="min-w-0">
-                        <div className="truncate font-medium">{course.courseName || "—"}</div>
+                        <div className="truncate font-medium">{ov(course).courseName || "—"}</div>
                         {course.slug && (
                             <div className="truncate text-xs text-muted-foreground">{course.slug}</div>
                         )}
@@ -216,17 +221,17 @@ export function CourseList() {
         {
             key: "awardedBy",
             header: "Awarded By",
-            render: (course) => <span className="capitalize">{course.awardedBy || "—"}</span>,
+            render: (course) => <span className="capitalize">{ov(course).awardedBy || "—"}</span>,
         },
         {
             key: "level",
             header: "Level",
-            render: (course) => <span className="capitalize">{course.level || "—"}</span>,
+            render: (course) => <span className="capitalize">{ov(course).level || "—"}</span>,
         },
         {
             key: "studyMode",
             header: "Study Mode",
-            render: (course) => <span className="capitalize">{course.studyMode || "—"}</span>,
+            render: (course) => <span className="capitalize">{ov(course).studyMode || "—"}</span>,
         },
         {
             key: "status",

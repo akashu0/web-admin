@@ -127,9 +127,17 @@ export default function CountryList() {
             header: 'Country',
             render: (country) => (
                 <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-                        {country.name?.slice(0, 2).toUpperCase()}
-                    </div>
+                    {country.logo ? (
+                        <img
+                            src={country.logo}
+                            alt=""
+                            className="size-9 rounded-md border border-border object-cover"
+                        />
+                    ) : (
+                        <div className="flex size-9 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                            {country.name?.slice(0, 2).toUpperCase()}
+                        </div>
+                    )}
                     <span className="font-medium">{country.name}</span>
                 </div>
             ),
