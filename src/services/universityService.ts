@@ -1,4 +1,4 @@
-import type { University, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
+import type { University, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
 import { apiClient } from './api';
 
 export const universityService = {
@@ -7,6 +7,14 @@ export const universityService = {
             params,
         });
         return response.data;
+    },
+
+    // Narrowed by country, so picking one shrinks the city list to its cities.
+    getFacets: async (country?: string): Promise<UniversityFacets> => {
+        const response = await apiClient.get<{ data: UniversityFacets }>(`/universities/facets`, {
+            params: country ? { country } : undefined,
+        });
+        return response.data.data;
     },
     createUniversity: async (data: FormData): Promise<UniversityResponse> => {
         const response = await apiClient.post<UniversityResponse>(

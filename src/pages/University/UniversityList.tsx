@@ -20,13 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import {
     DropdownMenu,
@@ -38,7 +31,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ResourceTable, type Column } from "@/components/common/ResourceTable";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import type { University, UniversityQueryParams } from "@/types/university";
+import { useDebounce } from "@/hooks/use-debounce";
+import { FilterSelect } from "@/components/common/FilterSelect";
+import type { University, UniversityFacets, UniversityQueryParams } from "@/types/university";
 import { universityService } from "@/services/universityService";
 import { AddUniversityModal } from "./AddUniversityModal";
 
@@ -65,60 +60,69 @@ export function UniversityList() {
         status: "all",
     });
 
-    // Text-filter inputs are kept local and pushed into `filters` on a short
-    // debounce, so typing doesn't fire a request on every keystroke.
+    // Search stays free text; everything else is a Select now, because the API
+    // filters by exact equality — a typed "london" never matched the stored
+    // "London", and Country/City weren't even in the filter allowlist.
     const [searchInput, setSearchInput] = useState("");
-    const [countryInput, setCountryInput] = useState("");
-    const [cityInput, setCityInput] = useState("");
     const [locationInput, setLocationInput] = useState("");
+    const search = useDebounce(searchInput, 400);
+    const location = useDebounce(locationInput, 400);
+
+    // The values universities actually carry, narrowed to the chosen country so
+    // the City list is that country's cities.
+    const [facets, setFacets] = useState<UniversityFacets>({
+        countries: [], continents: [], cities: [], universityTypes: [], streams: [],
+    });
 
     useEffect(() => {
-        const t = setTimeout(() => {
-            setFilters((prev) => ({
-                ...prev,
-                search: searchInput.trim() || undefined,
-                country: countryInput.trim() || undefined,
-                city: cityInput.trim() || undefined,
-                location: locationInput.trim() || undefined,
-            }));
-        }, 400);
-        return () => clearTimeout(t);
-    }, [searchInput, countryInput, cityInput, locationInput]);
+        setFilters((prev) => ({
+            ...prev,
+            search: search.trim() || undefined,
+            location: location.trim() || undefined,
+        }));
+    }, [search, location]);
+
+    useEffect(() => {
+        let stale = false;
+        universityService
+            .getFacets(filters.country)
+            .then((next) => {
+                if (stale) return;
+                setFacets(next);
+                // A city that the newly-chosen country has none of would filter
+                // to an empty list with no explanation.
+                setFilters((prev) => ({
+                    ...prev,
+                    city: prev.city && next.cities.includes(prev.city) ? prev.city : undefined,
+                }));
+            })
+            .catch(() => undefined);
+        return () => {
+            stale = true;
+        };
+    }, [filters.country]);
 
     const hasActiveFilters = Boolean(
         (filters.status && filters.status !== "all") ||
         filters.country ||
         filters.city ||
         filters.location ||
+        filters.continent ||
+        filters.streams ||
         filters.universityType ||
         filters.search
     );
 
-    const setStatusFilter = useCallback((value: string) => {
-        setFilters((prev) => ({
-            ...prev,
-            status: value as UniversityFilters["status"],
-        }));
-    }, []);
-
-    const setTypeFilter = useCallback((value: string) => {
-        setFilters((prev) => ({
-            ...prev,
-            universityType:
-                value === "all" ? undefined : (value as "Public" | "Private"),
-        }));
-    }, []);
+    const setFilter = useCallback(
+        (key: keyof UniversityFilters, value: string | undefined) =>
+            setFilters((prev) => ({ ...prev, [key]: value })),
+        []
+    );
 
     const clearFilters = useCallback(() => {
         setSearchInput("");
-        setCountryInput("");
-        setCityInput("");
         setLocationInput("");
-        setFilters((prev) => ({
-            status: "all",
-            sortBy: prev.sortBy,
-            sortOrder: prev.sortOrder,
-        }));
+        setFilters({ status: "all" });
     }, []);
 
     // Distinguishes a filter-driven reset (replace list) from a scroll-driven
@@ -292,21 +296,26 @@ export function UniversityList() {
         {
             key: "logo",
             header: "Logo",
-            render: (university) => (
-                <div className="flex items-center justify-center">
-                    {university.logo ? (
-                        <img
-                            src={university.logo}
-                            alt={university.name}
-                            className="h-10 w-10 rounded-full border border-border object-cover"
-                        />
-                    ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                            {university.name.charAt(0).toUpperCase()}
-                        </div>
-                    )}
-                </div>
-            ),
+            // A record with no logo usually still has a banner — showing that
+            // beats a letter circle, and only a record with neither falls back.
+            render: (university) => {
+                const thumb = university.logo || university.banner;
+                return (
+                    <div className="flex items-center justify-center">
+                        {thumb ? (
+                            <img
+                                src={thumb}
+                                alt={university.name}
+                                className="h-10 w-10 rounded-full border border-border object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                                {university.name.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                    </div>
+                );
+            },
         },
         {
             key: "name",
@@ -466,53 +475,57 @@ export function UniversityList() {
                     />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Status</Label>
-                    <Select value={filters.status ?? "all"} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[150px]">
-                            <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="published">Published</SelectItem>
-                            <SelectItem value="draft">Draft</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Type</Label>
-                    <Select value={filters.universityType ?? "all"} onValueChange={setTypeFilter}>
-                        <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="All Types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="Public">Public</SelectItem>
-                            <SelectItem value="Private">Private</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Country</Label>
-                    <Input
-                        value={countryInput}
-                        onChange={(e) => setCountryInput(e.target.value)}
-                        placeholder="e.g. United Kingdom"
-                        className="w-[170px]"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">City</Label>
-                    <Input
-                        value={cityInput}
-                        onChange={(e) => setCityInput(e.target.value)}
-                        placeholder="e.g. London"
-                        className="w-[150px]"
-                    />
-                </div>
+                <FilterSelect
+                    label="Status"
+                    value={filters.status}
+                    onChange={(v) => setFilter("status", v ?? "all")}
+                    options={[
+                        { value: "all", label: "All Status" },
+                        { value: "published", label: "Published" },
+                        { value: "draft", label: "Draft" },
+                    ]}
+                    allLabel="All Status"
+                    className="w-[150px]"
+                />
+                <FilterSelect
+                    label="Type"
+                    value={filters.universityType}
+                    onChange={(v) => setFilter("universityType", v)}
+                    options={facets.universityTypes}
+                    allLabel="All Types"
+                    className="w-[140px]"
+                />
+                <FilterSelect
+                    label="Country"
+                    value={filters.country}
+                    onChange={(v) => setFilter("country", v)}
+                    options={facets.countries}
+                    allLabel="All Countries"
+                />
+                <FilterSelect
+                    label="City"
+                    value={filters.city}
+                    onChange={(v) => setFilter("city", v)}
+                    options={facets.cities}
+                    allLabel="All Cities"
+                    className="w-[160px]"
+                />
+                <FilterSelect
+                    label="Continent"
+                    value={filters.continent}
+                    onChange={(v) => setFilter("continent", v)}
+                    options={facets.continents}
+                    allLabel="All Continents"
+                    className="w-[150px]"
+                />
+                <FilterSelect
+                    label="Stream"
+                    value={filters.streams}
+                    onChange={(v) => setFilter("streams", v)}
+                    options={facets.streams}
+                    allLabel="All Streams"
+                    className="w-[210px]"
+                />
 
                 <div className="flex flex-col gap-1">
                     <Label className="text-xs text-muted-foreground">Location</Label>

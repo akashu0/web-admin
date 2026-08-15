@@ -28,21 +28,30 @@ interface CountryResponseData {
     message?: string;
 }
 
+export interface CountryQueryParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: 'draft' | 'published' | 'all';
+    continent?: string;
+}
+
 export const countryService = {
-    async getAllCountries(params?: {
-        page?: number;
-        limit?: number;
-        search?: string;
-    }): Promise<CountryListResponse> {
+    async getAllCountries(params?: CountryQueryParams): Promise<CountryListResponse> {
         try {
-
-
             const response = await apiClient.get<CountryListResponse>('/countries', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching countries:', error);
             throw error;
         }
+    },
+
+    // Continents that records actually carry, so the filter never offers one
+    // with nothing behind it.
+    async getFacets(): Promise<{ continents: string[] }> {
+        const response = await apiClient.get<{ data: { continents: string[] } }>('/countries/facets');
+        return response.data.data;
     },
 
     async getCountryById(id: string): Promise<CountryByIdResponse> {

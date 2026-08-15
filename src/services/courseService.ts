@@ -6,10 +6,27 @@ export interface CourseQueryParams {
     page?: number;
     limit?: number;
     search?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    status?: 'draft' | 'published';
+    // No sortBy/sortOrder: the API sorts every list by _id and reads neither.
+    status?: 'draft' | 'published' | 'all';
     stream?: string;
+    country?: string;
+    level?: string;
+    studyMode?: string;
+    awardedBy?: string;
+    /** Months, as the website sends them — the API matches years too. */
+    duration?: string;
+    scholarship?: string;
+}
+
+// The values that actually occur in the catalogue. The enums drifted from the
+// data long ago (most courses say "undergraduate", which is in no enum), so the
+// filter dropdowns are built from this, not from a hardcoded list.
+export interface CourseFacets {
+    levels: string[];
+    studyModes: string[];
+    streams: string[];
+    awardedBy: string[];
+    durations: string[];
 }
 
 export interface GetCoursesResponse {
@@ -39,6 +56,15 @@ export const courseService = {
 
         const response = await apiClient.get(`/courses?${queryString}`);
         return response.data;
+    },
+
+    // Narrowed by country the way the website's dependent dropdowns are, so
+    // picking a country shrinks the level/awarded-by lists to what it teaches.
+    getFacets: async (country?: string): Promise<CourseFacets> => {
+        const response = await apiClient.get<{ data: CourseFacets }>('/courses/facets', {
+            params: country ? { country } : undefined,
+        });
+        return response.data.data;
     },
 
     // Both of these unwrap the shared envelope — the API answers

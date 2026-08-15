@@ -158,10 +158,20 @@ export interface UniversityQueryParams {
     limit?: number;
     status?: "all" | "published" | "draft";
     search?: string;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
+    // No sortBy/sortOrder: the API sorts every list by _id and reads neither.
     country?: string;
     city?: string;
     location?: string;
+    continent?: string;
+    streams?: string;
     universityType?: "all" | "Public" | "Private";
+}
+
+/** The values universities actually carry — what the filter bar may offer. */
+export interface UniversityFacets {
+    countries: string[];
+    continents: string[];
+    cities: string[];
+    universityTypes: string[];
+    streams: string[];
 }

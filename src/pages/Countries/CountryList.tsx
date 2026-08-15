@@ -1,6 +1,6 @@
 // components/CountryList.tsx
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Plus, Edit, Trash2, MapPin, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, MapPin, Eye, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ResourceTable, type Column } from '@/components/common/ResourceTable';
+import { FilterSelect } from '@/components/common/FilterSelect';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 import { countryService } from '@/services/countryService';
@@ -22,6 +23,11 @@ export default function CountryList() {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [searchInput, setSearchInput] = useState('');
     const searchTerm = useDebounce(searchInput);
+    const [status, setStatus] = useState<'all' | 'published' | 'draft'>('all');
+    const [continent, setContinent] = useState<string | undefined>();
+    // Continents the records actually carry, so the filter never offers one
+    // with nothing behind it.
+    const [continents, setContinents] = useState<string[]>([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false);
     const [total, setTotal] = useState(0);
@@ -30,17 +36,24 @@ export default function CountryList() {
     const isReset = useRef(true);
     const loadingRef = useRef(false);
 
-    // Reset to page 1 whenever the search term changes
+    useEffect(() => {
+        countryService
+            .getFacets()
+            .then((f) => setContinents(f.continents ?? []))
+            .catch(() => setContinents([]));
+    }, []);
+
+    // Reset to page 1 whenever a filter changes
     useEffect(() => {
         isReset.current = true;
         setPage(1);
-    }, [searchTerm]);
+    }, [searchTerm, status, continent]);
 
     useEffect(() => {
         fetchCountries(page, !isReset.current);
         isReset.current = false;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, searchTerm]);
+    }, [page, searchTerm, status, continent]);
 
     const fetchCountries = async (pageNum: number, append: boolean) => {
         if (loadingRef.current) return;
@@ -54,7 +67,9 @@ export default function CountryList() {
             const params = {
                 page: pageNum,
                 limit: 10,
+                status,
                 ...(searchTerm && { search: searchTerm }),
+                ...(continent && { continent }),
             };
 
             const response = await countryService.getAllCountries(params);
@@ -211,7 +226,7 @@ export default function CountryList() {
                 }
             />
 
-            <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+            <Card className="mb-4 flex flex-wrap items-end gap-3 p-3">
                 <div className="relative min-w-[200px] flex-1">
                     <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -221,7 +236,44 @@ export default function CountryList() {
                         className="pl-9"
                     />
                 </div>
-                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+
+                <FilterSelect
+                    label="Status"
+                    value={status}
+                    onChange={(v) => setStatus((v as typeof status) ?? 'all')}
+                    options={[
+                        { value: 'all', label: 'All Status' },
+                        { value: 'published', label: 'Published' },
+                        { value: 'draft', label: 'Draft' },
+                    ]}
+                    allLabel="All Status"
+                    className="w-[150px]"
+                />
+                <FilterSelect
+                    label="Continent"
+                    value={continent}
+                    onChange={setContinent}
+                    options={continents}
+                    allLabel="All Continents"
+                    className="w-[160px]"
+                />
+
+                {(searchInput || continent || status !== 'all') && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                            setSearchInput('');
+                            setContinent(undefined);
+                            setStatus('all');
+                        }}
+                    >
+                        <X className="mr-1 h-4 w-4" />
+                        Clear filters
+                    </Button>
+                )}
+
+                <span className="ml-auto pb-2 pr-1 text-xs text-muted-foreground">
                     {countries.length} of {total}
                 </span>
             </Card>

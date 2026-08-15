@@ -1,7 +1,7 @@
 // pages/Course/CourseList.tsx
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, MoreHorizontal, Pencil, Plus, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Plus, RefreshCcw, Search, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,43 +12,41 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ResourceTable, type Column } from "@/components/common/ResourceTable";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { courseService } from "@/services/courseService";
+import { courseService, type CourseFacets } from "@/services/courseService";
+import { countryService } from "@/services/countryService";
+import { FilterSelect } from "@/components/common/FilterSelect";
 import type { Course } from "@/types/course";
 import { AddCourseModal } from "./AddCourseModal";
 
 const LIMIT = 10;
 
-const STREAM_OPTIONS = [
-    'Engineering & Technology',
-    'Business & Management Studies',
-    'Information Technology & Computing',
-    'Accounting & Finance',
-    'Education & Teaching',
-    'Social Sciences & Humanities',
-    'Medicine & Healthcare',
-    'Nursing & Allied Health Sciences',
-    'Artificial Intelligence & Data Science',
-    'Cyber Security & Networking',
-    'Software Engineering & Development',
-    'Hospitality & Tourism Management',
-    'Law & Legal Studies',
-    'Architecture & Interior Design',
-    'Aeronautical & Aviation Studies',
-    'Banking & Financial Technology (FinTech)',
-    'Public Health & Healthcare Management',
-    'Pharmacy & Pharmaceutical Sciences',
+// Duration is a scale, not a vocabulary: it is asked in months and the API
+// resolves it against whichever of durationMonths/durationYears the record
+// actually filled in. The raw facet mixes both units in one list, so it cannot
+// be used here — these are the same steps the website offers.
+const DURATION_OPTIONS = [
+    { value: '6', label: '6 months' },
+    { value: '9', label: '9 months' },
+    { value: '12', label: '1 year' },
+    { value: '24', label: '2 years' },
+    { value: '36', label: '3 years' },
+    { value: '48', label: '4 years' },
+    { value: '60', label: '5 years' },
+] as const;
+
+// These four labels are a mapping, not stored values — the API translates each
+// one onto a university type or a fee type. Keep them in step with
+// scholarshipFilter() in eg-api's course_http.go.
+const SCHOLARSHIP_OPTIONS = [
+    'Public Universities',
+    'Private Universities',
+    'Tuition Fee Sponsored',
+    'Fully Funded',
 ] as const;
 
 // Card fields live under `overview` — the Go API keeps the document's nesting
@@ -58,10 +56,14 @@ const ov = (course: Course) => course.overview ?? ({} as Course["overview"]);
 
 interface CourseFilters {
     search?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    status?: 'draft' | 'published';
+    status?: 'draft' | 'published' | 'all';
     stream?: string;
+    country?: string;
+    level?: string;
+    studyMode?: string;
+    awardedBy?: string;
+    duration?: string;
+    scholarship?: string;
 }
 
 export function CourseList() {
@@ -81,9 +83,48 @@ export function CourseList() {
         status: 'published',
     });
 
+    // The values that actually occur, narrowed to the chosen country. Options
+    // come from here rather than from an enum: most records say "undergraduate"
+    // and "offline", neither of which any enum in this repo contains, so a
+    // hardcoded list would offer choices that return nothing.
+    const [facets, setFacets] = useState<CourseFacets>({
+        levels: [], studyModes: [], streams: [], awardedBy: [], durations: [],
+    });
+    const [countries, setCountries] = useState<string[]>([]);
+
     useEffect(() => {
         setFilters((prev) => ({ ...prev, search: search || undefined }));
     }, [search]);
+
+    useEffect(() => {
+        countryService
+            .getAllCountries({ limit: 200 })
+            .then((res) => setCountries((res.data ?? []).map((c) => c.name).filter(Boolean)))
+            .catch(() => setCountries([]));
+    }, []);
+
+    useEffect(() => {
+        let stale = false;
+        courseService
+            .getFacets(filters.country)
+            .then((next) => {
+                if (stale) return;
+                setFacets(next);
+                // A sub-filter that the new country does not offer would return
+                // an empty list forever, with no clue why. Drop it.
+                setFilters((prev) => ({
+                    ...prev,
+                    level: prev.level && next.levels.includes(prev.level) ? prev.level : undefined,
+                    studyMode: prev.studyMode && next.studyModes.includes(prev.studyMode) ? prev.studyMode : undefined,
+                    stream: prev.stream && next.streams.includes(prev.stream) ? prev.stream : undefined,
+                    awardedBy: prev.awardedBy && next.awardedBy.includes(prev.awardedBy) ? prev.awardedBy : undefined,
+                }));
+            })
+            .catch(() => undefined);
+        return () => {
+            stale = true;
+        };
+    }, [filters.country]);
 
     // Distinguishes a filter-driven reset (replace list) from a scroll-driven
     // next-page fetch (append to list).
@@ -184,13 +225,23 @@ export function CourseList() {
         refreshList();
     };
 
-    const setStream = useCallback((stream: string) => {
-        setFilters((prev) => ({ ...prev, stream: stream || undefined }));
+    const setFilter = useCallback(
+        (key: keyof CourseFilters, value: string | undefined) =>
+            setFilters((prev) => ({ ...prev, [key]: value })),
+        []
+    );
+
+    const clearFilters = useCallback(() => {
+        setSearchInput("");
+        setFilters({ status: 'published' });
     }, []);
 
-    const setStatus = useCallback((status: string) => {
-        setFilters((prev) => ({ ...prev, status: status as CourseFilters["status"] }));
-    }, []);
+    // `status` always has a value, so it is not what makes the bar "active".
+    const hasActiveFilters = Boolean(
+        searchInput || filters.country || filters.level || filters.studyMode ||
+        filters.stream || filters.awardedBy || filters.duration || filters.scholarship ||
+        filters.status !== 'published'
+    );
 
     const handleRefresh = () => {
         refreshList();
@@ -199,6 +250,10 @@ export function CourseList() {
     const columns: Column<Course>[] = useMemo(() => [
         {
             key: "course",
+            // The table lays out automatically, so without a width bound the
+            // longest course name widens this column until the whole table
+            // scrolls sideways — `truncate` alone has nothing to clamp against.
+            className: "max-w-[320px]",
             header: "Course",
             render: (course) => (
                 <div className="flex items-center gap-3">
@@ -210,9 +265,13 @@ export function CourseList() {
                         />
                     </div>
                     <div className="min-w-0">
-                        <div className="truncate font-medium">{ov(course).courseName || "—"}</div>
+                        <div className="truncate font-medium" title={ov(course).courseName}>
+                            {ov(course).courseName || "—"}
+                        </div>
                         {course.slug && (
-                            <div className="truncate text-xs text-muted-foreground">{course.slug}</div>
+                            <div className="truncate text-xs text-muted-foreground" title={course.slug}>
+                                {course.slug}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -299,7 +358,7 @@ export function CourseList() {
                 }
             />
 
-            <Card className="mb-4 flex flex-wrap items-center gap-3 p-3">
+            <Card className="mb-4 flex flex-wrap items-end gap-3 p-3">
                 <div className="relative min-w-[200px] flex-1">
                     <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -310,32 +369,82 @@ export function CourseList() {
                     />
                 </div>
 
-                <Select value={filters.status ?? "published"} onValueChange={setStatus}>
-                    <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="published">Published</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                    </SelectContent>
-                </Select>
+                <FilterSelect
+                    label="Status"
+                    value={filters.status}
+                    onChange={(v) => setFilter("status", v ?? "all")}
+                    options={[
+                        { value: "all", label: "All" },
+                        { value: "published", label: "Published" },
+                        { value: "draft", label: "Draft" },
+                    ]}
+                    allLabel="All"
+                    className="w-[130px]"
+                />
+                <FilterSelect
+                    label="Country"
+                    value={filters.country}
+                    onChange={(v) => setFilter("country", v)}
+                    options={countries}
+                    allLabel="All Countries"
+                />
+                <FilterSelect
+                    label="Level"
+                    value={filters.level}
+                    onChange={(v) => setFilter("level", v)}
+                    options={facets.levels}
+                    allLabel="All Levels"
+                    className="w-[180px]"
+                />
+                <FilterSelect
+                    label="Study Mode"
+                    value={filters.studyMode}
+                    onChange={(v) => setFilter("studyMode", v)}
+                    options={facets.studyModes}
+                    allLabel="All Modes"
+                    className="w-[140px]"
+                />
+                <FilterSelect
+                    label="Stream"
+                    value={filters.stream}
+                    onChange={(v) => setFilter("stream", v)}
+                    options={facets.streams}
+                    allLabel="All Streams"
+                    className="w-[210px]"
+                />
+                <FilterSelect
+                    label="Awarded By"
+                    value={filters.awardedBy}
+                    onChange={(v) => setFilter("awardedBy", v)}
+                    options={facets.awardedBy}
+                    allLabel="All Awarding Bodies"
+                    className="w-[210px]"
+                />
+                <FilterSelect
+                    label="Duration"
+                    value={filters.duration}
+                    onChange={(v) => setFilter("duration", v)}
+                    options={DURATION_OPTIONS}
+                    allLabel="Any Duration"
+                    className="w-[140px]"
+                />
+                <FilterSelect
+                    label="Scholarship"
+                    value={filters.scholarship}
+                    onChange={(v) => setFilter("scholarship", v)}
+                    options={SCHOLARSHIP_OPTIONS}
+                    allLabel="Any"
+                    className="w-[190px]"
+                />
 
-                <Select
-                    value={filters.stream ?? "__all__"}
-                    onValueChange={(value) => setStream(value === "__all__" ? "" : value)}
-                >
-                    <SelectTrigger className="w-[220px]">
-                        <SelectValue placeholder="All Streams" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                        <SelectItem value="__all__">All Streams</SelectItem>
-                        {STREAM_OPTIONS.map((s) => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                {hasActiveFilters && (
+                    <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
+                        <X className="mr-1 size-4" />
+                        Clear filters
+                    </Button>
+                )}
 
-                <span className="ml-auto pr-1 text-xs text-muted-foreground">
+                <span className="ml-auto pb-2 pr-1 text-xs text-muted-foreground">
                     {courses.length} of {total}
                 </span>
             </Card>
