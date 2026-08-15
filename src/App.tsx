@@ -23,6 +23,8 @@ import { LibraryPage } from './pages/Library/LibraryPage';
 import { EgAcademyCourseList } from './pages/EgAcademy/EgAcademyCourseList';
 import EditEgAcademyCourse from './pages/EgAcademy/EditEgAcademyCourse';
 import { EgAcademyCourseViewPage } from './pages/EgAcademy/EgAcademyCourseViewPage';
+import { CenterPageList } from './pages/EgAcademy/CenterPageList';
+import EditCenterPage from './pages/EgAcademy/EditCenterPage';
 
 function App() {
     return (
@@ -71,6 +73,10 @@ function App() {
                         {/* view before :slug — otherwise "view" is read as a slug */}
                         <Route path="/eg-academy/courses/view/:slug" element={<EgAcademyCourseViewPage />} />
                         <Route path="/eg-academy/courses/:slug" element={<EditEgAcademyCourse />} />
+
+                        {/* Academy centre pages — the /centers pages on the academy site */}
+                        <Route path="/eg-academy/centers" element={<CenterPageList />} />
+                        <Route path="/eg-academy/centers/:slug" element={<EditCenterPage />} />
                     </Route>
                 </Route>
             </Routes>

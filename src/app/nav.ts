@@ -8,6 +8,7 @@ import {
   Image,
   LayoutDashboard,
   Library,
+  MapPin,
   type LucideIcon,
 } from "lucide-react";
 
@@ -49,7 +50,15 @@ export const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "eG Academy",
-    items: [{ label: "Academy Courses", to: "/eg-academy/courses", icon: BookMarked }],
+    items: [
+      { label: "Academy Courses", to: "/eg-academy/courses", icon: BookMarked },
+      {
+        label: "Academy Centres",
+        to: "/eg-academy/centers",
+        icon: MapPin,
+        hint: "The /centers landing pages",
+      },
+    ],
   },
   {
     label: "Content",
