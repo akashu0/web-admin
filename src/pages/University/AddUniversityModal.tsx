@@ -26,6 +26,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { universityService } from "@/services/universityService";
+import { useCountryNames } from "@/hooks/useCountryNames";
 import { STREAM_OPTIONS } from "@/types/course";
 
 // Simplified validation schema - only basic info
@@ -99,6 +100,10 @@ export function AddUniversityModal({
 
     const status = watch("status");
     const name = watch("name");
+    const country = watch("country");
+    // The Countries module is the only place a country may come from — typing
+    // it is what put "UK" and "United Kingdom" in the filter bar side by side.
+    const countries = useCountryNames();
 
     // Auto-generate slug when country changes
     useEffect(() => {
@@ -267,11 +272,19 @@ export function AddUniversityModal({
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="country">Country *</Label>
-                                <Input
-                                    id="country"
-                                    {...register("country")}
-                                    placeholder="United States"
-                                />
+                                <Select
+                                    value={country ?? ""}
+                                    onValueChange={(v) => setValue("country", v, { shouldValidate: true })}
+                                >
+                                    <SelectTrigger id="country">
+                                        <SelectValue placeholder="Select country" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card">
+                                        {countries.map((c) => (
+                                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                                 {errors.country && (
                                     <p className="text-sm text-destructive">
                                         {errors.country.message}

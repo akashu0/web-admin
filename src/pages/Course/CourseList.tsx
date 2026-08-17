@@ -18,7 +18,7 @@ import { ResourceTable, type Column } from "@/components/common/ResourceTable";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { courseService, type CourseFacets } from "@/services/courseService";
-import { countryService } from "@/services/countryService";
+import { useCountryNames } from "@/hooks/useCountryNames";
 import { FilterSelect } from "@/components/common/FilterSelect";
 import type { Course } from "@/types/course";
 import { AddCourseModal } from "./AddCourseModal";
@@ -90,18 +90,11 @@ export function CourseList() {
     const [facets, setFacets] = useState<CourseFacets>({
         levels: [], studyModes: [], streams: [], awardedBy: [], durations: [],
     });
-    const [countries, setCountries] = useState<string[]>([]);
+    const countries = useCountryNames();
 
     useEffect(() => {
         setFilters((prev) => ({ ...prev, search: search || undefined }));
     }, [search]);
-
-    useEffect(() => {
-        countryService
-            .getAllCountries({ limit: 200 })
-            .then((res) => setCountries((res.data ?? []).map((c) => c.name).filter(Boolean)))
-            .catch(() => setCountries([]));
-    }, []);
 
     useEffect(() => {
         let stale = false;

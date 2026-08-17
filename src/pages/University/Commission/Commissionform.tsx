@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CommissionTierField } from "./Commissiontierfield";
+import { useCountryNames } from "@/hooks/useCountryNames";
 import {
     COURSE_TYPES,
     COURSE_TYPE_LABELS,
@@ -82,6 +83,8 @@ export const CommissionForm = ({
         ...initialValues,
     });
 
+    const countries = useCountryNames(initialValues?.country);
+
     const [activeTab, setActiveTab] = useState<"details" | "commissions" | "notes">(
         "details"
     );
@@ -142,12 +145,19 @@ export const CommissionForm = ({
                                 </Field>
                                 <div className="grid grid-cols-2 gap-3">
                                     <Field label="Country">
-                                        <input
+                                        {/* From the Countries module, not typed:
+                                            a commission's country has to match the
+                                            university's or the filters disagree. */}
+                                        <select
                                             className={inputCls}
-                                            placeholder="e.g. Switzerland"
                                             value={values.country}
                                             onChange={(e) => set("country", e.target.value)}
-                                        />
+                                        >
+                                            <option value="">Select country</option>
+                                            {countries.map((c) => (
+                                                <option key={c} value={c}>{c}</option>
+                                            ))}
+                                        </select>
                                     </Field>
                                     <Field label="Location / city">
                                         <input

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useCountryNames } from "@/hooks/useCountryNames";
 
 const CONTINENT_OPTIONS = [
     "Africa",
@@ -81,6 +82,10 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
     });
 
     const status = watch("status");
+    const country = watch("country");
+    // initialData.country keeps a legacy spelling selectable until
+    // `cmd/fixcountries` has run — otherwise saving this tab would blank it.
+    const countries = useCountryNames(initialData.country);
     const continent = watch("continent");
     const universityType = watch("universityType");
 
@@ -130,11 +135,19 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="country">Country *</Label>
-                            <Input
-                                id="country"
-                                {...register("country")}
-                                placeholder="United States"
-                            />
+                            <Select
+                                value={country ?? ""}
+                                onValueChange={(v) => setValue("country", v, { shouldValidate: true })}
+                            >
+                                <SelectTrigger id="country">
+                                    <SelectValue placeholder="Select country" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card">
+                                    {countries.map((c) => (
+                                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             {errors.country && (
                                 <p className="text-sm text-destructive">{errors.country.message}</p>
                             )}
