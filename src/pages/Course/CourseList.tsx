@@ -79,8 +79,11 @@ export function CourseList() {
     const [searchInput, setSearchInput] = useState("");
     const search = useDebounce(searchInput, 500);
 
+    // All, not published: a course the editor has just created is a DRAFT (the
+    // API defaults every new record to one), and defaulting to published hid it
+    // from the list it lands on — so nobody could reach its University tab.
     const [filters, setFilters] = useState<CourseFilters>({
-        status: 'published',
+        status: 'all',
     });
 
     // The values that actually occur, narrowed to the chosen country. Options
@@ -226,14 +229,14 @@ export function CourseList() {
 
     const clearFilters = useCallback(() => {
         setSearchInput("");
-        setFilters({ status: 'published' });
+        setFilters({ status: 'all' });
     }, []);
 
     // `status` always has a value, so it is not what makes the bar "active".
     const hasActiveFilters = Boolean(
         searchInput || filters.country || filters.level || filters.studyMode ||
         filters.stream || filters.awardedBy || filters.duration || filters.scholarship ||
-        filters.status !== 'published'
+        filters.status !== 'all'
     );
 
     const handleRefresh = () => {

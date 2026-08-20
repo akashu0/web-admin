@@ -243,27 +243,14 @@ export default function EditCourse() {
                             <StudyCentersSection
                                 data={courseData.studyCenters?.map(center => center.centerId) || []}
                                 universityId={courseData.universityId || ""}
-                                onSave={(centerIds, universityId) => {
-                                    // Prepare payload with only non-empty values
-                                    const payload: any = {};
-
-                                    if (centerIds && centerIds.length > 0) {
-                                        payload.studyCenters = centerIds;
-                                    }
-
-                                    if (universityId && universityId.trim() !== "") {
-                                        payload.universityId = universityId;
-                                    }
-
-                                    // Only call handleSectionUpdate if there's data to send
-                                    if (Object.keys(payload).length > 0) {
-                                        handleSectionUpdate("studyCenters", payload);
-                                    } else {
-                                        // If nothing selected, show a message or just proceed
-                                        console.log("No study centers or university selected");
-                                        setActiveSection("documents"); // or show validation message
-                                    }
-                                }}
+                                // Always saved, including an empty id: skipping the
+                                // call when nothing was chosen is what made
+                                // CLEARING a university impossible.
+                                onSave={(_centerIds, universityId) =>
+                                    handleSectionUpdate("studyCenters", {
+                                        universityId: universityId ?? "",
+                                    })
+                                }
                                 onNext={() => setActiveSection("documents")}
                             />
                         )}

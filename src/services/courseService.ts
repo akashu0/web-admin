@@ -162,9 +162,20 @@ export const courseService = {
         return response.data;
     },
 
-    updateStudyCenters: async (slug: string, data: { studyCenters?: string[], universityId?: string }) => {
-
-        const response = await apiClient.patch(`/courses/${slug}/section/study-centers`, data);
+    /**
+     * The "University" tab. `universityId` is a TOP-LEVEL course field and the
+     * OVERVIEW section save is the only one that writes it (courseSet in the Go
+     * API parses and validates the hex there, and an empty string clears it).
+     *
+     * PATCHing /section/study-centers stored the whole request body under
+     * `studyCenters` — so the link was never saved AND the typed array was
+     * replaced by an object. This tab has no centre picker; it only picks a
+     * university.
+     */
+    updateStudyCenters: async (slug: string, data: { universityId?: string }) => {
+        const response = await apiClient.patch(`/courses/${slug}/section/overview`, {
+            universityId: data.universityId ?? "",
+        });
         return response.data;
     },
 
