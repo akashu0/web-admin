@@ -29,20 +29,25 @@ export const commissionService = {
 
     // The university editor's Commission tab. One record per university, so the
     // API upserts and the client never has to decide between create and update.
-    getForUniversity: async (slug: string): Promise<PartnerCommission | null> => {
+    // `audience` splits the agent card from the part-timer card — two records
+    // per university at most, one per audience. Omitted = agent (the legacy rows).
+    getForUniversity: async (slug: string, audience?: string): Promise<PartnerCommission | null> => {
         const { data } = await apiClient.get<{ data: PartnerCommission | null }>(
-            `/universities/${slug}/commission`
+            `/universities/${slug}/commission`,
+            { params: audience ? { audience } : undefined }
         );
         return data.data ?? null;
     },
 
     saveForUniversity: async (
         slug: string,
-        payload: Partial<CommissionFormValues>
+        payload: Partial<CommissionFormValues>,
+        audience?: string
     ): Promise<PartnerCommission> => {
         const { data } = await apiClient.put<{ data: PartnerCommission }>(
             `/universities/${slug}/commission`,
-            payload
+            payload,
+            { params: audience ? { audience } : undefined }
         );
         return data.data;
     },

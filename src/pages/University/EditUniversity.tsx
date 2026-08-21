@@ -92,6 +92,7 @@ export function EditUniversity() {
                     <TabsTrigger value="images">Images</TabsTrigger>
                     <TabsTrigger value="media">Media</TabsTrigger>
                     <TabsTrigger value="commission">Commission</TabsTrigger>
+                    <TabsTrigger value="ptCommission">PT Commission</TabsTrigger>
                     <TabsTrigger value="refrences">Refrences</TabsTrigger>
                 </TabsList>
 
@@ -160,6 +161,15 @@ export function EditUniversity() {
                     <CommissionSection
                         slug={slug!}
                         onSuccess={() => handleSectionUpdate("Partner Commission")}
+                    />
+                </TabsContent>
+
+                {/* The part-timer rate card — same editor, different audience. */}
+                <TabsContent value="ptCommission" className="space-y-4 mt-4">
+                    <CommissionSection
+                        slug={slug!}
+                        audience="parttimer"
+                        onSuccess={() => handleSectionUpdate("Part-timer Commission")}
                     />
                 </TabsContent>
 

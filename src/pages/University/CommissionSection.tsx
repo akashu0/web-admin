@@ -16,21 +16,24 @@ import { toFormValues, type CommissionFormValues } from "@/types/commission";
  */
 export function CommissionSection({
     slug,
+    audience,
     onSuccess,
 }: {
     slug: string;
+    /** "parttimer" for the part-timer rate card; omitted = the agent card. */
+    audience?: "agent" | "parttimer";
     onSuccess?: () => void;
 }) {
     const qc = useQueryClient();
 
     const { data: commission, isLoading, isError } = useQuery({
-        queryKey: ["commissions", "university", slug],
-        queryFn: () => commissionService.getForUniversity(slug),
+        queryKey: ["commissions", "university", slug, audience ?? "agent"],
+        queryFn: () => commissionService.getForUniversity(slug, audience),
     });
 
     const save = useMutation({
         mutationFn: (values: CommissionFormValues) =>
-            commissionService.saveForUniversity(slug, values),
+            commissionService.saveForUniversity(slug, values, audience),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["commissions"] });
             onSuccess?.();
@@ -69,7 +72,7 @@ export function CommissionSection({
                 }}
                 // Nothing to cancel out of in a tab — reset to what is stored.
                 onCancel={() =>
-                    qc.invalidateQueries({ queryKey: ["commissions", "university", slug] })
+                    qc.invalidateQueries({ queryKey: ["commissions", "university", slug, audience ?? "agent"] })
                 }
             />
         </Card>
