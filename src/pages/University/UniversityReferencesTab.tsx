@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Course } from '@/types/course';
 import { courseService } from '@/services/courseService';
 import { visaService } from '@/services/visaService';
@@ -104,14 +105,15 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
         try {
             setIsSaving(true);
             await universityService.updateReferences(slug, {
-                visaProcessDocuments: selectedVisa,
-                topCourses: selectedCourses,
-                faq: selectedFAQ // Add FAQ to save payload
+                visa: selectedVisa,
+                courses: selectedCourses,
+                faqs: selectedFAQ,
             });
 
             onSuccess();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving references:', error);
+            toast.error(error.response?.data?.message || 'Failed to save references');
         } finally {
             setIsSaving(false);
         }

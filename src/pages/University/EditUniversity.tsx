@@ -83,7 +83,7 @@ export function EditUniversity() {
             </div>
 
             <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-9">
+                <TabsList className="grid w-full grid-cols-10">
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="fees">Fees</TabsTrigger>
                     <TabsTrigger value="admissions">Admissions</TabsTrigger>
@@ -178,9 +178,10 @@ export function EditUniversity() {
                         slug={slug!}
                         initialData={{
                             visa: universityData.visa || "",
-                            courses: universityData.courses || "",
+                            courses: universityData.courses || [],
+                            faq: universityData.faqs || "",
                         }}
-                        onSuccess={() => handleSectionUpdate("Media")}
+                        onSuccess={() => handleSectionUpdate("References")}
                     />
                 </TabsContent>
             </Tabs>
