@@ -122,7 +122,11 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
     const onSubmit = async (data: FeeFormData) => {
         try {
             setIsSubmitting(true);
-            await universityService.updateFees(slug, data);
+            // The body IS the section: this endpoint takes the fee LIST, not an
+            // object wrapping it. Sending `data` posted {"fees":[...]}, which the
+            // API stored verbatim — turning `fees` into a document and making
+            // every later read of the university fail to decode.
+            await universityService.updateFees(slug, data.fees);
             onSuccess();
             toast.success("Fee structure saved");
         } catch (error: any) {

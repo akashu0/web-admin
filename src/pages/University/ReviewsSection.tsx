@@ -75,14 +75,14 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
     const onSubmit = async (data: ReviewsFormData) => {
         try {
             setIsSubmitting(true);
-            const payload = {
-                reviews: data.reviews.map((r) => ({
-                    studentName: r.studentName,
-                    rating: Number(r.rating),
-                    comment: r.comment,
-                    course: r.course || undefined,
-                })),
-            };
+            // The body IS the section — the review LIST, not {reviews: [...]}.
+            // See FeeSection: the wrapper is what corrupted the stored array.
+            const payload = data.reviews.map((r) => ({
+                studentName: r.studentName,
+                rating: Number(r.rating),
+                comment: r.comment,
+                course: r.course || undefined,
+            }));
             await universityService.updateReviews(slug, payload);
             onSuccess();
             toast.success("Student reviews saved");

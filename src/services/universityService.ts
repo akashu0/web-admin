@@ -1,4 +1,4 @@
-import type { University, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
+import type { FeeStructure, University, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
 import { apiClient } from './api';
 
 export const universityService = {
@@ -67,9 +67,16 @@ export const universityService = {
         return response.data;
     },
 
-    // Update Fee Structure
-    updateFees: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/${slug}/section/fees`, data);
+    // Update Fee Structure.
+    //
+    // The body IS the section, so this takes the fee LIST. The array-vs-object
+    // split across these four is not arbitrary — it mirrors the model:
+    // `Fees []FeeStructure` and `Reviews []Review` against `Admissions
+    // *Admissions` and `StudentLife *StudentLife`. Typed rather than `any`
+    // because sending the wrapper object instead of the array is what made
+    // every read of a saved university fail to decode.
+    updateFees: async (slug: string, fees: FeeStructure[]) => {
+        const response = await apiClient.patch(`/universities/${slug}/section/fees`, fees);
         return response.data;
     },
 
@@ -85,9 +92,9 @@ export const universityService = {
         return response.data;
     },
 
-    // Update Student Reviews
-    updateReviews: async (slug: string, data: any) => {
-        const response = await apiClient.patch(`/universities/${slug}/section/reviews`, data);
+    // Update Student Reviews — the review LIST, see updateFees.
+    updateReviews: async (slug: string, reviews: unknown[]) => {
+        const response = await apiClient.patch(`/universities/${slug}/section/reviews`, reviews);
         return response.data;
     },
 
