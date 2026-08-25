@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { apiErrorMessage } from "@/services/api";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,7 +35,7 @@ export function EditUniversity() {
                 setUniversityData(university.data);
             } catch (error: any) {
                 console.error("Error loading university:", error);
-                toast.error("Failed to load university data");
+                toast.error(apiErrorMessage(error, "Failed to load university data"));
                 navigate("/universities");
             } finally {
                 setIsLoading(false);

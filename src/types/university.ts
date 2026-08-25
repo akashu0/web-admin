@@ -1,3 +1,4 @@
+import type { SortParams } from '@/services/api';
 // src/types/university.ts
 
 /**
@@ -153,12 +154,11 @@ export interface PaginationMeta {
 /**
  * Query Params for fetching universities
  */
-export interface UniversityQueryParams {
+export interface UniversityQueryParams extends SortParams {
     page?: number;
     limit?: number;
     status?: "all" | "published" | "draft";
     search?: string;
-    // No sortBy/sortOrder: the API sorts every list by _id and reads neither.
     country?: string;
     city?: string;
     location?: string;

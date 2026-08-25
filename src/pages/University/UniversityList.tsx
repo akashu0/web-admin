@@ -21,6 +21,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { apiErrorMessage } from "@/services/api";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,7 +52,7 @@ export function UniversityList() {
     const [isLoading, setIsLoading] = useState(true);
     const [isFetching, setIsFetching] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [error, setError] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Bulk-action selection, keyed by _id so it survives infinite-scroll appends.
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -134,7 +135,7 @@ export function UniversityList() {
         if (isFetching) return;
         try {
             setIsFetching(true);
-            setError(false);
+            setError(null);
             const response = await universityService.getAllUniversities({
                 ...filters,
                 limit: LIMIT,
@@ -153,12 +154,12 @@ export function UniversityList() {
             );
         } catch (error) {
             console.error("Error fetching universities:", error);
-            setError(true);
+            setError(apiErrorMessage(error, "Failed to fetch universities"));
             if (!append) setUniversities([]);
             // See CourseList: without this the sentinel refires the failed
             // request forever and stacks a toast each time.
             setHasMore(false);
-            toast.error("Failed to fetch universities");
+            toast.error(apiErrorMessage(error, "Failed to fetch universities"));
         } finally {
             setIsLoading(false);
             setIsFetching(false);
@@ -219,7 +220,7 @@ export function UniversityList() {
             refreshList();
         } catch (error) {
             console.error("Error deleting university:", error);
-            toast.error("Failed to delete university");
+            toast.error(apiErrorMessage(error, "Failed to delete university"));
         }
     };
 
@@ -244,9 +245,7 @@ export function UniversityList() {
             refreshList();
         } catch (error) {
             console.error("Error updating university status:", error);
-            const message = (error as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message;
-            toast.error(message || "Failed to update status");
+            toast.error(apiErrorMessage(error, "Failed to update status"));
         }
     };
 
@@ -275,6 +274,7 @@ export function UniversityList() {
     const columns: Column<University>[] = useMemo(() => [
         {
             key: "select",
+            sortable: false,
             header: (
                 <Checkbox
                     checked={allSelected}
@@ -295,6 +295,7 @@ export function UniversityList() {
         },
         {
             key: "logo",
+            sortable: false,
             header: "Logo",
             // A record with no logo usually still has a banner — showing that
             // beats a letter circle, and only a record with neither falls back.
@@ -403,6 +404,7 @@ export function UniversityList() {
         },
         {
             key: "actions",
+            sortable: false,
             header: "Actions",
             align: "right",
             render: (university) => (
@@ -578,6 +580,11 @@ export function UniversityList() {
                 <ResourceTable
                     columns={columns}
                     rows={universities}
+                    sort={filters.sort ? { field: filters.sort, dir: filters.dir ?? "asc" } : undefined}
+                    // The sort lives in `filters` so the existing reset effect
+                    // takes the list back to page one — a new order paged from
+                    // page 4 is rows from the middle of a list nobody saw.
+                    onSort={(next) => setFilters((f) => ({ ...f, sort: next?.field, dir: next?.dir }))}
                     isLoading={isLoading}
                     sentinelRef={sentinelRef}
                     isFetchingNextPage={isFetching && universities.length > 0}
@@ -585,7 +592,7 @@ export function UniversityList() {
                     emptyTitle={error ? "Failed to load universities" : "No universities found"}
                     emptyDescription={
                         error
-                            ? "There was an error loading universities. Try refreshing."
+                            ? `${error} — try refreshing.`
                             : hasActiveFilters
                                 ? "Try adjusting your search or filters."
                                 : "Get started by adding your first university."

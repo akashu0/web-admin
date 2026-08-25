@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import type { IFAQ, CreateFAQInput, UpdateFAQInput } from '@/types/faq';
 import { faqService } from '@/services/faqservice';
 import { FAQTable } from './FAQTable';
+import type { SortState } from '@/components/ui/table';
 import { FAQFormDialog } from './FAQFormDialog';
 import { FAQViewDialog } from './FAQViewDialog';
 
@@ -48,6 +49,7 @@ export const FAQPage = () => {
     // Filters - use 'all' instead of empty string
     const [entityType, setEntityType] = useState<string>('all');
     const [status, setStatus] = useState<string>('all');
+    const [sort, setSort] = useState<SortState>();
 
     // Infinite scroll state
     const [page, setPage] = useState(1);
@@ -61,13 +63,13 @@ export const FAQPage = () => {
     useEffect(() => {
         isReset.current = true;
         setPage(1);
-    }, [entityType, status]);
+    }, [entityType, status, sort]);
 
     useEffect(() => {
         fetchFAQs(page, !isReset.current);
         isReset.current = false;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, entityType, status]);
+    }, [page, entityType, status, sort]);
 
     const fetchFAQs = async (pageNum: number, append: boolean) => {
         if (loadingRef.current) return;
@@ -82,6 +84,7 @@ export const FAQPage = () => {
             // Only add filters if not 'all'
             if (entityType && entityType !== 'all') filters.entityType = entityType;
             if (status && status !== 'all') filters.status = status;
+            if (sort) { filters.sort = sort.field; filters.dir = sort.dir; }
 
             const response = await faqService.getAllFAQs(filters);
             setFaqs((prev) => (append ? [...prev, ...response.data] : response.data));
@@ -283,6 +286,8 @@ export const FAQPage = () => {
                     hasMore={hasMore}
                     loadingMore={loadingMore}
                     onLoadMore={handleLoadMore}
+                    sort={sort}
+                    onSort={setSort}
                 />
             </Card>
 

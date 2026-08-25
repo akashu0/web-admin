@@ -258,8 +258,6 @@ export interface CourseQueryParams {
     status?: 'draft' | 'published';
     level?: string;
     stream?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
 }
 
 export interface CourseListResponse {

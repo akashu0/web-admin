@@ -14,10 +14,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ResourceTable, type Column } from "@/components/common/ResourceTable";
+import type { SortState } from "@/components/ui/table";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 import { visaService } from "@/services/visaService";
 import { toast } from "sonner";
+import { apiErrorMessage } from "@/services/api";
 import { DeleteVisaDialog } from "./DeleteVisaDialog";
 import { AddEditVisaModal } from "./AddEditVisaModal";
 import type { Visa } from "@/types/visa";
@@ -55,6 +57,7 @@ const VisaList: React.FC = () => {
 
     const isReset = useRef(true);
     const loadingRef = useRef(false);
+    const [sort, setSort] = useState<SortState>();
 
     // The view page's Edit button sends the record back here, because the editor
     // is a modal on this list and a modal has no URL of its own. The state is
@@ -70,7 +73,15 @@ const VisaList: React.FC = () => {
     useEffect(() => {
         fetchVisas(page, !isReset.current);
         isReset.current = false;
-    }, [page]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, sort]);
+
+    // A new order starts at the first page: page 4 of the old order is rows from
+    // the middle of a list nobody has seen.
+    useEffect(() => {
+        isReset.current = true;
+        setPage(1);
+    }, [sort]);
 
     const fetchVisas = async (pageNum: number, append: boolean) => {
         if (loadingRef.current) return;
@@ -84,6 +95,7 @@ const VisaList: React.FC = () => {
             const response = await visaService.getAllVisas({
                 page: pageNum,
                 limit: 10,
+                ...(sort && { sort: sort.field, dir: sort.dir }),
             });
             setVisas((prev) => (append ? [...prev, ...response.data] : response.data));
             setPagination(response.pagination);
@@ -93,7 +105,7 @@ const VisaList: React.FC = () => {
             // lets the scroll sentinel refire this failed request forever — one
             // error toast per intersection.
             setPagination((prev) => ({ ...prev, hasNextPage: false }));
-            toast.error("Failed to fetch visas");
+            toast.error(apiErrorMessage(error, "Failed to fetch visas"));
         } finally {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -169,6 +181,7 @@ const VisaList: React.FC = () => {
         },
         {
             key: "actions",
+            sortable: false,
             header: "Actions",
             align: "right",
             render: (visa) => (
@@ -235,6 +248,8 @@ const VisaList: React.FC = () => {
                     columns={columns}
                     rows={rows}
                     isLoading={isLoading}
+                    sort={sort}
+                    onSort={setSort}
                     sentinelRef={sentinelRef}
                     isFetchingNextPage={isLoadingMore}
                     hasNextPage={pagination.hasNextPage}

@@ -2,9 +2,10 @@
 
 import type { CreateVisaDto, SingleVisaResponse, UpdateVisaDto, Visa, VisaMutationResponse, } from "@/types/visa";
 import { apiClient } from "./api";
+import type { SortParams } from '@/services/api';
 
 
-interface GetAllVisasParams {
+interface GetAllVisasParams extends SortParams {
     page?: number;
     limit?: number;
     search?: string;

@@ -172,6 +172,7 @@ export function EgAcademyCourseList() {
     },
     {
       key: 'centers',
+      sortable: false,
       header: 'Centers',
       render: (course) => (
         <span className="tabular-nums">{course.learningCenters?.length ?? 0}</span>
@@ -179,6 +180,7 @@ export function EgAcademyCourseList() {
     },
     {
       key: 'actions',
+      sortable: false,
       header: 'Actions',
       align: 'right',
       render: (course) => (
@@ -278,6 +280,11 @@ export function EgAcademyCourseList() {
         <ResourceTable
           columns={columns}
           rows={courses}
+          sort={filters.sort ? { field: filters.sort, dir: filters.dir ?? "asc" } : undefined}
+          // The sort lives in `filters` so the existing reset effect
+          // takes the list back to page one — a new order paged from
+          // page 4 is rows from the middle of a list nobody saw.
+          onSort={(next) => setFilters((f) => ({ ...f, sort: next?.field, dir: next?.dir }))}
           isLoading={isLoading}
           sentinelRef={sentinelRef}
           isFetchingNextPage={isFetching && courses.length > 0}

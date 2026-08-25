@@ -1,3 +1,4 @@
+import type { SortParams } from '@/services/api';
 export interface FAQQuestion {
     question: string;
     answer: string;
@@ -35,7 +36,7 @@ export interface UpdateFAQInput {
     }>;
 }
 
-export interface FAQFilters {
+export interface FAQFilters extends SortParams {
     entityType?: 'University' | 'Course' | 'Country';
     status?: 'active' | 'inactive' | 'draft';
     page?: number;

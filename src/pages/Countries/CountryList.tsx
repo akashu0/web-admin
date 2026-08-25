@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ResourceTable, type Column } from '@/components/common/ResourceTable';
+import type { SortState } from '@/components/ui/table';
 import { FilterSelect } from '@/components/common/FilterSelect';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
@@ -32,6 +33,7 @@ export default function CountryList() {
     const [hasMore, setHasMore] = useState(false);
     const [total, setTotal] = useState(0);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [sort, setSort] = useState<SortState>();
 
     const isReset = useRef(true);
     const loadingRef = useRef(false);
@@ -47,13 +49,13 @@ export default function CountryList() {
     useEffect(() => {
         isReset.current = true;
         setPage(1);
-    }, [searchTerm, status, continent]);
+    }, [searchTerm, status, continent, sort]);
 
     useEffect(() => {
         fetchCountries(page, !isReset.current);
         isReset.current = false;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, searchTerm, status, continent]);
+    }, [page, searchTerm, status, continent, sort]);
 
     const fetchCountries = async (pageNum: number, append: boolean) => {
         if (loadingRef.current) return;
@@ -70,6 +72,7 @@ export default function CountryList() {
                 status,
                 ...(searchTerm && { search: searchTerm }),
                 ...(continent && { continent }),
+                ...(sort && { sort: sort.field, dir: sort.dir }),
             };
 
             const response = await countryService.getAllCountries(params);
@@ -188,6 +191,7 @@ export default function CountryList() {
         },
         {
             key: 'actions',
+            sortable: false,
             header: 'Actions',
             align: 'right',
             render: (country) => (
@@ -283,6 +287,8 @@ export default function CountryList() {
                     columns={columns}
                     rows={countries}
                     isLoading={isLoading}
+                    sort={sort}
+                    onSort={setSort}
                     sentinelRef={sentinelRef}
                     isFetchingNextPage={isLoadingMore}
                     hasNextPage={hasMore}

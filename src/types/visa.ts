@@ -86,6 +86,4 @@ export interface VisaQueryParams {
     search?: string;
     country?: string;
     status?: 'active' | 'inactive';
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
 }

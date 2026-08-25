@@ -13,6 +13,7 @@ import {
 import { visaService } from "../../services/visaService";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { apiErrorMessage } from "@/services/api";
 import type { Visa } from "@/types/visa";
 
 interface DeleteVisaDialogProps {
@@ -43,7 +44,7 @@ export function DeleteVisaDialog({
             onClose();
         } catch (error) {
             console.error("Error deleting visa:", error);
-            toast.error("Failed to delete visa");
+            toast.error(apiErrorMessage(error, "Failed to delete visa"));
         } finally {
             setIsDeleting(false);
         }

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ResourceTable, type Column } from "@/components/common/ResourceTable";
+import type { SortState } from "@/components/ui/table";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { CommissionDrawer, type DrawerMode } from "./Commissiondrawer";
@@ -87,6 +88,7 @@ export const CommissionList = () => {
     // Drawer state
     const [drawerMode, setDrawerMode] = useState<DrawerMode | null>(null);
     const [selectedCommission, setSelectedCommission] = useState<PartnerCommission | null>(null);
+    const [sort, setSort] = useState<SortState>();
 
     // Queries - infinite scroll: each page is fetched in sequence and appended.
     const {
@@ -100,6 +102,10 @@ export const CommissionList = () => {
         limit: 20,
         search: debouncedSearch,
         country: country || undefined,
+        // In the query key, so a header click starts a fresh list rather than
+        // appending differently-ordered pages to the ones already loaded.
+        sort: sort?.field,
+        dir: sort?.dir,
     });
 
     // Flatten the paginated responses into a single list, and read the total
@@ -176,6 +182,7 @@ export const CommissionList = () => {
         },
         {
             key: "linked",
+            sortable: false,
             header: "Status",
             render: (commission) => (
                 <Badge tone={commission.universityRef ? "green" : "neutral"}>
@@ -185,16 +192,19 @@ export const CommissionList = () => {
         },
         {
             key: "bachelors",
+            sortable: false,
             header: "Bachelors",
             render: (commission) => <CommissionTierDisplay tier={commission.bachelors} compact />,
         },
         {
             key: "masters",
+            sortable: false,
             header: "Masters",
             render: (commission) => <CommissionTierDisplay tier={commission.masters} compact />,
         },
         {
             key: "others",
+            sortable: false,
             header: "Others",
             render: (commission) => {
                 const offered = COURSE_TYPES.filter((ct) => commission[ct]?.ranges?.length);
@@ -208,6 +218,7 @@ export const CommissionList = () => {
         },
         {
             key: "intakes",
+            sortable: false,
             header: "Intakes",
             render: (commission) => (
                 <span className="text-muted-foreground">{commission.intakes ?? "—"}</span>
@@ -215,6 +226,7 @@ export const CommissionList = () => {
         },
         {
             key: "actions",
+            sortable: false,
             header: "",
             align: "right",
             render: (commission) => (
@@ -281,6 +293,8 @@ export const CommissionList = () => {
                     columns={columns}
                     rows={commissions}
                     isLoading={isLoading}
+                    sort={sort}
+                    onSort={setSort}
                     sentinelRef={sentinelRef}
                     isFetchingNextPage={isFetchingNextPage}
                     hasNextPage={hasNextPage}

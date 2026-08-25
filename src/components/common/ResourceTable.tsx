@@ -1,5 +1,14 @@
 import type { ReactNode } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  SortableHead,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  type SortState,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { EmptyState } from "@/components/common/states";
@@ -10,6 +19,17 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
   className?: string;
   align?: "left" | "right" | "center";
+  /**
+   * The field name the SERVER orders by when this header is clicked, which makes
+   * the header sortable. Defaults to `key`; give it explicitly when the column
+   * shows something the record does not store under that name (a course's name
+   * lives at `overview.courseName`, and the server knows it as `course`).
+   *
+   * Omit — `sortable: false` — for an action column, or one counted from an
+   * array, where there is nothing stored to order by.
+   */
+  sortField?: string;
+  sortable?: boolean;
 }
 
 export function ResourceTable<T extends { _id?: string; id?: string }>({
@@ -22,6 +42,8 @@ export function ResourceTable<T extends { _id?: string; id?: string }>({
   hasNextPage,
   emptyTitle = "Nothing here yet",
   emptyDescription,
+  sort,
+  onSort,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -32,6 +54,13 @@ export function ResourceTable<T extends { _id?: string; id?: string }>({
   hasNextPage?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  /**
+   * Pass both and every column becomes a sortable header. The order is the
+   * server's — the list refetches from page 1 — so it is correct for the whole
+   * table and not just for the rows already scrolled into view.
+   */
+  sort?: SortState;
+  onSort?: (next: SortState) => void;
 }) {
   const alignClass = (a?: string) =>
     a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
@@ -42,11 +71,23 @@ export function ResourceTable<T extends { _id?: string; id?: string }>({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              {columns.map((c) => (
-                <TableHead key={c.key} className={alignClass(c.align)}>
-                  {c.header}
-                </TableHead>
-              ))}
+              {columns.map((c) =>
+                onSort && c.sortable !== false ? (
+                  <SortableHead
+                    key={c.key}
+                    field={c.sortField ?? c.key}
+                    sort={sort}
+                    onSort={onSort}
+                    className={alignClass(c.align)}
+                  >
+                    {c.header}
+                  </SortableHead>
+                ) : (
+                  <TableHead key={c.key} className={alignClass(c.align)}>
+                    {c.header}
+                  </TableHead>
+                ),
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>

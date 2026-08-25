@@ -19,6 +19,10 @@ class FAQService {
         if (filters?.status) params.append('status', filters.status);
         if (filters?.page) params.append('page', filters.page.toString());
         if (filters?.limit) params.append('limit', filters.limit.toString());
+        if (filters?.sort) {
+            params.append('sort', filters.sort);
+            params.append('dir', filters.dir ?? 'asc');
+        }
 
         const response = await apiClient.get(`/faqs?${params.toString()}`);
         return response.data;

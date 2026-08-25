@@ -1,6 +1,7 @@
 // services/countryService.ts
 import type { CountryResponse, ICountry, UpdateCountryDto } from '@/types/country';
 import { apiClient } from './api';
+import type { SortParams } from '@/services/api';
 
 interface PaginationResponse {
     page: number;
@@ -28,7 +29,7 @@ interface CountryResponseData {
     message?: string;
 }
 
-export interface CountryQueryParams {
+export interface CountryQueryParams extends SortParams {
     page?: number;
     limit?: number;
     search?: string;

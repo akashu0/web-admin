@@ -1,8 +1,9 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { commissionService } from '../services/commissionService';
 import type { CommissionFormValues } from '../types/commission';
+import type { SortParams } from '../services/api';
 
-export interface ListCommissionsParams {
+export interface ListCommissionsParams extends SortParams {
     page?: number;
     limit?: number;
     search?: string;

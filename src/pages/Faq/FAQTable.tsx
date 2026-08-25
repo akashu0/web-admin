@@ -9,6 +9,7 @@ import { ResourceTable, type Column } from '@/components/common/ResourceTable';
 import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 import { formatDate } from '@/lib/utils';
 import type { IFAQ } from '@/types/faq';
+import type { SortState } from '@/components/ui/table';
 
 interface FAQTableProps {
     data: IFAQ[];
@@ -25,6 +26,9 @@ interface FAQTableProps {
     hasMore: boolean;
     loadingMore: boolean;
     onLoadMore: () => void;
+    /** Owned by the page for the same reason the selection is: it is a query. */
+    sort?: SortState;
+    onSort: (next: SortState) => void;
 }
 
 export const FAQTable = ({
@@ -38,6 +42,8 @@ export const FAQTable = ({
     hasMore,
     loadingMore,
     onLoadMore,
+    sort,
+    onSort,
 }: FAQTableProps) => {
     const sentinelRef = useInfiniteScroll(onLoadMore, { hasMore, loading: Boolean(loadingMore) });
 
@@ -46,6 +52,7 @@ export const FAQTable = ({
     const columns: Column<IFAQ>[] = useMemo(() => [
         {
             key: 'select',
+            sortable: false,
             header: (
                 <Checkbox
                     checked={allSelected}
@@ -81,6 +88,7 @@ export const FAQTable = ({
         },
         {
             key: 'questions',
+            sortable: false,
             header: 'Questions',
             align: 'center',
             render: (faq) => (
@@ -107,6 +115,7 @@ export const FAQTable = ({
         },
         {
             key: 'actions',
+            sortable: false,
             header: 'Actions',
             align: 'right',
             render: (faq) => (
@@ -144,6 +153,8 @@ export const FAQTable = ({
             columns={columns}
             rows={data}
             isLoading={loading}
+            sort={sort}
+            onSort={onSort}
             sentinelRef={sentinelRef}
             isFetchingNextPage={loadingMore}
             hasNextPage={hasMore}

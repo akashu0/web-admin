@@ -1,12 +1,12 @@
 
 import { apiClient } from "./api";
 import type { Course, CourseFormData, PaginationMeta } from "@/types/course";
+import type { SortParams } from '@/services/api';
 
-export interface CourseQueryParams {
+export interface CourseQueryParams extends SortParams {
     page?: number;
     limit?: number;
     search?: string;
-    // No sortBy/sortOrder: the API sorts every list by _id and reads neither.
     status?: 'draft' | 'published' | 'all';
     stream?: string;
     country?: string;

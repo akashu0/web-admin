@@ -50,3 +50,17 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
     }
     return body.message;
 }
+
+/**
+ * The column order a list is asking for. Every list endpoint takes these two
+ * params and only these two: a field NAME the server resolves against its own
+ * whitelist, and a direction.
+ *
+ * This replaces the `sortBy`/`sortOrder` pair that used to sit unused in three
+ * of the query-param types — the API never read them, and now that it reads
+ * these, two spellings for one idea is how the wrong one gets sent.
+ */
+export interface SortParams {
+    sort?: string;
+    dir?: 'asc' | 'desc';
+}

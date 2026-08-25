@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ResourceTable, type Column } from "@/components/common/ResourceTable";
+import type { SortState } from "@/components/ui/table";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { apiErrorMessage } from "@/services/api";
 import { centerPageService } from "@/services/centerPageService";
@@ -42,6 +43,7 @@ export function CenterPageList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [status, setStatus] = useState<"draft" | "published" | undefined>();
+  const [sort, setSort] = useState<SortState>();
 
   const isReset = useRef(true);
 
@@ -54,6 +56,8 @@ export function CenterPageList() {
         limit: LIMIT,
         search: searchInput || undefined,
         status,
+        sort: sort?.field,
+        dir: sort?.dir,
       });
       const rows = response.data || [];
       const meta = response.pagination;
@@ -81,14 +85,14 @@ export function CenterPageList() {
       setPage(1);
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput, status]);
+  }, [searchInput, status, sort]);
 
   useEffect(() => {
     const append = !isReset.current;
     isReset.current = false;
     fetchPages(page, append);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchInput, status]);
+  }, [page, searchInput, status, sort]);
 
   const sentinelRef = useInfiniteScroll(() => setPage((prev) => prev + 1), {
     hasMore,
@@ -149,6 +153,7 @@ export function CenterPageList() {
       },
       {
         key: "content",
+        sortable: false,
         header: "Content",
         render: (row) => (
           <span className="text-xs text-muted-foreground tabular-nums">
@@ -158,6 +163,7 @@ export function CenterPageList() {
       },
       {
         key: "actions",
+        sortable: false,
         header: "Actions",
         align: "right",
         render: (row) => (
@@ -251,6 +257,8 @@ export function CenterPageList() {
         <ResourceTable
           columns={columns}
           rows={pages}
+          sort={sort}
+          onSort={setSort}
           isLoading={isLoading}
           sentinelRef={sentinelRef}
           isFetchingNextPage={isFetching && pages.length > 0}

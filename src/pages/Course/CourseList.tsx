@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { apiErrorMessage } from "@/services/api";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ResourceTable, type Column } from "@/components/common/ResourceTable";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -22,6 +23,7 @@ import { useCountryNames } from "@/hooks/useCountryNames";
 import { FilterSelect } from "@/components/common/FilterSelect";
 import type { Course } from "@/types/course";
 import { AddCourseModal } from "./AddCourseModal";
+import type { SortParams } from '@/services/api';
 
 const LIMIT = 10;
 
@@ -54,7 +56,7 @@ const SCHOLARSHIP_OPTIONS = [
 // every column, image included, blank after the cutover.
 const ov = (course: Course) => course.overview ?? ({} as Course["overview"]);
 
-interface CourseFilters {
+interface CourseFilters extends SortParams {
     search?: string;
     status?: 'draft' | 'published' | 'all';
     stream?: string;
@@ -155,7 +157,7 @@ export function CourseList() {
             // a `hasMore` left at true means it refires this failed request on
             // every intersection — one error toast per frame.
             setHasMore(false);
-            toast.error("Failed to fetch courses");
+            toast.error(apiErrorMessage(error, "Failed to fetch courses"));
         } finally {
             setIsLoading(false);
             setIsFetching(false);
@@ -208,7 +210,7 @@ export function CourseList() {
             } catch (error) {
                 console.error("Error deleting course:", error);
                 toast.dismiss(loadingToastId);
-                toast.error("Failed to delete course");
+                toast.error(apiErrorMessage(error, "Failed to delete course"));
             }
         }
     };
@@ -302,6 +304,7 @@ export function CourseList() {
         },
         {
             key: "actions",
+            sortable: false,
             header: "",
             align: "right",
             render: (course) => (
@@ -449,6 +452,11 @@ export function CourseList() {
                 <ResourceTable
                     columns={columns}
                     rows={courses}
+                    sort={filters.sort ? { field: filters.sort, dir: filters.dir ?? "asc" } : undefined}
+                    // The sort lives in `filters` so the existing reset effect
+                    // takes the list back to page one — a new order paged from
+                    // page 4 is rows from the middle of a list nobody saw.
+                    onSort={(next) => setFilters((f) => ({ ...f, sort: next?.field, dir: next?.dir }))}
                     isLoading={isLoading}
                     sentinelRef={sentinelRef}
                     isFetchingNextPage={isFetching && courses.length > 0}

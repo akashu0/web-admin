@@ -1,3 +1,4 @@
+import type { SortParams } from "@/services/api";
 /**
  * An eG Academy centre landing page — what eg-academy serves at
  * /centers/study-in-malta. Mirrors internal/catalog/centerpage.go.
@@ -100,7 +101,7 @@ export interface CenterQA {
   answer?: string;
 }
 
-export interface CenterPageQueryParams {
+export interface CenterPageQueryParams extends SortParams {
   page?: number;
   limit?: number;
   search?: string;

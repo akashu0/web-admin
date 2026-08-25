@@ -1,3 +1,4 @@
+import type { SortParams } from "@/services/api";
 // types/egAcademyCourse.ts
 
 export const LEVEL_OPTIONS = [
@@ -214,13 +215,11 @@ export interface EgAcademyCourseFormData {
   _id?: string;
 }
 
-export interface EgAcademyQueryParams {
+export interface EgAcademyQueryParams extends SortParams {
   page?: number;
   limit?: number;
   search?: string;
   stream?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
   status?: 'draft' | 'published';
 }
 
