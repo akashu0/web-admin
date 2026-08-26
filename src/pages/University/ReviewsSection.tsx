@@ -25,6 +25,9 @@ const reviewSchema = z.object({
     rating: z.string().min(1, "Rating is required"),
     comment: z.string().min(1, "Review comment is required"),
     course: z.string().optional(),
+    // Carried, not shown: the section save replaces the whole list, so a date
+    // the schema drops is a date deleted from the record.
+    date: z.string().optional(),
 });
 
 const reviewsFormSchema = z.object({
@@ -57,6 +60,7 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
                 rating: r.rating ? String(r.rating) : "5",
                 comment: r.comment || "",
                 course: r.course || "",
+                date: r.date || "",
             })),
         },
     });
@@ -69,6 +73,7 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
             rating: "5",
             comment: "",
             course: "",
+            date: new Date().toISOString().slice(0, 10),
         });
     };
 
@@ -82,6 +87,7 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
                 rating: Number(r.rating),
                 comment: r.comment,
                 course: r.course || undefined,
+                date: r.date || undefined,
             }));
             await universityService.updateReviews(slug, payload);
             onSuccess();

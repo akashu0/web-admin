@@ -19,6 +19,8 @@ interface AuthState {
     permissions: PermissionMap;
     isAuthenticated: boolean;
     login: (user: User, token: string, extra?: { refreshToken?: string; permissions?: PermissionMap }) => void;
+    /** A refreshed token pair. Identity and permissions are unchanged. */
+    setTokens: (token: string, refreshToken: string) => void;
     logout: () => void;
 }
 
@@ -37,6 +39,7 @@ export const useAuthStore = create<AuthState>()(
                 permissions: extra?.permissions ?? {},
                 isAuthenticated: true,
             }),
+            setTokens: (token, refreshToken) => set({ token, refreshToken }),
             logout: () => set({
                 user: null, token: null, refreshToken: null,
                 permissions: {}, isAuthenticated: false,

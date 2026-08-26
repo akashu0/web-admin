@@ -125,14 +125,20 @@ export function CourseOverviewSection({
 
                     {/* Slug */}
                     <div>
-                        <Label htmlFor="slug">Slug (URL-friendly) *</Label>
+                        <Label htmlFor="slug">Slug (URL-friendly)</Label>
                         <Input
                             id="slug"
-                            {...register('slug', { required: 'Slug is required' })}
+                            {...register('slug')}
                             placeholder="auto-generated-from-name"
                             className="mt-2 bg-muted"
-                            disabled={isSubmitting}
+                            readOnly
                         />
+                        {/* Read-only because the server derives the slug from the
+                            course name and the section save's allowlist has no
+                            `slug` — an editable box here was a silent no-op. */}
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Generated from the course name. Used in the URL and cannot be changed.
+                        </p>
                     </div>
 
                     {/* Description */}
@@ -158,7 +164,7 @@ export function CourseOverviewSection({
                                 id="durationYears"
                                 type="number"
                                 min="0"
-                                {...register('durationYears', { valueAsNumber: true })}
+                                {...register('durationYears')}
                                 placeholder="1"
                                 className="mt-2"
                                 disabled={isSubmitting}
@@ -171,7 +177,7 @@ export function CourseOverviewSection({
                                 type="number"
                                 min="0"
                                 max="11"
-                                {...register('durationMonths', { valueAsNumber: true })}
+                                {...register('durationMonths')}
                                 placeholder="6"
                                 className="mt-2"
                                 disabled={isSubmitting}

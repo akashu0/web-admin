@@ -27,8 +27,10 @@ export function AddCourseModal({
         headingDescription: "",
         slug: "",
         description: "",
-        durationYears: 0,
-        durationMonths: 0,
+        // Text, not numbers: the model stores duration as a string, and a
+        // number here is rejected by POST /courses as invalid_body.
+        durationYears: "",
+        durationMonths: "",
         studyMode: "online",
         awardedBy: "",
         intakes: [],

@@ -19,6 +19,26 @@ interface UniversityReferencesTabProps {
     onSuccess: () => void;
 }
 
+/**
+ * Whether the website will actually render this reference.
+ *
+ * `resolveUniversityRefs` on the API fetches the visa and the FAQ with
+ * publicOnly, so a draft or inactive one is dropped from the payload and the
+ * site hides that whole tab. Attaching one used to look like it worked and did
+ * nothing — this is the same rule the server applies, spelled out for the editor.
+ */
+const showsOnWebsite = (status?: string) =>
+    !status || status === 'active' || status === 'published';
+
+function NotLiveWarning({ kind, status, where }: { kind: string; status?: string; where: string }) {
+    return (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            This {kind} is <strong>{status}</strong>, so it will not appear on the website.
+            Publish it in the {where} menu.
+        </p>
+    );
+}
+
 export function UniversityReferencesTab({ slug, initialData, onSuccess }: UniversityReferencesTabProps) {
     const [courses, setCourses] = useState<Course[]>([]);
     const [visaProcesses, setVisaProcesses] = useState<Visa[]>([]);
@@ -153,6 +173,7 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                         {visaProcesses.map((visa) => (
                             <option key={visa._id} value={visa._id}>
                                 {visa.country}
+                                {showsOnWebsite(visa.status) ? '' : ` — ${visa.status}`}
                             </option>
                         ))}
                     </select>
@@ -173,6 +194,15 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                             </button>
                         </div>
                     )}
+
+                    {selectedVisa &&
+                        !showsOnWebsite(visaProcesses.find(v => v._id === selectedVisa)?.status) && (
+                            <NotLiveWarning
+                                kind="visa process"
+                                status={visaProcesses.find(v => v._id === selectedVisa)?.status}
+                                where="Visas"
+                            />
+                        )}
                 </div>
             </div>
 
@@ -194,6 +224,7 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                         {faqs.map((faq) => (
                             <option key={faq._id} value={faq._id}>
                                 {faq.title}
+                                {showsOnWebsite(faq.status) ? '' : ` — ${faq.status}`}
                             </option>
                         ))}
                     </select>
@@ -214,6 +245,15 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                             </button>
                         </div>
                     )}
+
+                    {selectedFAQ &&
+                        !showsOnWebsite(faqs.find(f => f._id === selectedFAQ)?.status) && (
+                            <NotLiveWarning
+                                kind="FAQ"
+                                status={faqs.find(f => f._id === selectedFAQ)?.status}
+                                where="FAQ"
+                            />
+                        )}
                 </div>
             </div>
 
@@ -252,7 +292,12 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between">
-                                                <span className="text-sm">{course.courseName}</span>
+                                                <span className="text-sm">
+                                                    {course.overview?.courseName ?? '(untitled course)'}
+                                                    {showsOnWebsite(course.status) ? '' : (
+                                                        <span className="text-amber-700"> — {course.status}</span>
+                                                    )}
+                                                </span>
                                                 {isSelected && (
                                                     <span className="text-primary font-semibold">✓</span>
                                                 )}
@@ -275,6 +320,11 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                         <p className="text-xs text-muted-foreground">
                             {selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected
                         </p>
+                        {selectedCourses.some(
+                            (id) => !showsOnWebsite(courses.find(c => c._id === id)?.status)
+                        ) && (
+                            <NotLiveWarning kind="course" status="not published" where="Courses" />
+                        )}
                         <div className="flex flex-wrap gap-2">
                             {selectedCourses.map((id) => {
                                 const course = courses.find(c => c._id === id);
@@ -283,7 +333,7 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                                         key={id}
                                         className="inline-flex items-center gap-1 px-3 py-1 bg-accent text-primary rounded-full text-sm"
                                     >
-                                        {course.courseName}
+                                        {course.overview?.courseName ?? '(untitled course)'}
                                         <button
                                             type="button"
                                             onClick={() => removeCourse(id)}

@@ -21,6 +21,7 @@ import { PageLoader } from "@/components/common/PageLoader";
 import { EmptyState } from "@/components/common/states";
 import { Field, FieldGrid, StatChip } from "@/components/common/detail";
 import { courseService } from "@/services/courseService";
+import { visaService } from "@/services/visaService";
 import type {
     Brochure,
     CareerOpportunity,
@@ -59,6 +60,13 @@ export function CourseViewPage() {
         enabled: Boolean(slug),
     });
 
+    // The course stores only the visa's id, so the names come from the visa list.
+    const { data: visas } = useQuery({
+        queryKey: ["visas", "for-course-view"],
+        queryFn: () => visaService.getAllVisas({ limit: 200 }),
+    });
+    const visaById = new Map((visas?.data ?? []).map((v) => [v._id, v]));
+
     if (isLoading) return <PageLoader />;
 
     if (isError || !course) {
@@ -93,7 +101,7 @@ export function CourseViewPage() {
     return (
         <div>
             <PageHeader
-                title={o.courseName || c.courseName || "Course"}
+                title={o.courseName || "Course"}
                 subtitle={[o.awardedBy && `Awarded by ${o.awardedBy}`, o.level]
                     .filter(Boolean)
                     .join(" · ")}
@@ -321,24 +329,33 @@ export function CourseViewPage() {
                 <TabsContent value="visa" className="mt-4">
                     {c.visaProcess?.length ? (
                         <Card className="divide-y divide-border p-0">
-                            {[...c.visaProcess]
-                                .sort((a, b) => (a.stepNumber ?? 0) - (b.stepNumber ?? 0))
-                                .map((v: VisaProcess, i: number) => (
-                                    <div key={i} className="flex gap-3 p-4">
-                                        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
-                                            {v.stepNumber ?? i + 1}
-                                        </span>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium">{v.title}</p>
-                                            {v.description && (
-                                                <p className="text-sm text-muted-foreground">{v.description}</p>
-                                            )}
+                            {c.visaProcess.map((v: VisaProcess, i: number) => {
+                                const visa = visaById.get(v.visaId);
+                                return (
+                                    <div key={v.visaId ?? i} className="flex items-center gap-3 p-4">
+                                        <Plane className="size-5 shrink-0 text-muted-foreground" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium">
+                                                {visa?.country ?? "Linked visa process"}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {visa
+                                                    ? `${visa.visaSteps?.length ?? 0} steps · ${visa.visaDocuments?.length ?? 0} documents`
+                                                    : "This visa record no longer exists"}
+                                            </p>
                                         </div>
+                                        {visa && (
+                                            <Button variant="outline" size="sm"
+                                                onClick={() => navigate(`/visas/view/${visa._id}`)}>
+                                                Open
+                                            </Button>
+                                        )}
                                     </div>
-                                ))}
+                                );
+                            })}
                         </Card>
                     ) : (
-                        <EmptyState icon={<Plane className="size-8" />} title="No visa steps recorded" />
+                        <EmptyState icon={<Plane className="size-8" />} title="No visa process linked" />
                     )}
                 </TabsContent>
 

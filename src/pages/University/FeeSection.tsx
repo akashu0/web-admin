@@ -77,6 +77,9 @@ const feeStructureSchema = z.object({
         "Scholarships",
         "Regular (Self-Funded Program)",
     ]).optional(),
+    applicationFee: z.string().optional(),
+    duration: z.string().optional(),
+    scholarshipPercentage: z.string().optional(),
 });
 
 const feeSchema = z.object({
@@ -116,6 +119,9 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
             currency: "USD",
             tuitionFee: "",
             tuitionFeeType: "Regular (Self-Funded Program)",
+            applicationFee: "",
+            duration: "",
+            scholarshipPercentage: "",
         });
     };
 
@@ -210,8 +216,8 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                 </div>
                             </div>
 
-                            {/* Row 2: Average Tuition Fee */}
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* Row 2: Average Tuition Fee + Application Fee + Duration */}
+                            <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <Label>Average Tuition Fee *</Label>
                                     <Input
@@ -223,6 +229,22 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                     {errors.fees?.[index]?.tuitionFee && (
                                         <p className="text-xs text-destructive">{errors.fees[index]?.tuitionFee?.message}</p>
                                     )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Application Fee</Label>
+                                    <Input
+                                        {...register(`fees.${index}.applicationFee`)}
+                                        placeholder="e.g. 50"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Duration</Label>
+                                    <Input
+                                        {...register(`fees.${index}.duration`)}
+                                        placeholder="e.g. 3 years"
+                                    />
                                 </div>
                             </div>
 
@@ -253,6 +275,14 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                </div>
+
+                                <div className="space-y-2 mt-4">
+                                    <Label>Scholarship (%)</Label>
+                                    <Input
+                                        {...register(`fees.${index}.scholarshipPercentage`)}
+                                        placeholder="e.g. 25"
+                                    />
                                 </div>
                             </div>
                         </div>

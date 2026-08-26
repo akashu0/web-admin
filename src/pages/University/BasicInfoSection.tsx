@@ -92,7 +92,15 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
     const onSubmit = async (data: BasicInfoFormData) => {
         try {
             setIsSubmitting(true);
-            await universityService.updateBasicInfo(slug, data);
+            const { status, ...basicInfo } = data;
+            await universityService.updateBasicInfo(slug, basicInfo);
+            // `status` is NOT in the server's basic-info allowlist, so posting it
+            // here was a silent no-op: the tab said saved and the record stayed a
+            // draft. Publishing has its own endpoint, which skips the full-document
+            // validation this section save runs.
+            if (status !== initialData.status) {
+                await universityService.bulkUpdateStatus([initialData._id], status);
+            }
             onSuccess();
         } catch (error: any) {
             console.error("Error updating basic info:", error);

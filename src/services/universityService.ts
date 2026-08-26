@@ -1,4 +1,4 @@
-import type { FeeStructure, University, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
+import type { FeeStructure, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
 import { apiClient } from './api';
 
 export const universityService = {
@@ -10,9 +10,9 @@ export const universityService = {
     },
 
     // Narrowed by country, so picking one shrinks the city list to its cities.
-    getFacets: async (country?: string): Promise<UniversityFacets> => {
+    getFacets: async (country?: string, status?: string): Promise<UniversityFacets> => {
         const response = await apiClient.get<{ data: UniversityFacets }>(`/universities/facets`, {
-            params: country ? { country } : undefined,
+            params: { country: country || undefined, status: status || undefined },
         });
         return response.data.data;
     },
@@ -25,26 +25,6 @@ export const universityService = {
                     'Content-Type': 'multipart/form-data',
                 },
             }
-        );
-        return response.data;
-    },
-
-    // Get single university
-    getUniversityById: async (id: string): Promise<UniversityResponse> => {
-        const response = await apiClient.get<UniversityResponse>(`/universities/${id}`);
-        return response.data;
-    },
-
-    // Update university
-    updateUniversity: async (id: string, data: FormData | Partial<University>): Promise<UniversityResponse> => {
-        const headers = data instanceof FormData
-            ? { 'Content-Type': 'multipart/form-data' }
-            : { 'Content-Type': 'application/json' };
-
-        const response = await apiClient.put<UniversityResponse>(
-            `/universities/${id}`,
-            data,
-            { headers }
         );
         return response.data;
     },

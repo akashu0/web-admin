@@ -60,9 +60,9 @@ export const courseService = {
 
     // Narrowed by country the way the website's dependent dropdowns are, so
     // picking a country shrinks the level/awarded-by lists to what it teaches.
-    getFacets: async (country?: string): Promise<CourseFacets> => {
+    getFacets: async (country?: string, status?: string): Promise<CourseFacets> => {
         const response = await apiClient.get<{ data: CourseFacets }>('/courses/facets', {
-            params: country ? { country } : undefined,
+            params: { country: country || undefined, status: status || undefined },
         });
         return response.data.data;
     },
@@ -132,9 +132,13 @@ export const courseService = {
         // and send a newly-picked image to the image endpoint. The old route
         // (PUT /courses/courses-overview/:slug) does not exist on this API.
         const { courseImage, ...fields } = data;
+        // A new image goes to the upload endpoint; an explicit `null` means the
+        // editor cleared it, and only an empty string sent through the section
+        // save can actually remove a stored one.
+        const body = courseImage === null ? { ...fields, courseImage: "" } : fields;
         const response = await apiClient.patch<{ data: Course }>(
             `/courses/${slug}/section/overview`,
-            fields
+            body
         );
         const updated = response.data.data;
         if (courseImage instanceof File) {

@@ -134,6 +134,13 @@ const VisaList: React.FC = () => {
         return q ? visas.filter((v) => v.country?.toLowerCase().includes(q)) : visas;
     }, [visas, search]);
 
+    // Every one of these is `omitempty` on the API, so a visa nobody has filled
+    // in fully sends nothing at all for them. This list used to call
+    // .toLocaleString() straight on the value and take the whole page down.
+    const text = (v?: string) => (v?.trim() ? v.trim() : "—");
+    const percent = (v?: string) =>
+        !v?.trim() ? "—" : v.trim().endsWith("%") ? v.trim() : `${v.trim()}%`;
+
     const columns: Column<Visa>[] = useMemo(() => [
         {
             key: "country",
@@ -145,21 +152,25 @@ const VisaList: React.FC = () => {
             header: "Visa Fee",
             render: (visa) => (
                 <span className="tabular-nums">
-                    {visa.currency} {visa.visaFee.toLocaleString()}
+                    {[visa.currency, text(visa.visaFee)].filter(Boolean).join(" ")}
                 </span>
             ),
         },
         {
             key: "visaSuccessRate",
             header: "Success Rate",
-            render: (visa) => <span className="font-medium tabular-nums">{visa.visaSuccessRate}%</span>,
+            render: (visa) => (
+                <span className="font-medium tabular-nums">{percent(visa.visaSuccessRate)}</span>
+            ),
         },
         {
             key: "visaProcessingTime",
             header: "Processing Time",
             render: (visa) => (
                 <span>
-                    {visa.visaProcessingTime} {visa.visaProcessingTimeUnit}
+                    {visa.visaProcessingTime
+                        ? `${visa.visaProcessingTime} ${visa.visaProcessingTimeUnit ?? ""}`.trim()
+                        : "—"}
                 </span>
             ),
         },
@@ -168,7 +179,9 @@ const VisaList: React.FC = () => {
             header: "Renewal Cost",
             render: (visa) => (
                 <span className="tabular-nums">
-                    {visa.currency} {visa.visaRenewalCost.toLocaleString()}
+                    {visa.visaRenewalCost
+                        ? [visa.currency, visa.visaRenewalCost].filter(Boolean).join(" ")
+                        : "—"}
                 </span>
             ),
         },

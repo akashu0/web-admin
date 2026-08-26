@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/services/api";
 import {
@@ -65,9 +64,7 @@ export function UniversityList() {
     // filters by exact equality — a typed "london" never matched the stored
     // "London", and Country/City weren't even in the filter allowlist.
     const [searchInput, setSearchInput] = useState("");
-    const [locationInput, setLocationInput] = useState("");
     const search = useDebounce(searchInput, 400);
-    const location = useDebounce(locationInput, 400);
 
     // The values universities actually carry, narrowed to the chosen country so
     // the City list is that country's cities.
@@ -79,14 +76,13 @@ export function UniversityList() {
         setFilters((prev) => ({
             ...prev,
             search: search.trim() || undefined,
-            location: location.trim() || undefined,
         }));
-    }, [search, location]);
+    }, [search]);
 
     useEffect(() => {
         let stale = false;
         universityService
-            .getFacets(filters.country)
+            .getFacets(filters.country, filters.status)
             .then((next) => {
                 if (stale) return;
                 setFacets(next);
@@ -101,13 +97,12 @@ export function UniversityList() {
         return () => {
             stale = true;
         };
-    }, [filters.country]);
+    }, [filters.country, filters.status]);
 
     const hasActiveFilters = Boolean(
         (filters.status && filters.status !== "all") ||
         filters.country ||
         filters.city ||
-        filters.location ||
         filters.continent ||
         filters.streams ||
         filters.universityType ||
@@ -122,7 +117,6 @@ export function UniversityList() {
 
     const clearFilters = useCallback(() => {
         setSearchInput("");
-        setLocationInput("");
         setFilters({ status: "all" });
     }, []);
 
@@ -472,7 +466,7 @@ export function UniversityList() {
                     <Input
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        placeholder="Search universities..."
+                        placeholder="Search name, city, country, address..."
                         className="pl-9"
                     />
                 </div>
@@ -528,16 +522,6 @@ export function UniversityList() {
                     allLabel="All Streams"
                     className="w-[210px]"
                 />
-
-                <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Location</Label>
-                    <Input
-                        value={locationInput}
-                        onChange={(e) => setLocationInput(e.target.value)}
-                        placeholder="e.g. Downtown"
-                        className="w-[150px]"
-                    />
-                </div>
 
                 {hasActiveFilters && (
                     <Button variant="ghost" size="sm" onClick={clearFilters}>

@@ -65,7 +65,7 @@ export function DocumentsRequiredSection({
         e.preventDefault();
 
         // Validate that all required fields are filled
-        const hasEmptyNames = documents.some(doc => !doc.documentName.trim());
+        const hasEmptyNames = documents.some(doc => !doc.documentName?.trim());
         if (hasEmptyNames) {
             alert('Please fill in all document names');
             return;
@@ -113,7 +113,7 @@ export function DocumentsRequiredSection({
                                     </Label>
                                     <Input
                                         id={`documentName-${index}`}
-                                        value={document.documentName}
+                                        value={document.documentName ?? ''}
                                         onChange={(e) =>
                                             handleDocumentChange(index, 'documentName', e.target.value)
                                         }
@@ -127,7 +127,7 @@ export function DocumentsRequiredSection({
                                     <Label htmlFor={`description-${index}`}>Description</Label>
                                     <Textarea
                                         id={`description-${index}`}
-                                        value={document.description}
+                                        value={document.description ?? ''}
                                         onChange={(e) =>
                                             handleDocumentChange(index, 'description', e.target.value)
                                         }

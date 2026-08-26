@@ -40,7 +40,11 @@ export const FAQFormDialog = ({
         defaultValues: {
             entityType: 'University',
             title: '',
-            status: 'draft',
+            // Live by default, like the Visa modal. The whole FAQ is written in
+            // this dialog before Save, so there is no half-finished state that
+            // draft would be protecting — and a draft FAQ attached to a
+            // university is silently dropped from the public page.
+            status: 'active',
             questions: [{ question: '', answer: '', order: 0 }],
         },
     });
@@ -63,7 +67,7 @@ export const FAQFormDialog = ({
             reset({
                 entityType: 'University',
                 title: '',
-                status: 'draft',
+                status: 'active',
                 questions: [{ question: '', answer: '', order: 0 }],
             });
         }

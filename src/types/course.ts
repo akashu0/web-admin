@@ -119,8 +119,8 @@ export interface CourseOverview {
     headingDescription: string;
     slug: string;
     description: string;
-    durationYears?: number;
-    durationMonths?: number;
+    durationYears?: string;
+    durationMonths?: string;
     studyMode: 'online' | 'on-campus' | 'hybrid';
     awardedBy: string;
     intakes: string[];
@@ -154,11 +154,9 @@ export interface DocumentRequired {
     isMandatory: boolean;
 }
 
+/** A course links to a Visa record; the steps live on that record, not here. */
 export interface VisaProcess {
-    id: string;
-    stepNumber: number;
-    title: string;
-    description: string;
+    visaId: string;
 }
 
 export interface CareerOpportunity {
@@ -224,18 +222,7 @@ export interface Course {
     documentsRequired?: DocumentRequired[];
     viewCount?: number;
     _id: string;
-    courseName: string;
     slug: string;
-    courseImage?: string;
-    description?: string;
-    level?: string;
-    durationYears?: number;
-    durationMonths?: number;
-    studyMode: 'online' | 'on-campus' | 'hybrid';
-    intakes: string[];
-    awardedBy?: string;
-    stream?: string;
-    universityType?: 'Public' | 'Private';
     status: 'draft' | 'published';
     createdAt?: string;
     updatedAt?: string;

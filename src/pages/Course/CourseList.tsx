@@ -104,7 +104,7 @@ export function CourseList() {
     useEffect(() => {
         let stale = false;
         courseService
-            .getFacets(filters.country)
+            .getFacets(filters.country, filters.status)
             .then((next) => {
                 if (stale) return;
                 setFacets(next);
@@ -122,7 +122,7 @@ export function CourseList() {
         return () => {
             stale = true;
         };
-    }, [filters.country]);
+    }, [filters.country, filters.status]);
 
     // Distinguishes a filter-driven reset (replace list) from a scroll-driven
     // next-page fetch (append to list).

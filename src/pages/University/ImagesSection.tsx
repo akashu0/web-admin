@@ -43,6 +43,8 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
             };
             reader.readAsDataURL(file);
         }
+        // Clear it, or choosing the same file again fires no change event.
+        e.target.value = "";
     };
 
     const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +57,7 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
             };
             reader.readAsDataURL(file);
         }
+        e.target.value = "";
     };
 
     const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +85,17 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
         setBannerPreview(null);
     };
 
+    // Clearing a preview used to be forgotten on save: the upload endpoint only
+    // ever $sets an image it was given a file for, so "remove" looked like it
+    // worked and the stored logo stayed. `logo`/`banner` ARE in the basic-info
+    // allowlist, so an empty string there is the one write that clears them.
+    const clearedImages = () => {
+        const cleared: Record<string, string> = {};
+        if (initialData.logoUrl && !logoPreview && !logoFile) cleared.logo = "";
+        if (initialData.bannerUrl && !bannerPreview && !bannerFile) cleared.banner = "";
+        return cleared;
+    };
+
     const removeGalleryImage = (index: number) => {
         setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
         setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
@@ -94,30 +108,40 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const hasFiles = Boolean(logoFile || bannerFile || galleryFiles.length);
+        const removedGallery =
+            existingGallery.length !== (initialData.galleryUrls || []).length;
+        const cleared = clearedImages();
+
+        if (!hasFiles && !removedGallery && Object.keys(cleared).length === 0) {
+            toast.info("Nothing to save");
+            return;
+        }
+
         try {
             setIsSubmitting(true);
 
-            const formData = new FormData();
-
-            // Append files
-            if (logoFile) {
-                formData.append("logo", logoFile);
-            }
-            if (bannerFile) {
-                formData.append("banner", bannerFile);
-            }
-            if (galleryFiles.length > 0) {
-                galleryFiles.forEach((file) => {
-                    formData.append("gallery", file);
-                });
+            // Removals first, then uploads. The images endpoint only $pushes —
+            // it has no way to drop a URL, which is why deleting a photo used to
+            // look like it worked and never persisted. The media section owns the
+            // gallery LIST, so the surviving URLs go there. Doing it after the
+            // upload would overwrite the freshly pushed ones.
+            if (removedGallery) {
+                await universityService.updateMedia(slug, { galleryUrls: existingGallery });
             }
 
-            // Append existing gallery URLs
-            if (existingGallery.length > 0) {
-                formData.append("existingGallery", JSON.stringify(existingGallery));
+            if (Object.keys(cleared).length > 0) {
+                await universityService.updateBasicInfo(slug, cleared);
             }
 
-            await universityService.updateImages(slug, formData);
+            if (hasFiles) {
+                const formData = new FormData();
+                if (logoFile) formData.append("logo", logoFile);
+                if (bannerFile) formData.append("banner", bannerFile);
+                galleryFiles.forEach((file) => formData.append("gallery", file));
+                await universityService.updateImages(slug, formData);
+            }
+
             onSuccess();
 
             // Reset new file states
@@ -147,6 +171,18 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                         {/* Logo Upload */}
                         <div className="space-y-2">
                             <Label>University Logo</Label>
+                            {/* The input stays mounted whether or not there is a
+                                preview. It used to live only in the empty branch,
+                                so replacing an image meant removing it first —
+                                and the removal did not persist, which is why a
+                                replacement looked like it had not saved. */}
+                            <input
+                                type="file"
+                                id="logo"
+                                accept="image/*"
+                                onChange={handleLogoChange}
+                                className="hidden"
+                            />
                             {logoPreview ? (
                                 <div className="relative inline-block">
                                     <img
@@ -158,19 +194,19 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                         type="button"
                                         onClick={removeLogo}
                                         className="absolute -top-2 -right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
+                                        title="Remove logo"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
+                                    <label
+                                        htmlFor="logo"
+                                        className="mt-2 block cursor-pointer text-center text-xs font-medium text-primary hover:underline"
+                                    >
+                                        Change logo
+                                    </label>
                                 </div>
                             ) : (
                                 <div className="border-2 border-dashed border-input rounded-lg p-6">
-                                    <input
-                                        type="file"
-                                        id="logo"
-                                        accept="image/*"
-                                        onChange={handleLogoChange}
-                                        className="hidden"
-                                    />
                                     <label
                                         htmlFor="logo"
                                         className="flex flex-col items-center cursor-pointer"
@@ -190,6 +226,13 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                         {/* Banner Upload */}
                         <div className="space-y-2">
                             <Label>Banner Image</Label>
+                            <input
+                                type="file"
+                                id="banner"
+                                accept="image/*"
+                                onChange={handleBannerChange}
+                                className="hidden"
+                            />
                             {bannerPreview ? (
                                 <div className="relative inline-block w-full">
                                     <img
@@ -201,19 +244,19 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
                                         type="button"
                                         onClick={removeBanner}
                                         className="absolute top-2 right-2 p-1 bg-destructive text-primary-foreground rounded-full hover:bg-destructive"
+                                        title="Remove banner"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
+                                    <label
+                                        htmlFor="banner"
+                                        className="mt-2 block cursor-pointer text-center text-xs font-medium text-primary hover:underline"
+                                    >
+                                        Change banner
+                                    </label>
                                 </div>
                             ) : (
                                 <div className="border-2 border-dashed border-input rounded-lg p-6">
-                                    <input
-                                        type="file"
-                                        id="banner"
-                                        accept="image/*"
-                                        onChange={handleBannerChange}
-                                        className="hidden"
-                                    />
                                     <label
                                         htmlFor="banner"
                                         className="flex flex-col items-center cursor-pointer"

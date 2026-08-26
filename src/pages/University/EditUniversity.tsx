@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/services/api";
@@ -23,30 +23,40 @@ export function EditUniversity() {
 
     const [isLoading, setIsLoading] = useState(true);
     const [universityData, setUniversityData] = useState<any>(null);
+    // Bumped on every reload and used as the sections' `key`. They seed
+    // react-hook-form `defaultValues` once, so without a new key a re-fetch
+    // would update this component and leave the forms showing the old values.
+    const [version, setVersion] = useState(0);
 
-    // Load university data
+    const loadUniversity = useCallback(async () => {
+        if (!slug) return;
+        const university = await universityService.getUniversityBySlug(slug);
+        setUniversityData(university.data);
+        setVersion((v) => v + 1);
+    }, [slug]);
+
     useEffect(() => {
-        const loadUniversity = async () => {
-            if (!slug) return;
-
-            try {
-                setIsLoading(true);
-                const university = await universityService.getUniversityBySlug(slug);
-                setUniversityData(university.data);
-            } catch (error: any) {
+        setIsLoading(true);
+        loadUniversity()
+            .catch((error: any) => {
                 console.error("Error loading university:", error);
                 toast.error(apiErrorMessage(error, "Failed to load university data"));
                 navigate("/universities");
-            } finally {
-                setIsLoading(false);
-            }
-        };
+            })
+            .finally(() => setIsLoading(false));
+    }, [loadUniversity, navigate]);
 
-        loadUniversity();
-    }, [slug, navigate]);
-
-    const handleSectionUpdate = (sectionName: string) => {
+    // Re-read after every section save. A section PATCH replaces its whole field,
+    // so what the server now holds is the only honest thing to show — a form that
+    // keeps rendering what you typed hides anything the save dropped until the
+    // next visit, which is what made this feel like "the data isn't saving".
+    const handleSectionUpdate = async (sectionName: string) => {
         toast.success(`${sectionName} updated successfully`);
+        try {
+            await loadUniversity();
+        } catch (error: any) {
+            console.error("Error reloading university:", error);
+        }
     };
 
     if (isLoading) {
@@ -99,6 +109,7 @@ export function EditUniversity() {
 
                 <TabsContent value="basic" className="space-y-4 mt-4">
                     <BasicInfoSection
+                        key={version}
                         slug={slug!}
                         initialData={universityData}
                         onSuccess={() => handleSectionUpdate("Basic Information")}
@@ -107,6 +118,7 @@ export function EditUniversity() {
 
                 <TabsContent value="fees" className="space-y-4 mt-4">
                     <FeeSection
+                        key={version}
                         slug={slug!}
                         initialData={universityData.fees || []}
                         onSuccess={() => handleSectionUpdate("Fee Structure")}
@@ -115,6 +127,7 @@ export function EditUniversity() {
 
                 <TabsContent value="admissions" className="space-y-6 mt-4">
                     <AdmissionsSection
+                        key={version}
                         slug={slug!}
                         initialData={universityData.admissions || {}}
                         onSuccess={() => handleSectionUpdate("Admissions")}
@@ -123,6 +136,7 @@ export function EditUniversity() {
 
                 <TabsContent value="studentLife" className="space-y-4 mt-4">
                     <StudentLifeSection
+                        key={version}
                         slug={slug!}
                         initialData={universityData.studentLife || {}}
                         onSuccess={() => handleSectionUpdate("Student Life")}
@@ -131,6 +145,7 @@ export function EditUniversity() {
 
                 <TabsContent value="reviews" className="space-y-4 mt-4">
                     <ReviewsSection
+                        key={version}
                         slug={slug!}
                         initialData={universityData.reviews || []}
                         onSuccess={() => handleSectionUpdate("Student Reviews")}
@@ -139,6 +154,7 @@ export function EditUniversity() {
 
                 <TabsContent value="images" className="space-y-4 mt-4">
                     <ImagesSection
+                        key={version}
                         slug={slug!}
                         initialData={{
                             logoUrl: universityData.logo,
@@ -151,6 +167,7 @@ export function EditUniversity() {
 
                 <TabsContent value="media" className="space-y-4 mt-4">
                     <MediaSection
+                        key={version}
                         slug={slug!}
                         initialData={{
                             youtubeVideoUrl: universityData.youtubeVideoUrl || "",
@@ -176,6 +193,7 @@ export function EditUniversity() {
 
                 <TabsContent value="refrences" className="space-y-4 mt-4">
                     <UniversityReferencesTab
+                        key={version}
                         slug={slug!}
                         initialData={{
                             visa: universityData.visa || "",

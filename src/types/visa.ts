@@ -26,15 +26,15 @@ export interface Visa {
     _id: string;
     country: string;
     visaDocuments: VisaDocument[];
-    visaFee: string;
-    currency: string;
+    visaFee?: string;
+    currency?: string;
     visaSteps: VisaStep[];
-    visaRenewalCost: string;
+    visaRenewalCost?: string;
     renewalDocuments: VisaRenewalDocument[];
-    visaSuccessRate: string;
-    visaProcessingTime: string;
+    visaSuccessRate?: string;
+    visaProcessingTime?: string;
     visaProcessingTimeUnit: 'days' | 'weeks' | 'months';
-    status: 'active' | 'inactive';
+    status: 'active' | 'inactive' | 'draft';
     createdAt: string;
     updatedAt: string;
 }
@@ -43,15 +43,15 @@ export interface Visa {
 export interface CreateVisaDto {
     country: string;
     visaDocuments: VisaDocument[]; // Now includes optional _id
-    visaFee: string;
+    visaFee?: string;
     currency?: string;
     visaSteps: VisaStep[]; // Now includes optional _id
-    visaRenewalCost: string;
+    visaRenewalCost?: string;
     renewalDocuments: VisaRenewalDocument[]; // Now includes optional _id
-    visaSuccessRate: string;
-    visaProcessingTime: string;
+    visaSuccessRate?: string;
+    visaProcessingTime?: string;
     visaProcessingTimeUnit?: 'days' | 'weeks' | 'months';
-    status?: 'active' | 'inactive';
+    status?: 'active' | 'inactive' | 'draft';
 }
 
 export interface UpdateVisaDto extends Partial<CreateVisaDto> { }
@@ -85,5 +85,5 @@ export interface VisaQueryParams {
     limit?: number;
     search?: string;
     country?: string;
-    status?: 'active' | 'inactive';
+    status?: 'active' | 'inactive' | 'draft';
 }

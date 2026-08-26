@@ -24,7 +24,13 @@ export const AppLayout = () => {
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar onMenu={() => setMobileOpen(true)} />
-          <main ref={mainRef} className="flex-1 overflow-y-auto p-4 lg:p-5">
+          {/* `relative` is load-bearing: overflow only clips absolutely
+              positioned descendants when this element is their containing
+              block. Without it every `sr-only` span in a table row (one per
+              row-actions button) escaped the clip and stretched the DOCUMENT to
+              the full list height — giving the page a second scrollbar that
+              scrolled through thousands of pixels of nothing. */}
+          <main ref={mainRef} className="relative flex-1 overflow-y-auto p-4 lg:p-5">
             <Outlet />
           </main>
         </div>

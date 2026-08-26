@@ -47,6 +47,11 @@ export default function EditCourse() {
     const navigate = useNavigate();
 
     const [courseData, setCourseData] = useState<CourseFormData | null>(null);
+    // Bumped on every reload and used as each section's `key`. The sections seed
+    // their state once (useState / useForm defaultValues), so without a new key
+    // the refetch below updates this component and leaves the forms showing what
+    // was typed rather than what the server actually stored.
+    const [version, setVersion] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<CourseSection>("overview");
     const [isPublishing, setIsPublishing] = useState(false);
@@ -76,14 +81,15 @@ export default function EditCourse() {
                 brochure: response?.brochure || [],
                 overview: {
                     ...response.overview,
-                    durationYears: response.overview.durationYears || 0,
-                    durationMonths: response.overview.durationMonths || 0,
+                    durationYears: response.overview.durationYears || "",
+                    durationMonths: response.overview.durationMonths || "",
                     dynamicFields: response.overview.dynamicFields || [],
                 },
                 universityId: response.universityId || ""
             };
 
             setCourseData(normalizedData);
+            setVersion((v) => v + 1);
         } catch (error: any) {
             console.error("Error fetching course:", error);
             toast.error(error.response?.data?.message || "Failed to fetch course");
@@ -234,6 +240,7 @@ export default function EditCourse() {
                     <div className="max-w-5xl mx-auto bg-card rounded-lg shadow-sm border border-border p-6">
                         {activeSection === "overview" && (
                             <CourseOverviewSection
+                                key={version}
                                 data={courseData.overview}
                                 onSave={(data) => handleSectionUpdate("overview", data)}
                                 onNext={() => setActiveSection("studyCenters")}
@@ -241,6 +248,7 @@ export default function EditCourse() {
                         )}
                         {activeSection === "studyCenters" && (
                             <StudyCentersSection
+                                key={version}
                                 data={courseData.studyCenters?.map(center => center.centerId) || []}
                                 universityId={courseData.universityId || ""}
                                 // Always saved, including an empty id: skipping the
@@ -257,6 +265,7 @@ export default function EditCourse() {
 
                         {activeSection === "feeStructures" && (
                             <DeliveryModeFeeStructure
+                                key={version}
                                 initialData={courseData.feeStructures || []}
                                 onSave={(data) => handleSectionUpdate("feeStructures", data)}
                                 onNext={() => setActiveSection("documents")}
@@ -265,6 +274,7 @@ export default function EditCourse() {
 
                         {activeSection === "documents" && (
                             <DocumentsRequiredSection
+                                key={version}
                                 data={courseData.documentsRequired}
                                 onSave={(data) => handleSectionUpdate("documents", data)}
                                 onNext={() => setActiveSection("visa")}
@@ -273,6 +283,7 @@ export default function EditCourse() {
 
                         {activeSection === "visa" && (
                             <VisaProcessSection
+                                key={version}
                                 data={courseData.visaProcess}
                                 onSave={(data) => handleSectionUpdate("visa", data)}
                                 onNext={() => setActiveSection("career")}
@@ -281,6 +292,7 @@ export default function EditCourse() {
 
                         {activeSection === "career" && (
                             <CareerOpportunitiesSection
+                                key={version}
                                 data={courseData.careerOpportunities}
                                 onSave={(data) => handleSectionUpdate("career", data)}
                                 onNext={() => setActiveSection("dynamicFields")}
@@ -299,6 +311,7 @@ export default function EditCourse() {
 
                         {activeSection === "dynamicFields" && (
                             <DynamicFieldsSection
+                                key={version}
                                 data={courseData.dynamicFields || []}
                                 onSave={(data) => handleSectionUpdate("dynamicFields", data)}
                             />

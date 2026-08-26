@@ -223,7 +223,7 @@ export function ReferencesTab({ form }: ReferencesTabProps) {
                 loadingText="Loading courses..."
                 isLoading={isLoadingCourses}
                 options={courses}
-                labelOf={(c) => c.courseName}
+                labelOf={(c) => c.overview?.courseName ?? '(untitled course)'}
                 selected={watch('topCourses') ?? []}
                 onChange={(ids) => setValue('topCourses', ids)}
             />

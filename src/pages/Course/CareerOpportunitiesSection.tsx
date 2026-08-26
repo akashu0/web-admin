@@ -66,8 +66,8 @@ export function CareerOpportunitiesSection({
         e.preventDefault();
 
         // Validate required fields
-        const hasEmptyTitles = careers.some(career => !career.title.trim());
-        const hasEmptyDescriptions = careers.some(career => !career.description.trim());
+        const hasEmptyTitles = careers.some(career => !career.title?.trim());
+        const hasEmptyDescriptions = careers.some(career => !career.description?.trim());
 
         if (hasEmptyTitles || hasEmptyDescriptions) {
             alert('Please fill in all job titles and descriptions');
@@ -116,7 +116,7 @@ export function CareerOpportunitiesSection({
                                     </Label>
                                     <Input
                                         id={`title-${index}`}
-                                        value={career.title}
+                                        value={career.title ?? ''}
                                         onChange={(e) =>
                                             handleCareerChange(index, 'title', e.target.value)
                                         }
@@ -148,7 +148,7 @@ export function CareerOpportunitiesSection({
                                         id={`salary-${index}`}
                                         type="number"
                                         min="0"
-                                        value={career.averageSalary}
+                                        value={career.averageSalary ?? ''}
                                         onChange={(e) =>
                                             handleCareerChange(index, 'averageSalary', e.target.value)
                                         }

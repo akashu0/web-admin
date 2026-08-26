@@ -15,7 +15,7 @@ import { visaService } from '@/services/visaService';
 
 interface VisaProcessSectionProps {
     data: Array<{ visaId: any }> | any[] | null;
-    onSave: (data: { visaId: string }) => void;
+    onSave: (data: Array<{ visaId: string }>) => void;
     onNext: () => void;
 }
 
@@ -94,7 +94,10 @@ export function VisaProcessSection({
             return;
         }
 
-        onSave({ visaId });
+        // The body IS the section, and `visaProcess` is a LIST. Sending the bare
+        // object stored a document into []CourseVisaProcess, after which the
+        // course could not be read, edited or deleted through the API at all.
+        onSave([{ visaId }]);
         onNext();
     };
 
@@ -224,7 +227,7 @@ export function VisaProcessSection({
                                         <div>
                                             <p className="text-xs text-muted-foreground">Documents</p>
                                             <p className="font-semibold text-foreground">
-                                                {selectedVisa.visaDocuments.length} Required
+                                                {selectedVisa.visaDocuments?.length ?? 0} Required
                                             </p>
                                         </div>
                                     </div>

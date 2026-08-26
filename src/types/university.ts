@@ -89,10 +89,14 @@ export interface University {
     about: string;
     streams?: string[];
 
-    // Images
-    logoUrl?: string;
-    bannerUrl?: string;
+    feeRange?: string;
+
+    // Images. `logo`/`banner` — NOT logoUrl/bannerUrl, which is what this file
+    // used to claim; every read of them was silently undefined.
+    logo?: string;
+    banner?: string;
     galleryUrls: string[];
+    youtubeVideoUrl?: string;
 
     // Embedded
     fees?: FeeStructure[];
@@ -101,7 +105,8 @@ export interface University {
     admissions?: Admissions;
     studentLife?: StudentLife;
     reviews?: UniversityReview[];
-    faqs: string[]; // Array of FAQ ObjectIds (as strings)
+    visa?: string;  // one Visa ObjectId
+    faqs?: string;  // one FAQ ObjectId — a single id, never a list
     courses: string[]; // Array of Course ObjectIds (as strings)
 
     // Status & Slug
@@ -111,9 +116,8 @@ export interface University {
     // Timestamps
     createdAt: string; // ISO string
     updatedAt: string; // ISO string
-
-    // Optional virtuals or methods (if you add any later)
-    [key: string]: any;
+    viewCount?: number;
+    courseCount?: number;
 }
 
 
@@ -164,7 +168,7 @@ export interface UniversityQueryParams extends SortParams {
     location?: string;
     continent?: string;
     streams?: string;
-    universityType?: "all" | "Public" | "Private";
+    universityType?: "Public" | "Private";
 }
 
 /** The values universities actually carry — what the filter bar may offer. */
