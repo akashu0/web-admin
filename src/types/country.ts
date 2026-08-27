@@ -106,6 +106,7 @@ export interface CountryResponse {
     spokenLanguages: string;
     population: string;
     about: string;
+    whyChoose?: { heading?: string; content?: string };
     logo?: string;
     banner?: string;
     status: "published" | "draft";
@@ -136,6 +137,7 @@ export interface ICountry {
     spokenLanguages: string;
     population: string;
     about: string;
+    whyChoose?: { heading?: string; content?: string };
     logo?: string;
     banner?: string;
     status: "published" | "draft";
@@ -165,6 +167,7 @@ export interface CreateCountryDto {
     spokenLanguages: string;
     population: string;
     about: string;
+    whyChoose?: { heading?: string; content?: string };
     logo?: string;
     banner?: string;
     status: "published" | "draft";
@@ -185,6 +188,7 @@ export interface UpdateCountryDto {
     spokenLanguages?: string;
     population?: string;
     about?: string;
+    whyChoose?: { heading?: string; content?: string };
     logo?: string;
     banner?: string;
     status?: "published" | "draft";

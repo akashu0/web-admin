@@ -1,6 +1,7 @@
 import {
   BookMarked,
   BookOpen,
+  Briefcase,
   FileText,
   Globe,
   GraduationCap,
@@ -46,6 +47,12 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Universities", to: "/universities", icon: GraduationCap },
       { label: "Countries", to: "/countries", icon: Globe },
       { label: "Visas", to: "/visas", icon: FileText },
+      {
+        label: "Jobs",
+        to: "/jobs",
+        icon: Briefcase,
+        hint: "Publish the openings drafted in the CRM",
+      },
     ],
   },
   {

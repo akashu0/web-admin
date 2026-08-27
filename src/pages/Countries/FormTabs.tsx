@@ -1,7 +1,7 @@
 // components/CountryForm/FormTabs.tsx
 import { cn } from '@/lib/utils';
 
-type TabType = 'basic' | 'costs' | 'references';
+type TabType = 'basic' | 'usp' | 'costs' | 'references';
 
 interface Tab {
     id: TabType;
@@ -15,6 +15,7 @@ interface FormTabsProps {
 
 const TABS: Tab[] = [
     { id: 'basic', label: 'Basic Info' },
+    { id: 'usp', label: 'Why Choose' },
     { id: 'costs', label: 'Cost of Living' },
     { id: 'references', label: 'References' },
 ];

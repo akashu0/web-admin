@@ -104,6 +104,7 @@ export interface University {
     // Populated or raw IDs (depending on query)
     admissions?: Admissions;
     studentLife?: StudentLife;
+    whyChoose?: { heading?: string; content?: string };
     reviews?: UniversityReview[];
     visa?: string;  // one Visa ObjectId
     faqs?: string;  // one FAQ ObjectId — a single id, never a list

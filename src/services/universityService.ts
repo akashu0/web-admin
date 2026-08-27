@@ -72,6 +72,14 @@ export const universityService = {
         return response.data;
     },
 
+    // Update the USP block. An OBJECT section (like admissions/student-life),
+    // NOT a list — it is keyed in universitySections but deliberately absent
+    // from universityListSections on the Go side.
+    updateWhyChoose: async (slug: string, data: { heading?: string; content?: string }) => {
+        const response = await apiClient.patch(`/universities/${slug}/section/why-choose`, data);
+        return response.data;
+    },
+
     // Update Student Reviews — the review LIST, see updateFees.
     updateReviews: async (slug: string, reviews: unknown[]) => {
         const response = await apiClient.patch(`/universities/${slug}/section/reviews`, reviews);

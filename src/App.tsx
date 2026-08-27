@@ -6,6 +6,8 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { Toaster } from './components/ui/sonner';
 
 import { CourseList } from './pages/Course/CourseList';
+import { JobList } from "./pages/Jobs/JobList";
+import { JobViewPage } from "./pages/Jobs/JobViewPage";
 import { UniversityList } from './pages/University/UniversityList';
 import VisaList from './pages/Visa/VisaList';
 import { VisaViewPage } from './pages/Visa/VisaViewPage';
@@ -45,7 +47,11 @@ function App() {
                         <Route path="/courses/:slug" element={<EditCourse />} />
 
                         {/* University Routes */}
-                        <Route path="/universities" element={<UniversityList />} />
+                        {/* `view` before `:id`, or "view" is read as a reference. */}
+          <Route path="/jobs" element={<JobList />} />
+          <Route path="/jobs/view/:id" element={<JobViewPage />} />
+
+          <Route path="/universities" element={<UniversityList />} />
                         <Route path="/universities/commission" element={<CommissionList />} />
                         <Route path="/universities/view/:slug" element={<UniversityViewPage />} />
                         <Route path="/universities/edit/:slug" element={<EditUniversity />} />

@@ -167,6 +167,16 @@ export const courseService = {
     },
 
     /**
+     * The USP block. An OBJECT section, not a list — the Go side keys it in
+     * courseSections but deliberately NOT in courseListSections, so it must be
+     * sent as `{heading, content}` and never wrapped in an array.
+     */
+    updateWhyChoose: async (slug: string, data: CourseFormData['whyChoose']) => {
+        const response = await apiClient.patch(`/courses/${slug}/section/why-choose`, data ?? {});
+        return response.data;
+    },
+
+    /**
      * The "University" tab. `universityId` is a TOP-LEVEL course field and the
      * OVERVIEW section save is the only one that writes it (courseSet in the Go
      * API parses and validates the hex there, and an empty string clears it).

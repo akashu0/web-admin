@@ -10,7 +10,8 @@ import {
     Globe,
     Briefcase,
     MapPin,
-    Settings
+    Settings,
+    Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ import StudyCentersSection from "./StudyCentersSection";
 import { DocumentsRequiredSection } from "./DocumentsRequiredSection";
 import { VisaProcessSection } from "./VisaProcessSection";
 import { CareerOpportunitiesSection } from "./CareerOpportunitiesSection";
+import { WhyChooseSection } from "./WhyChooseSection";
 import { DynamicFieldsSection } from "./DynamicFieldsSection";
 import DeliveryModeFeeStructure from "./DeliveryModeFeeStructure";
 
@@ -33,6 +35,7 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
     { id: "overview", label: "Course Overview", icon: <FileText className="h-4 w-4" /> },
+    { id: "whyChoose", label: "Why Choose", icon: <Sparkles className="h-4 w-4" /> },
     { id: "studyCenters", label: "University", icon: <MapPin className="h-4 w-4" /> },
     { id: "feeStructures", label: "Fee Structure", icon: <Settings className="h-4 w-4" /> },
     { id: "documents", label: "Documents Required", icon: <FileCheck className="h-4 w-4" /> },
@@ -132,6 +135,9 @@ export default function EditCourse() {
                     break;
                 case "career":
                     await courseService.updateCareerOpportunities(slug!, data);
+                    break;
+                case "whyChoose":
+                    await courseService.updateWhyChoose(slug!, data);
                     break;
                 case "studyCenters":
                     await courseService.updateStudyCenters(slug!, data);
@@ -243,6 +249,14 @@ export default function EditCourse() {
                                 key={version}
                                 data={courseData.overview}
                                 onSave={(data) => handleSectionUpdate("overview", data)}
+                                onNext={() => setActiveSection("whyChoose")}
+                            />
+                        )}
+                        {activeSection === "whyChoose" && (
+                            <WhyChooseSection
+                                key={version}
+                                data={courseData.whyChoose}
+                                onSave={(data) => handleSectionUpdate("whyChoose", data)}
                                 onNext={() => setActiveSection("studyCenters")}
                             />
                         )}

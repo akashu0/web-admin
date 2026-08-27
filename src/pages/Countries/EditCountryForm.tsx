@@ -14,8 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
 import { emptyCountryForm, type CountryFormValues } from './country-form-values';
+import { UspTab } from './UspTab';
 
-export type TabType = 'basic' | 'costs' | 'references';
+export type TabType = 'basic' | 'usp' | 'costs' | 'references';
 
 export function EditCountryForm() {
     const { id } = useParams();
@@ -55,6 +56,7 @@ export function EditCountryForm() {
                 spokenLanguages: data.spokenLanguages ?? '',
                 population: data.population ?? '',
                 about: data.about ?? '',
+                whyChoose: data.whyChoose ?? { heading: '', content: '' },
                 status: data.status ?? 'draft',
                 slug: data.slug ?? '',
                 costOfLiving: data.costOfLiving ?? [],
@@ -121,6 +123,10 @@ export function EditCountryForm() {
                     break;
                 }
 
+                case 'usp':
+                    await countryService.updateCountryWhyChoose(countryId, values.whyChoose);
+                    break;
+
                 case 'costs':
                     await countryService.updateCountryCostOfLiving(countryId, values.costOfLiving);
                     break;
@@ -158,6 +164,8 @@ export function EditCountryForm() {
                         onRemoveImage={handleRemoveImage}
                     />
                 );
+            case 'usp':
+                return <UspTab form={form} />;
             case 'costs':
                 return <CostOfLivingTab form={form} />;
             case 'references':

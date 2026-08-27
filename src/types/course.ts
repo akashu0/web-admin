@@ -180,6 +180,12 @@ export interface Brochure {
 }
 
 
+/** The staff-authored "why choose this course" block. Content is editor HTML. */
+export interface WhyChoose {
+    heading?: string;
+    content?: string;
+}
+
 export interface CourseFormData {
     feeStructures: FeeStructure[];
     universityId: string;
@@ -189,6 +195,7 @@ export interface CourseFormData {
     documentsRequired: DocumentRequired[];
     visaProcess: VisaProcess[];
     careerOpportunities: CareerOpportunity[];
+    whyChoose?: WhyChoose;
     brochure: Brochure[];
     dynamicFields?: DynamicField[];
     status: 'draft' | 'published';
@@ -218,6 +225,7 @@ export interface Course {
     brochure?: Brochure[];
     overview: CourseOverview;
     careerOpportunities?: CareerOpportunity[];
+    whyChoose?: WhyChoose;
     visaProcess?: VisaProcess[];
     documentsRequired?: DocumentRequired[];
     viewCount?: number;
@@ -230,6 +238,7 @@ export interface Course {
 
 export type CourseSection =
     | 'overview'
+    | 'whyChoose'
     | 'studyCenters'
     | 'feeStructures'
     | 'documents'

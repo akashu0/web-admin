@@ -12,6 +12,8 @@ export interface CountryFormValues {
     spokenLanguages: string;
     population: string;
     about: string;
+    /** The staff-authored "why choose this country" block; content is editor HTML. */
+    whyChoose: { heading?: string; content?: string };
     status: 'draft' | 'published';
     slug: string;
     costOfLiving: Cost[];
@@ -28,6 +30,7 @@ export const emptyCountryForm: CountryFormValues = {
     spokenLanguages: '',
     population: '',
     about: '',
+    whyChoose: { heading: '', content: '' },
     status: 'draft',
     slug: '',
     costOfLiving: [],

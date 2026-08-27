@@ -198,6 +198,22 @@ export const countryService = {
         }
     },
 
+    // Countries have no /section/ route — the generic entity PATCH takes the
+    // field directly. Plain JSON, unlike updateCountryBasicInfo which is
+    // multipart because of the banner file.
+    async updateCountryWhyChoose(
+        id: string,
+        whyChoose: { heading?: string; content?: string },
+    ): Promise<CountryResponseData> {
+        try {
+            const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { whyChoose });
+            return response.data;
+        } catch (error) {
+            console.error('Error updating why choose:', error);
+            throw error;
+        }
+    },
+
     async updateCountryCostOfLiving(id: string, costOfLiving: any[]): Promise<CountryResponseData> {
         try {
             const response = await apiClient.patch<CountryResponseData>(`/countries/${id}`, { costOfLiving });
