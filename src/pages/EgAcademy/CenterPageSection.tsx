@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowDown, ArrowUp, ImageUp, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -71,11 +71,13 @@ export function CenterPageSection({
   const [value, setValue] = useState<any>(initial ?? (isArraySection ? [] : {}));
   const [isSaving, setIsSaving] = useState(false);
 
-  // Switching sections swaps `initial` under a mounted form; without this the
-  // second section shows the first one's values.
-  useEffect(() => {
-    setValue(initial ?? (isArraySection ? [] : {}));
-  }, [initial, isArraySection]);
+  // No effect re-syncing `value` from `initial`. The parent keys this component
+  // by section AND page version, so switching sections or saving already
+  // remounts it with fresh state — while an effect keyed on `initial` also fired
+  // on every unrelated parent render (`initial` is rebuilt inline each time),
+  // wiping whatever was typed but not yet saved. That is how an image uploaded
+  // and then followed by "Publish page" lost its URL after saying "Image
+  // uploaded": the upload only writes local state, and the effect threw it away.
 
   const setField = (under: string | undefined, key: string, next: string) => {
     setValue((prev: any) => {

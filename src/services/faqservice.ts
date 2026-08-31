@@ -52,7 +52,10 @@ class FAQService {
         id: string,
         data: UpdateFAQInput
     ): Promise<{ success: boolean; message: string; data: IFAQ }> {
-        const response = await apiClient.put(
+        // PATCH, not PUT: this form sends only {title, status, questions}, and a
+        // whole-document replace erased entityType/entityId — which dropped the
+        // FAQ out of every filtered list it belonged to.
+        const response = await apiClient.patch(
             `/faqs/${id}`,
             data,
         );

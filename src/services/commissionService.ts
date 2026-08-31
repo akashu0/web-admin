@@ -66,7 +66,9 @@ export const commissionService = {
         id: string,
         payload: Partial<CommissionFormValues>
     ): Promise<PartnerCommission> => {
-        const { data } = await apiClient.put<PartnerCommission>(`${BASE}/${id}`, payload);
+        // PATCH, not PUT: CommissionFormValues carries neither `audience` nor
+        // `isActive`, so a replace erased the audience and deactivated the card.
+        const { data } = await apiClient.patch<PartnerCommission>(`${BASE}/${id}`, payload);
         return data;
     },
 

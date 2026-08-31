@@ -76,7 +76,9 @@ export const visaService = {
 
     async updateVisa(id: string, data: UpdateVisaDto): Promise<Visa> {
         try {
-            const response = await apiClient.put<VisaMutationResponse>(`/visas/${id}`, data);
+            // PATCH, not PUT: UpdateVisaDto is a Partial, and a replace erased
+            // every nested document/step _id the body did not carry.
+            const response = await apiClient.patch<VisaMutationResponse>(`/visas/${id}`, data);
             return response.data.data;
         } catch (error) {
             console.error('Error updating visa:', error);

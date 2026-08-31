@@ -26,6 +26,10 @@ export default function EditCenterPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPublishing, setIsPublishing] = useState(false);
   const [activeId, setActiveId] = useState(CENTER_SECTIONS[0].id);
+  // Bumped after each section save so the form remounts and renders what the
+  // server actually stored, rather than what was typed — same reason
+  // EditUniversity keys its sections by version.
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     if (!slug) {
@@ -160,15 +164,21 @@ export default function EditCenterPage() {
         <div className="p-8">
           <div className="mx-auto max-w-5xl rounded-lg border border-border bg-card p-6 shadow-sm">
             <CenterPageSection
-              // Remounting per section keeps each form's state to its own section.
-              key={active.id}
+              // Remount per section, and again after a save. Deliberately NOT on
+              // every render: unrelated parent updates (publishing, for one) must
+              // leave an in-progress edit — including a just-uploaded image URL —
+              // exactly where it is.
+              key={`${active.id}:${version}`}
               slug={page.slug}
               sectionKey={active.sectionKey}
               patch={active.patch}
               initial={active.read(page)}
               blocks={active.blocks}
               description={active.description}
-              onSaved={setPage}
+              onSaved={(saved) => {
+                setPage(saved);
+                setVersion((v) => v + 1);
+              }}
             />
           </div>
         </div>
