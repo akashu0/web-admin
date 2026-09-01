@@ -12,11 +12,30 @@ import {
 } from "@/components/ui/select";
 import type { Visa } from '@/types/visa';
 import { visaService } from '@/services/visaService';
+import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 
 interface VisaProcessSectionProps {
     data: Array<{ visaId: any }> | any[] | null;
-    onSave: (data: Array<{ visaId: string }>) => void;
+    onSave: (data: Array<{ visaId: string }>) => Promise<void> | void;
     onNext: () => void;
+}
+
+/** The stored value is a list whose one row holds the visa reference, and the
+ *  reference is a hex string or a populated document depending on the read. */
+function extractVisaId(data: VisaProcessSectionProps['data']): string {
+    if (!data || !Array.isArray(data) || data.length === 0) return '';
+
+    const firstVisa = data[0];
+    if (firstVisa?.visaId) {
+        if (typeof firstVisa.visaId === 'object' && firstVisa.visaId._id) {
+            return firstVisa.visaId._id;
+        }
+        if (typeof firstVisa.visaId === 'string') {
+            return firstVisa.visaId;
+        }
+    }
+    return '';
 }
 
 export function VisaProcessSection({
@@ -27,31 +46,15 @@ export function VisaProcessSection({
     const [visas, setVisas] = useState<Visa[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedVisa, setSelectedVisa] = useState<Visa | null>(null);
-    const [visaId, setVisaId] = useState<string>('');
+    const [visaId, setVisaId] = useState<string>(() => extractVisaId(data));
     const [modalVisa, setModalVisa] = useState<Visa | null>(null);
-
-    // Extract visaId from the data structure
-    const getVisaId = () => {
-        if (!data || !Array.isArray(data) || data.length === 0) return '';
-
-        const firstVisa = data[0];
-        if (firstVisa?.visaId) {
-            if (typeof firstVisa.visaId === 'object' && firstVisa.visaId._id) {
-                return firstVisa.visaId._id;
-            }
-            if (typeof firstVisa.visaId === 'string') {
-                return firstVisa.visaId;
-            }
-        }
-        return '';
-    };
 
     useEffect(() => {
         fetchVisas();
     }, []);
 
     useEffect(() => {
-        const initialVisaId = getVisaId();
+        const initialVisaId = extractVisaId(data);
         if (initialVisaId) {
             setVisaId(initialVisaId);
         }
@@ -86,19 +89,34 @@ export function VisaProcessSection({
         setVisaId(selectedId);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    /** Throws when the section is not fit to save — see DocumentsRequiredSection. */
+    const submit = async () => {
         if (!visaId) {
-            alert('Please select a visa process');
-            return;
+            throw new Error('Please select a visa process');
         }
 
         // The body IS the section, and `visaProcess` is a LIST. Sending the bare
         // object stored a document into []CourseVisaProcess, after which the
         // course could not be read, edited or deleted through the API at all.
-        onSave([{ visaId }]);
-        onNext();
+        await onSave([{ visaId }]);
+    };
+
+    useSectionGuard({
+        id: 'course.visa',
+        label: 'Visa Process',
+        value: visaId,
+        onSave: submit,
+        onRestore: setVisaId,
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await submit();
+            onNext();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not save this section');
+        }
     };
 
     if (isLoading) {

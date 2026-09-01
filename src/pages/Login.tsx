@@ -6,14 +6,19 @@ import { z } from 'zod';
 import { ArrowRight, Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/authStore';
+import { setRemember } from '@/lib/authStorage';
 import { apiClient, apiErrorMessage } from '@/services/api';
 
 const schema = z.object({
     email: z.string().email('Enter a valid email address'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
+    // Ticked by default: this is how the app has always behaved, and the box is
+    // here to opt OUT of it on a machine that is not yours.
+    rememberMe: z.boolean(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -28,14 +33,23 @@ export const Login = () => {
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors },
-    } = useForm<FormValues>({ resolver: zodResolver(schema) });
+    } = useForm<FormValues>({
+        resolver: zodResolver(schema),
+        defaultValues: { rememberMe: true },
+    });
+    const rememberMe = watch('rememberMe');
 
     if (token) return <Navigate to="/dashboard" replace />;
 
-    const onSubmit = async ({ email, password }: FormValues) => {
+    const onSubmit = async ({ email, password, rememberMe: keep }: FormValues) => {
         try {
             setIsLoading(true);
+            // Before the store is written, so the session lands in the storage
+            // the choice selects rather than being moved afterwards.
+            setRemember(keep);
             // The CRM's staff login — web-admin has no user list of its own any
             // more. The response carries the identity AND the permission map, so
             // the sidebar can render correctly without a second round trip.
@@ -43,6 +57,9 @@ export const Login = () => {
                 email,
                 password,
                 deviceName: 'web-admin',
+                // The server halves this too: an unremembered sign-in gets a
+                // twelve-hour session instead of a week.
+                rememberMe: keep,
             });
             const { token, refreshToken, user, role, permissions } = response.data.data;
 
@@ -147,6 +164,18 @@ export const Login = () => {
                             {errors.password && (
                                 <p className="text-xs text-destructive">{errors.password.message}</p>
                             )}
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                            <Checkbox
+                                id="rememberMe"
+                                checked={rememberMe}
+                                onCheckedChange={(v) => setValue('rememberMe', v === true)}
+                                disabled={isLoading}
+                            />
+                            <Label htmlFor="rememberMe" className="text-sm font-normal">
+                                Keep me logged in
+                            </Label>
                         </div>
 
                         <Button type="submit" size="lg" className="w-full" disabled={isLoading}>

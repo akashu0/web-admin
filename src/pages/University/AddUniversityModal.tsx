@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
+import { useGuardedDialog, useSectionGuard } from "@/hooks/use-unsaved-changes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -90,6 +91,7 @@ export function AddUniversityModal({
         reset,
         setValue,
         watch,
+        control,
     } = useForm<UniversityFormData>({
         resolver: zodResolver(universitySchema),
         defaultValues: {
@@ -171,6 +173,27 @@ export function AddUniversityModal({
         setBannerPreview(null);
     };
 
+    // Files and the stream picker live outside the form, so the guard watches
+    // them alongside the form values.
+    const values = useWatch({ control });
+    useSectionGuard({
+        id: "university.new",
+        label: "New university",
+        value: { values, logoFile, bannerFile, selectedStreams },
+        ready: open,
+        onSave: () => handleSubmit(onSubmit)(),
+        onRestore: () => {
+            reset();
+            setLogoFile(null);
+            setLogoPreview(null);
+            setBannerFile(null);
+            setBannerPreview(null);
+            setSelectedStreams([]);
+        },
+    });
+
+    const guardedOpenChange = useGuardedDialog(onOpenChange);
+
     const onSubmit = async (data: UniversityFormData) => {
         try {
             setIsSubmitting(true);
@@ -220,14 +243,17 @@ export function AddUniversityModal({
             if (slug) navigate(`/universities/edit/${slug}`);
         } catch (error: any) {
             console.error("Error creating university:", error);
-            toast.error(error.response?.data?.message || "Failed to create university");
+            const message = error.response?.data?.message || "Failed to create university";
+            toast.error(message);
+            // Rethrown so the guard cannot close the dialog over a failed create.
+            throw new Error(message);
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={guardedOpenChange}>
             <DialogContent className="max-w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New University</DialogTitle>

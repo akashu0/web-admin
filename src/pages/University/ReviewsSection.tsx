@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
 
 const RATING_OPTIONS = ["1", "2", "3", "4", "5"] as const;
 
@@ -45,14 +46,7 @@ interface ReviewsSectionProps {
 export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        control,
-        watch,
-        setValue,
-    } = useForm<ReviewsFormData>({
+    const form = useForm<ReviewsFormData>({
         resolver: zodResolver(reviewsFormSchema),
         defaultValues: {
             reviews: (initialData || []).map((r) => ({
@@ -64,6 +58,14 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
             })),
         },
     });
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        control,
+        watch,
+        setValue,
+    } = form;
 
     const { fields, append, remove } = useFieldArray({ control, name: "reviews" });
 
@@ -77,21 +79,29 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
         });
     };
 
+    /** The save itself. Throws on failure, so the unsaved-changes guard
+     *  can refuse to let a failed save through. */
+    const submit = async (data: ReviewsFormData) => {
+        // The body IS the section — the review LIST, not {reviews: [...]}.
+        // See FeeSection: the wrapper is what corrupted the stored array.
+        const payload = data.reviews.map((r) => ({
+            studentName: r.studentName,
+            rating: Number(r.rating),
+            comment: r.comment,
+            course: r.course || undefined,
+            date: r.date || undefined,
+        }));
+        await universityService.updateReviews(slug, payload);
+        onSuccess();
+        toast.success("Student reviews saved");
+    };
+
+    useRhfSectionGuard({ id: 'university.reviews', label: 'Student Reviews', form, submit });
+
     const onSubmit = async (data: ReviewsFormData) => {
         try {
             setIsSubmitting(true);
-            // The body IS the section — the review LIST, not {reviews: [...]}.
-            // See FeeSection: the wrapper is what corrupted the stored array.
-            const payload = data.reviews.map((r) => ({
-                studentName: r.studentName,
-                rating: Number(r.rating),
-                comment: r.comment,
-                course: r.course || undefined,
-                date: r.date || undefined,
-            }));
-            await universityService.updateReviews(slug, payload);
-            onSuccess();
-            toast.success("Student reviews saved");
+            await submit(data);
         } catch (error: any) {
             console.error("Error updating reviews:", error);
             toast.error(error.response?.data?.message || "Failed to update reviews");
@@ -100,14 +110,19 @@ export function ReviewsSection({ slug, initialData, onSuccess }: ReviewsSectionP
         }
     };
 
+
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>Student Reviews</CardTitle>
-                            <CardDescription>Manage reviews shared by students of this university</CardDescription>
+                            <CardTitle>Featured Reviews</CardTitle>
+                            <CardDescription>
+                                Written by staff and stored on this university. Reviews students
+                                submit themselves are moderated under Reviews in the sidebar — they
+                                are a separate list and this tab does not touch them.
+                            </CardDescription>
                         </div>
                         <Button type="button" variant="outline" size="sm" onClick={addReview}>
                             <Plus className="h-4 w-4 mr-2" />

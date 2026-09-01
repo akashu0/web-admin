@@ -1,6 +1,7 @@
 // components/CountryForm/CountryForm.tsx
 import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
+import { useGuardedDialog, useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { countryService } from '@/services/countryService';
@@ -21,6 +22,20 @@ export function CountryForm({ onClose, onSuccess }: CountryFormProps) {
     const bannerInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<CountryFormValues>({ defaultValues: emptyCountryForm });
+
+    const values = useWatch({ control: form.control });
+    useSectionGuard({
+        id: 'country.new',
+        label: 'New country',
+        value: { values, bannerFile },
+        onSave: () => form.handleSubmit(onSubmit)(),
+        onRestore: () => {
+            form.reset(emptyCountryForm);
+            handleRemoveImage();
+        },
+    });
+
+    const guardedClose = useGuardedDialog((open) => { if (!open) onClose(); });
 
     const onSubmit = async (value: CountryFormValues) => {
         try {
@@ -56,6 +71,8 @@ export function CountryForm({ onClose, onSuccess }: CountryFormProps) {
         } catch (error) {
             console.error('Error creating country:', error);
             toast.error('Failed to create country. Please try again.');
+            // Rethrown so the guard cannot close the dialog over a failed create.
+            throw error;
         } finally {
             setIsSubmitting(false);
         }
@@ -83,7 +100,7 @@ export function CountryForm({ onClose, onSuccess }: CountryFormProps) {
     };
 
     return (
-        <Dialog open onOpenChange={(open) => !open && onClose()}>
+        <Dialog open onOpenChange={guardedClose}>
             <DialogContent className="max-h-[95vh] gap-0 overflow-hidden p-0 sm:max-w-4xl">
                 <DialogHeader className="border-b border-border px-6 py-4">
                     <DialogTitle className="text-h2">Add New Country</DialogTitle>

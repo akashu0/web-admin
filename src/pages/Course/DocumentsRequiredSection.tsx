@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, FileText } from 'lucide-react';
 import type { DocumentRequired } from '@/types/course';
+import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 
 interface DocumentsRequiredSectionProps {
     data: DocumentRequired[];
-    onSave: (data: DocumentRequired[]) => void;
+    onSave: (data: DocumentRequired[]) => Promise<void> | void;
     onNext: () => void;
 }
 
@@ -61,18 +63,32 @@ export function DocumentsRequiredSection({
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Validate that all required fields are filled
+    /** Throws when the section is not fit to save. The unsaved-changes guard
+     *  turns that into "you cannot leave yet"; the Save button into a toast. */
+    const submit = async () => {
         const hasEmptyNames = documents.some(doc => !doc.documentName?.trim());
         if (hasEmptyNames) {
-            alert('Please fill in all document names');
-            return;
+            throw new Error('Please fill in all document names');
         }
+        await onSave(documents);
+    };
 
-        onSave(documents);
-        onNext();
+    useSectionGuard({
+        id: 'course.documents',
+        label: 'Documents Required',
+        value: documents,
+        onSave: submit,
+        onRestore: setDocuments,
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await submit();
+            onNext();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not save this section');
+        }
     };
 
     return (

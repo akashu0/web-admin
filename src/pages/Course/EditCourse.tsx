@@ -16,6 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { courseService } from "@/services/courseService";
+import { useUnsavedContext, useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedBar } from "@/components/common/UnsavedBar";
 import type { CourseFormData, CourseSection } from "@/types/course";
 import { CourseOverviewSection } from "./CourseOverviewSection";
 import StudyCentersSection from "./StudyCentersSection";
@@ -58,6 +60,10 @@ export default function EditCourse() {
     const [isLoading, setIsLoading] = useState(true);
     const [activeSection, setActiveSection] = useState<CourseSection>("overview");
     const [isPublishing, setIsPublishing] = useState(false);
+    // Switching section unmounts the current one, so it is a way of losing work
+    // exactly like navigating away — it asks the same question.
+    const { requestLeave } = useUnsavedContext();
+    const { dirty } = useUnsavedChanges();
 
     useEffect(() => {
         if (!slug) {
@@ -185,11 +191,11 @@ export default function EditCourse() {
                     </p>
                 </div>
 
-                <nav className="p-4 space-y-1">
+                <nav className={cn("p-4 space-y-1 transition-opacity", dirty && "opacity-60")}>
                     {sidebarItems.map((item) => (
                         <button
                             key={item.id}
-                            onClick={() => setActiveSection(item.id)}
+                            onClick={() => requestLeave(() => setActiveSection(item.id))}
                             className={cn(
                                 "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
                                 activeSection === item.id
@@ -218,7 +224,7 @@ export default function EditCourse() {
                         </div>
 
                         <Button
-                            onClick={handlePublish}
+                            onClick={() => requestLeave(handlePublish)}
                             disabled={isPublishing}
                             className={cn(
                                 "gap-2",
@@ -243,7 +249,9 @@ export default function EditCourse() {
                 </div>
 
                 <div className="p-8">
-                    <div className="max-w-5xl mx-auto bg-card rounded-lg shadow-sm border border-border p-6">
+                    <div className="max-w-5xl mx-auto space-y-4">
+                    <UnsavedBar />
+                    <div className="bg-card rounded-lg shadow-sm border border-border p-6">
                         {activeSection === "overview" && (
                             <CourseOverviewSection
                                 key={version}
@@ -330,6 +338,7 @@ export default function EditCourse() {
                                 onSave={(data) => handleSectionUpdate("dynamicFields", data)}
                             />
                         )}
+                    </div>
                     </div>
                 </div>
             </main>

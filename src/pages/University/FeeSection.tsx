@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
 
 const TUITION_FEE_TYPES = [
     "Fully Tuition Fee Funded",
@@ -77,8 +78,6 @@ const feeStructureSchema = z.object({
         "Scholarships",
         "Regular (Self-Funded Program)",
     ]).optional(),
-    applicationFee: z.string().optional(),
-    duration: z.string().optional(),
     scholarshipPercentage: z.string().optional(),
 });
 
@@ -97,6 +96,12 @@ interface FeeSectionProps {
 export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const form = useForm<FeeFormData>({
+        resolver: zodResolver(feeSchema),
+        defaultValues: {
+            fees: initialData.length > 0 ? initialData : [],
+        },
+    });
     const {
         register,
         handleSubmit,
@@ -104,12 +109,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
         control,
         watch,
         setValue,
-    } = useForm<FeeFormData>({
-        resolver: zodResolver(feeSchema),
-        defaultValues: {
-            fees: initialData.length > 0 ? initialData : [],
-        },
-    });
+    } = form;
 
     const { fields, append, remove } = useFieldArray({ control, name: "fees" });
 
@@ -119,22 +119,28 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
             currency: "USD",
             tuitionFee: "",
             tuitionFeeType: "Regular (Self-Funded Program)",
-            applicationFee: "",
-            duration: "",
             scholarshipPercentage: "",
         });
     };
 
+    /** The save itself. Throws on failure, so the unsaved-changes guard
+     *  can refuse to let a failed save through. */
+    const submit = async (data: FeeFormData) => {
+        // The body IS the section: this endpoint takes the fee LIST, not an
+        // object wrapping it. Sending `data` posted {"fees":[...]}, which the
+        // API stored verbatim — turning `fees` into a document and making
+        // every later read of the university fail to decode.
+        await universityService.updateFees(slug, data.fees);
+        onSuccess();
+        toast.success("Fee structure saved");
+    };
+
+    useRhfSectionGuard({ id: 'university.fees', label: 'Fee Structure', form, submit });
+
     const onSubmit = async (data: FeeFormData) => {
         try {
             setIsSubmitting(true);
-            // The body IS the section: this endpoint takes the fee LIST, not an
-            // object wrapping it. Sending `data` posted {"fees":[...]}, which the
-            // API stored verbatim — turning `fees` into a document and making
-            // every later read of the university fail to decode.
-            await universityService.updateFees(slug, data.fees);
-            onSuccess();
-            toast.success("Fee structure saved");
+            await submit(data);
         } catch (error: any) {
             console.error("Error updating fees:", error);
             toast.error(error.response?.data?.message || "Failed to update fee structure");
@@ -142,6 +148,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -216,36 +223,21 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                 </div>
                             </div>
 
-                            {/* Row 2: Average Tuition Fee + Application Fee + Duration */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Average Tuition Fee *</Label>
-                                    <Input
-                                        type="text"
-                                        inputMode="text"
-                                        {...register(`fees.${index}.tuitionFee`)}
-                                        placeholder="e.g. 15000 or 1000-2000"
-                                    />
-                                    {errors.fees?.[index]?.tuitionFee && (
-                                        <p className="text-xs text-destructive">{errors.fees[index]?.tuitionFee?.message}</p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Application Fee</Label>
-                                    <Input
-                                        {...register(`fees.${index}.applicationFee`)}
-                                        placeholder="e.g. 50"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Duration</Label>
-                                    <Input
-                                        {...register(`fees.${index}.duration`)}
-                                        placeholder="e.g. 3 years"
-                                    />
-                                </div>
+                            {/* Row 2: Average Tuition Fee. Application fee and
+                                duration used to sit beside it — duration belongs
+                                to the course, which states it already, and the
+                                application fee was the same number on every band. */}
+                            <div className="space-y-2">
+                                <Label>Average Tuition Fee *</Label>
+                                <Input
+                                    type="text"
+                                    inputMode="text"
+                                    {...register(`fees.${index}.tuitionFee`)}
+                                    placeholder="e.g. 15000 or 1000-2000"
+                                />
+                                {errors.fees?.[index]?.tuitionFee && (
+                                    <p className="text-xs text-destructive">{errors.fees[index]?.tuitionFee?.message}</p>
+                                )}
                             </div>
 
                             {/* Divider */}

@@ -78,4 +78,19 @@ export const vacancyService = {
     });
     return response.data;
   },
+
+  /**
+   * Attach a catalog FAQ to a job, or clear it with an empty string.
+   *
+   * Its own endpoint, not part of any job-content save: the CRM owns what the
+   * opening SAYS, this app owns how it reads once published. Returns the
+   * redacted job, so the caller can render what the server now holds.
+   */
+  setFaq: async (vacancyId: string, faqId: string) => {
+    const response = await apiClient.patch<Envelope<Vacancy>>(
+      `/vacancies/review/${vacancyId}/faq`,
+      { faqId },
+    );
+    return withKey(response.data.data);
+  },
 };

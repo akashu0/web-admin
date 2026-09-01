@@ -2,10 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/services/api";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { universityService } from "@/services/universityService";
+import { WEBSITE_URL, openUniversityPage } from "@/lib/website";
+import { useUnsavedContext, useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedBar } from "@/components/common/UnsavedBar";
 import { BasicInfoSection } from "./BasicInfoSection";
 import { FeeSection } from "./FeeSection";
 import { AdmissionsSection } from "./AdmissionsSection";
@@ -28,6 +32,12 @@ export function EditUniversity() {
     // react-hook-form `defaultValues` once, so without a new key a re-fetch
     // would update this component and leave the forms showing the old values.
     const [version, setVersion] = useState(0);
+    // Radix unmounts the inactive tab's content, so switching tab throws away
+    // whatever was typed in this one — the same loss as navigating away, asked
+    // the same way. That needs the tabs controlled.
+    const [activeTab, setActiveTab] = useState("basic");
+    const { requestLeave } = useUnsavedContext();
+    const { dirty } = useUnsavedChanges();
 
     const loadUniversity = useCallback(async () => {
         if (!slug) return;
@@ -80,7 +90,7 @@ export function EditUniversity() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate("/universities")}
+                        onClick={() => requestLeave(() => navigate("/universities"))}
                     >
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Universities
@@ -88,14 +98,34 @@ export function EditUniversity() {
                     <div>
                         <h1 className="text-3xl font-bold text-foreground">Edit University</h1>
                         <p className="text-muted-foreground mt-1">
-                            Update university information section by section
+                            {universityData.status === "draft"
+                                ? "Draft — not on the website yet"
+                                : "Published — live on the website"}
                         </p>
                     </div>
                 </div>
+
+                {/* The saved record as the site renders it. A draft goes through
+                    a signed preview link; published is just the public URL. */}
+                {WEBSITE_URL && (
+                    <Button
+                        variant="outline"
+                        onClick={() => openUniversityPage(universityData)}
+                    >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {universityData.status === "draft" ? "Preview draft" : "View on website"}
+                    </Button>
+                )}
             </div>
 
-            <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-11">
+            <UnsavedBar />
+
+            <Tabs
+                value={activeTab}
+                onValueChange={(next) => requestLeave(() => setActiveTab(next))}
+                className="w-full"
+            >
+                <TabsList className={cn("grid w-full grid-cols-11", dirty && "opacity-60")}>
                     <TabsTrigger value="basic">Basic Info</TabsTrigger>
                     <TabsTrigger value="whyChoose">Why Choose</TabsTrigger>
                     <TabsTrigger value="fees">Fees</TabsTrigger>

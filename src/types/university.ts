@@ -12,27 +12,20 @@ export interface FeeStructure {
     // here, so anything reading a fee row had to cast.
     tuitionFeeType?: "Fully Tuition Fee Funded" | "Scholarships" | "Regular (Self-Funded Program)";
     scholarshipPercentage?: string;
-    applicationFee?: string;
-    duration?: string; // e.g., "4 years"
+    // No applicationFee or duration: both were removed from the Go model.
+    // Duration belongs to the COURSE, which states it already; the application
+    // fee was the same figure repeated on every band.
 }
 
 /**
- * Student Life section
+ * Student Life section — prose about campus life, and only that.
+ *
+ * The `stats` block and `athletics.division` were removed here and in the Go
+ * model: four American-campus figures nobody filled in, which rendered as an
+ * empty stat grid wherever they were shown.
  */
-export interface StudentLifeStats {
-    studentOrganizations?: string; // e.g., "500+"
-    varsitySports?: string; // e.g., "33"
-    studentFacultyRatio?: string; // e.g., "12:1"
-}
-
-export interface StudentLifeAthletics {
-    division?: string; // e.g., "Division III"
-}
-
 export interface StudentLife {
     overview?: string;
-    stats?: StudentLifeStats;
-    athletics?: StudentLifeAthletics;
 }
 
 /**

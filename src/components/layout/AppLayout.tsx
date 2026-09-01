@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { ScrollRootContext } from "./scroll-root";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { UnsavedChangesProvider } from "@/app/unsaved-changes";
 
 export const AppLayout = () => {
   const mainRef = useRef<HTMLElement>(null);
@@ -11,6 +12,7 @@ export const AppLayout = () => {
 
   return (
     <ScrollRootContext.Provider value={mainRef}>
+     <UnsavedChangesProvider>
       <div className="flex h-screen overflow-hidden bg-canvas">
         <div className="hidden lg:block">
           <Sidebar />
@@ -35,6 +37,7 @@ export const AppLayout = () => {
           </main>
         </div>
       </div>
+     </UnsavedChangesProvider>
     </ScrollRootContext.Provider>
   );
 };

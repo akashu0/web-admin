@@ -3,9 +3,14 @@ import { GraduationCap, LogOut } from "lucide-react";
 import { NAV_GROUPS } from "@/app/nav";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
+import { useUnsavedChanges, useUnsavedContext } from "@/hooks/use-unsaved-changes";
 
 export const Sidebar = ({ onNavigate }: { onNavigate?: () => void }) => {
   const logout = useAuthStore((s) => s.logout);
+  // Route changes are caught by the blocker; signing out is not a route change,
+  // so it asks for itself.
+  const { requestLeave } = useUnsavedContext();
+  const { dirty } = useUnsavedChanges();
 
   return (
     <aside className="flex h-full w-[212px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-2.5 py-4">
@@ -19,7 +24,13 @@ export const Sidebar = ({ onNavigate }: { onNavigate?: () => void }) => {
         </div>
       </div>
 
-      <nav className="hide-scroll flex-1 space-y-3 overflow-y-auto">
+      <nav
+        className={cn(
+          "hide-scroll flex-1 space-y-3 overflow-y-auto transition-opacity",
+          dirty && "opacity-60",
+        )}
+        title={dirty ? "Save or discard your changes before leaving this page" : undefined}
+      >
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             <p className="mb-1 px-2.5 text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground/60">
@@ -66,7 +77,7 @@ export const Sidebar = ({ onNavigate }: { onNavigate?: () => void }) => {
 
       <div className="mt-auto border-t border-sidebar-border/70 pt-3">
         <button
-          onClick={logout}
+          onClick={() => requestLeave(logout)}
           className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent/60"
         >
           <LogOut className="size-[17px]" />

@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
 
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
@@ -93,6 +94,10 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
         return base;
     };
 
+    const form = useForm<AdmissionsFormData>({
+        resolver: zodResolver(admissionsSchema),
+        defaultValues: buildDefaults(),
+    });
     const {
         register,
         handleSubmit,
@@ -100,23 +105,28 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
         setValue,
         control,
         formState: { errors },
-    } = useForm<AdmissionsFormData>({
-        resolver: zodResolver(admissionsSchema),
-        defaultValues: buildDefaults(),
-    });
+    } = form;
 
     const { fields: customFields, append: addCustom, remove: removeCustom } = useFieldArray({
         control,
         name: "customRequirements",
     });
 
+    /** The save itself. Throws on failure, so the unsaved-changes guard
+     *  can refuse to let a failed save through. */
+    const submit = async (data: AdmissionsFormData) => {
+        const payload = { ...data, customRequirements: data.customRequirements ?? [] };
+        await universityService.updateAdmissions(slug, payload);
+        onSuccess();
+        toast.success("Admissions requirements saved");
+    };
+
+    useRhfSectionGuard({ id: 'university.admissions', label: 'Admissions', form, submit });
+
     const onSubmit = async (data: AdmissionsFormData) => {
         try {
             setIsSubmitting(true);
-            const payload = { ...data, customRequirements: data.customRequirements ?? [] };
-            await universityService.updateAdmissions(slug, payload);
-            onSuccess();
-            toast.success("Admissions requirements saved");
+            await submit(data);
         } catch (error: any) {
             console.error("Error updating admissions:", error);
             toast.error(error.response?.data?.message || "Failed to update admissions");
@@ -124,6 +134,7 @@ export function AdmissionsSection({ slug, initialData, onSuccess }: AdmissionsSe
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

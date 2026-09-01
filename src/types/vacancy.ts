@@ -66,6 +66,15 @@ export interface Vacancy {
   package?: VacancyPackage;
   documents?: VacancyDocument[];
 
+  /**
+   * The catalog FAQ shown with this opening — one id, never a list.
+   *
+   * A publishing decision rather than job content, so it is set from here and
+   * not in the CRM. The questions themselves are fetched from /faqs; this is
+   * only the link.
+   */
+  faqId?: string;
+
   publishStatus: VacancyPublishStatus;
   publishedAt?: string;
   updatedAt?: string;

@@ -9,6 +9,7 @@ import { courseService } from "@/services/courseService";
 import { toast } from "sonner";
 import type { CourseOverview } from "@/types/course";
 import { CourseOverviewSection } from "./CourseOverviewSection";
+import { useGuardedDialog } from "@/hooks/use-unsaved-changes";
 
 interface AddCourseModalProps {
     open: boolean;
@@ -60,8 +61,12 @@ export function AddCourseModal({
         // Close modal after save
     };
 
+    // Clicking the backdrop or pressing Escape used to throw away a filled-in
+    // form without a word.
+    const guardedOpenChange = useGuardedDialog(onOpenChange);
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={guardedOpenChange}>
             <DialogContent className="max-w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Course</DialogTitle>

@@ -17,6 +17,7 @@ import type { CourseOverview } from '@/types/course';
 import { LEVEL_OPTIONS, INTAKE_OPTIONS, STREAM_OPTIONS } from '@/types/course';
 import { ImageUpload } from '@/components/common/ImageUpload';
 import { Textarea } from '@/components/ui/textarea';
+import { useRhfSectionGuard } from '@/hooks/use-unsaved-changes';
 
 interface CourseOverviewSectionProps {
     data: CourseOverview;
@@ -31,12 +32,13 @@ export function CourseOverviewSection({
 }: CourseOverviewSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CourseOverview>({
+    const form = useForm<CourseOverview>({
         defaultValues: {
             ...data,
             intakes: data.intakes ?? [],
         },
     });
+    const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
 
     const courseName = watch('courseName');
     const courseImage = watch('courseImage');
@@ -62,10 +64,24 @@ export function CourseOverviewSection({
         }
     };
 
+    // Save WITHOUT advancing: the unsaved-changes guard offers "Save & leave",
+    // and the sticky bar a plain Save, neither of which should move the employee
+    // to the next section behind their back.
+    const submit = async (formData: CourseOverview) => {
+        await onSave(formData);
+    };
+
+    useRhfSectionGuard({
+        id: 'course.overview',
+        label: 'Course Overview',
+        form,
+        submit,
+    });
+
     const onSubmit = async (formData: CourseOverview) => {
         try {
             setIsSubmitting(true);
-            await onSave(formData);
+            await submit(formData);
             onNext();
         } catch (error) {
             console.error('Error saving course:', error);

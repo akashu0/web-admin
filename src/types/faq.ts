@@ -1,4 +1,19 @@
 import type { SortParams } from '@/services/api';
+
+/**
+ * What a FAQ can be attached to.
+ *
+ * One exported list rather than the same union written out in each interface:
+ * adding `Job` meant editing it in six places across three files, and the
+ * dropdowns that offer it are driven from here so they cannot fall out of step
+ * with the type again.
+ *
+ * The API does not police these — `FAQ.EntityType` is a plain string on the Go
+ * model — so this list IS the contract.
+ */
+export const FAQ_ENTITY_TYPES = ['University', 'Course', 'Country', 'Job'] as const;
+
+export type FAQEntityType = (typeof FAQ_ENTITY_TYPES)[number];
 export interface FAQQuestion {
     question: string;
     answer: string;
@@ -7,7 +22,7 @@ export interface FAQQuestion {
 
 export interface IFAQ {
     _id: string;
-    entityType: 'University' | 'Course' | 'Country';
+    entityType: FAQEntityType;
     title: string;
     status: 'active' | 'inactive' | 'draft';
     questions: FAQQuestion[];
@@ -16,7 +31,7 @@ export interface IFAQ {
 }
 
 export interface CreateFAQInput {
-    entityType: 'University' | 'Course' | 'Country';
+    entityType: FAQEntityType;
     title: string;
     status?: 'active' | 'inactive' | 'draft';
     questions: Array<{
@@ -37,7 +52,7 @@ export interface UpdateFAQInput {
 }
 
 export interface FAQFilters extends SortParams {
-    entityType?: 'University' | 'Course' | 'Country';
+    entityType?: FAQEntityType;
     status?: 'active' | 'inactive' | 'draft';
     page?: number;
     limit?: number;

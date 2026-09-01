@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { visaService } from "../../services/visaService";
 import { toast } from "sonner";
+import { useGuardedDialog, useSectionGuard } from "@/hooks/use-unsaved-changes";
 import type { CreateVisaDto, Visa, VisaDocument, VisaRenewalDocument, VisaStep } from "../../types/visa";
 
 interface AddEditVisaModalProps {
@@ -40,6 +41,9 @@ export function AddEditVisaModal({
     onSuccess,
 }: AddEditVisaModalProps) {
     const [isLoading, setIsLoading] = useState(false);
+    // See the guard below: true once the effect has seeded `formData` for this
+    // opening of the dialog.
+    const [seeded, setSeeded] = useState(false);
     const [formData, setFormData] = useState<CreateVisaDto>({
         country: "",
         visaDocuments: [],
@@ -103,10 +107,23 @@ export function AddEditVisaModal({
                 status: "active",
             });
         }
+        setSeeded(isOpen);
     }, [visa, isOpen]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // The form is seeded from `visa` in an effect above, so the guard only
+    // starts watching once the dialog is open and that seeding has run.
+    useSectionGuard({
+        id: "visa.form",
+        label: visa ? "Visa" : "New visa",
+        value: formData,
+        ready: isOpen && seeded,
+        onSave: () => submit(),
+        onRestore: setFormData,
+    });
+
+    const guardedOpenChange = useGuardedDialog(() => onClose());
+
+    const submit = async () => {
         setIsLoading(true);
 
         try {
@@ -127,9 +144,16 @@ export function AddEditVisaModal({
                 "Failed to save visa";
 
             toast.error(errorMessage);
+            // Rethrown so a failed save cannot close the dialog through the guard.
+            throw new Error(errorMessage);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        void submit().catch(() => {});
     };
 
     // Visa Documents handlers
@@ -241,7 +265,7 @@ export function AddEditVisaModal({
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
+        <Dialog open={isOpen} onOpenChange={guardedOpenChange}>
             <DialogContent className="max-w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{visa ? "Edit Visa" : "Add New Visa"}</DialogTitle>

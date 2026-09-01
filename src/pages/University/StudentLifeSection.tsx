@@ -5,25 +5,22 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
 
 // The section save replaces the WHOLE studentLife subdocument, so anything the
-// schema does not model is deleted from the record on save. stats/athletics were
-// missing here and were being wiped every time this tab was saved.
+// schema does not model is deleted from the record on save.
+//
+// That is now deliberate. This tab used to carry a `stats` block (student
+// organisations, varsity sports, student-faculty ratio) and an athletics
+// division — four American-campus figures nobody filled in, which rendered as an
+// empty stat grid on the site. They are gone from the Go model too, so saving
+// this tab is also what clears them from the stored record.
 const studentLifeSchema = z.object({
     overview: z.string().optional(),
-    stats: z.object({
-        studentOrganizations: z.string().optional(),
-        varsitySports: z.string().optional(),
-        studentFacultyRatio: z.string().optional(),
-    }),
-    athletics: z.object({
-        division: z.string().optional(),
-    }),
 });
 
 type StudentLifeFormData = z.infer<typeof studentLifeSchema>;
@@ -41,29 +38,30 @@ export function StudentLifeSection({
 }: StudentLifeSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const {
-        register,
-        handleSubmit,
-    } = useForm<StudentLifeFormData>({
+    const form = useForm<StudentLifeFormData>({
         resolver: zodResolver(studentLifeSchema),
         defaultValues: {
             overview: initialData.overview || "",
-            stats: {
-                studentOrganizations: initialData.stats?.studentOrganizations || "",
-                varsitySports: initialData.stats?.varsitySports || "",
-                studentFacultyRatio: initialData.stats?.studentFacultyRatio || "",
-            },
-            athletics: {
-                division: initialData.athletics?.division || "",
-            },
         },
     });
+    const {
+        register,
+        handleSubmit,
+    } = form;
+
+    /** The save itself. Throws on failure, so the unsaved-changes guard
+     *  can refuse to let a failed save through. */
+    const submit = async (data: StudentLifeFormData) => {
+        await universityService.updateStudentLife(slug, data);
+        onSuccess();
+    };
+
+    useRhfSectionGuard({ id: 'university.studentLife', label: 'Student Life', form, submit });
 
     const onSubmit = async (data: StudentLifeFormData) => {
         try {
             setIsSubmitting(true);
-            await universityService.updateStudentLife(slug, data);
-            onSuccess();
+            await submit(data);
         } catch (error: any) {
             console.error("Error updating student life:", error);
             toast.error(error.response?.data?.message || "Failed to update student life");
@@ -71,6 +69,7 @@ export function StudentLifeSection({
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -87,25 +86,6 @@ export function StudentLifeSection({
                             placeholder="Overview of student life..."
                             rows={4}
                         />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Student Organizations</Label>
-                            <Input {...register("stats.studentOrganizations")} placeholder="e.g. 500+" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Varsity Sports</Label>
-                            <Input {...register("stats.varsitySports")} placeholder="e.g. 33" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Student-Faculty Ratio</Label>
-                            <Input {...register("stats.studentFacultyRatio")} placeholder="e.g. 12:1" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Athletics Division</Label>
-                            <Input {...register("athletics.division")} placeholder="e.g. Division III" />
-                        </div>
                     </div>
 
                     <div className="flex justify-end pt-4">

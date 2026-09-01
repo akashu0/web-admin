@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import type { EgAcademyOverview } from '@/types/egAcademyCourse';
 import { EgAcademyOverviewSection } from './EgAcademyOverviewSection';
+import { useGuardedDialog } from '@/hooks/use-unsaved-changes';
 
 interface AddEgAcademyCourseModalProps {
   open: boolean;
@@ -38,6 +39,8 @@ export function AddEgAcademyCourseModal({
     courseImage: null,
   };
 
+  const guardedOpenChange = useGuardedDialog(onOpenChange);
+
   const handleSave = async (data: EgAcademyOverview) => {
     try {
       const created = await egAcademyCourseService.createCourse(data);
@@ -57,7 +60,7 @@ export function AddEgAcademyCourseModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={guardedOpenChange}>
       <DialogContent className="max-w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New eG Academy Course</DialogTitle>

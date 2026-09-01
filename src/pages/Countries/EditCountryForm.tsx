@@ -1,6 +1,6 @@
 // pages/CountryEdit/EditCountryPage.tsx
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { ICountry } from '@/types/country';
 import { countryService } from '@/services/countryService';
@@ -15,6 +15,8 @@ import { Card } from '@/components/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
 import { emptyCountryForm, type CountryFormValues } from './country-form-values';
 import { UspTab } from './UspTab';
+import { useSectionGuard, useUnsavedContext } from '@/hooks/use-unsaved-changes';
+import { UnsavedBar } from '@/components/common/UnsavedBar';
 
 export type TabType = 'basic' | 'usp' | 'costs' | 'references';
 
@@ -33,6 +35,12 @@ export function EditCountryForm() {
     const bannerInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<CountryFormValues>({ defaultValues: emptyCountryForm });
+    const { requestLeave } = useUnsavedContext();
+
+    // The four tabs share ONE form, so switching between them loses nothing and
+    // is deliberately not guarded. Leaving the page is what loses the edits, and
+    // that is what the guard below covers.
+    const values = useWatch({ control: form.control });
 
     useEffect(() => {
         fetchCountry();
@@ -46,6 +54,7 @@ export function EditCountryForm() {
             const data: ICountry = response.data;
             setCountry(data);
             setBannerPreview(data.banner || '');
+            setBannerFile(null);
             // One reset instead of a setFieldValue per key: it also clears the
             // dirty state, so the form matches what was just loaded.
             form.reset({
@@ -94,8 +103,19 @@ export function EditCountryForm() {
     };
 
     const handleClose = () => {
-        navigate('/countries'); // Navigate back to countries list
+        requestLeave(() => navigate('/countries'));
     };
+
+    useSectionGuard({
+        id: 'country.form',
+        label: `${activeTab === 'basic' ? 'Basic Info' : activeTab === 'usp' ? 'Why Choose' : activeTab === 'costs' ? 'Cost of Living' : 'References'} (country)`,
+        value: { values, bannerFile },
+        // The form is only loaded into after the fetch resolves; snapshotting
+        // before that would read the empty defaults as an edit.
+        ready: !isLoading,
+        onSave: () => handleSaveSection(),
+        onRestore: () => { void fetchCountry(); },
+    });
 
     const handleSaveSection = async () => {
         try {
@@ -145,6 +165,9 @@ export function EditCountryForm() {
         } catch (error) {
             console.error('Error saving section:', error);
             toast.error('Failed to save section. Please try again.');
+            // Rethrown so a failed save cannot be mistaken for a successful one
+            // by the unsaved-changes guard.
+            throw error;
         } finally {
             setIsSubmitting(false);
         }
@@ -198,6 +221,8 @@ export function EditCountryForm() {
                 subtitle="Update country information and settings"
             />
 
+            <UnsavedBar className="mb-4" />
+
             <Card className="overflow-hidden p-0">
                 <FormTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -212,7 +237,7 @@ export function EditCountryForm() {
                         <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button onClick={handleSaveSection} disabled={isSubmitting}>
+                        <Button onClick={() => void handleSaveSection().catch(() => {})} disabled={isSubmitting}>
                             {isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
                             {isSubmitting ? 'Saving...' : 'Save Section'}
                         </Button>

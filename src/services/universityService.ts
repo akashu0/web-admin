@@ -35,6 +35,17 @@ export const universityService = {
         return response.data;
     },
 
+    // The signed, short-lived URL that opens an UNPUBLISHED university on the
+    // public site. Minted by the API — the preview secret must not be in this
+    // bundle, where anyone could read it and with it every draft.
+    // 501 when the environment has no preview configured.
+    getPreviewLink: async (slug: string): Promise<{ url: string }> => {
+        const response = await apiClient.get<{ data: { url: string } }>(
+            `/universities/${slug}/preview-link`
+        );
+        return response.data.data;
+    },
+
     // Get university by slug
     getUniversityBySlug: async (slug: string): Promise<UniversityResponse> => {
         const response = await apiClient.get<UniversityResponse>(`/universities/${slug}`);

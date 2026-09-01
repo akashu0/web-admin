@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, ToggleLeft, ToggleRight, FileText, Star, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSectionGuard, useUnsavedContext } from '@/hooks/use-unsaved-changes';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -34,6 +35,7 @@ export const LibraryPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const { requestLeave } = useUnsavedContext();
 
     const [form, setForm] = useState({ ...emptyForm });
     const [file, setFile] = useState<File | null>(null);
@@ -68,11 +70,19 @@ export const LibraryPage = () => {
         if (thumbRef.current) thumbRef.current.value = '';
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!form.title.trim()) { toast.error('Title is required'); return; }
-        if (!form.category) { toast.error('Please select a category'); return; }
-        if (!form.academicLevel) { toast.error('Please select an academic level'); return; }
+    useSectionGuard({
+        id: 'library.new',
+        label: 'New resource',
+        value: { form, file, thumbnail },
+        ready: showForm,
+        onSave: () => submit(),
+        onRestore: () => resetForm(),
+    });
+
+    const submit = async () => {
+        if (!form.title.trim()) throw new Error('Title is required');
+        if (!form.category) throw new Error('Please select a category');
+        if (!form.academicLevel) throw new Error('Please select an academic level');
 
         const fd = new FormData();
         fd.append('title', form.title.trim());
@@ -94,10 +104,15 @@ export const LibraryPage = () => {
             setShowForm(false);
             resetForm();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to add resource');
+            throw new Error(err?.response?.data?.message || 'Failed to add resource');
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        void submit().catch((error: Error) => toast.error(error.message));
     };
 
     const handleToggle = async (id: string) => {
@@ -196,7 +211,13 @@ export const LibraryPage = () => {
             )}
 
             {/* Add Dialog */}
-            <Dialog open={showForm} onOpenChange={open => { setShowForm(open); if (!open) resetForm(); }}>
+            <Dialog
+                open={showForm}
+                onOpenChange={open => {
+                    const apply = () => { setShowForm(open); if (!open) resetForm(); };
+                    if (open) apply(); else requestLeave(apply);
+                }}
+            >
                 <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Add Library Resource</DialogTitle>

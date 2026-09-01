@@ -7,7 +7,7 @@ import {
     MoreHorizontal,
     Pencil,
     Trash2,
-    Eye,
+    ExternalLink,
     ChevronDown,
     Check,
     CheckCircle2,
@@ -35,6 +35,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { FilterSelect } from "@/components/common/FilterSelect";
 import type { University, UniversityFacets, UniversityQueryParams } from "@/types/university";
 import { universityService } from "@/services/universityService";
+import { WEBSITE_URL, openUniversityPage } from "@/lib/website";
 import { AddUniversityModal } from "./AddUniversityModal";
 
 const LIMIT = 10;
@@ -197,10 +198,12 @@ export function UniversityList() {
         navigate(`/universities/edit/${university.slug}`);
     };
 
+    // "View" is the eG website, not a copy of it here. The person entering this
+    // data is checking how it comes out on the site, which an admin rendering of
+    // the same record can only approximate — and a draft opens through a signed
+    // preview link so it can be checked before anyone else can see it.
     const handleView = (university: University) => {
-        // A page, not a modal: the record has seven sections, and the view has to
-        // be linkable and to read the full document rather than the list row.
-        navigate(`/universities/view/${university.slug}`);
+        openUniversityPage(university);
     };
 
     const handleDelete = async (id: string) => {
@@ -411,10 +414,14 @@ export function UniversityList() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => handleView(university)}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View
-                            </DropdownMenuItem>
+                            {WEBSITE_URL && (
+                                <DropdownMenuItem onSelect={() => handleView(university)}>
+                                    <ExternalLink className="mr-2 h-4 w-4" />
+                                    {university.status === "draft"
+                                        ? "Preview draft on site"
+                                        : "View on website"}
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onSelect={() => handleEdit(university)}>
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit

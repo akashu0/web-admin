@@ -8,6 +8,8 @@ import { egAcademyCourseService } from '@/services/egAcademyCourseService';
 import type { EgAcademyCourse, EgAcademyOverview } from '@/types/egAcademyCourse';
 import { EgAcademyOverviewSection } from './EgAcademyOverviewSection';
 import { EgAcademyLearningCentersSection } from './EgAcademyLearningCentersSection';
+import { useUnsavedContext, useUnsavedChanges } from '@/hooks/use-unsaved-changes';
+import { UnsavedBar } from '@/components/common/UnsavedBar';
 
 type ActiveTab = 'overview' | 'learningCenters';
 
@@ -30,6 +32,12 @@ export default function EditEgAcademyCourse() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [isPublishing, setIsPublishing] = useState(false);
+  // Keyed onto the sections so a refetch re-seeds their forms from the server
+  // rather than leaving them showing what was typed — the same counter
+  // EditCourse and EditUniversity use.
+  const [version, setVersion] = useState(0);
+  const { requestLeave } = useUnsavedContext();
+  const { dirty } = useUnsavedChanges();
 
   useEffect(() => {
     if (!slug) {
@@ -45,6 +53,7 @@ export default function EditEgAcademyCourse() {
       setIsLoading(true);
       const data = await egAcademyCourseService.getCourseBySlug(slug!);
       setCourseData(data);
+      setVersion(v => v + 1);
     } catch (error: any) {
       console.error('Error fetching course:', error);
       toast.error(error.response?.data?.message || 'Failed to fetch course');
@@ -119,11 +128,11 @@ export default function EditEgAcademyCourse() {
           </p>
         </div>
 
-        <nav className="p-4 space-y-1">
+        <nav className={cn('p-4 space-y-1 transition-opacity', dirty && 'opacity-60')}>
           {sidebarItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => requestLeave(() => setActiveTab(item.id))}
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
                 activeTab === item.id
@@ -153,7 +162,7 @@ export default function EditEgAcademyCourse() {
             </div>
 
             <Button
-              onClick={handlePublish}
+              onClick={() => requestLeave(handlePublish)}
               disabled={isPublishing}
               className={cn(
                 'gap-2',
@@ -178,9 +187,12 @@ export default function EditEgAcademyCourse() {
         </div>
 
         <div className="p-8">
-          <div className="max-w-5xl mx-auto bg-card rounded-lg shadow-sm border border-border p-6">
+          <div className="max-w-5xl mx-auto space-y-4">
+          <UnsavedBar />
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             {activeTab === 'overview' && (
               <EgAcademyOverviewSection
+                key={version}
                 data={courseData.overview}
                 onSave={handleOverviewSave}
                 onNext={() => setActiveTab('learningCenters')}
@@ -189,11 +201,13 @@ export default function EditEgAcademyCourse() {
 
             {activeTab === 'learningCenters' && (
               <EgAcademyLearningCentersSection
+                key={version}
                 slug={slug!}
                 learningCenters={courseData.learningCenters || []}
                 onRefresh={fetchCourseData}
               />
             )}
+          </div>
           </div>
         </div>
       </main>

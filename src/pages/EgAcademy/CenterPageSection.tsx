@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowDown, ArrowUp, ImageUp, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useSectionGuard } from "@/hooks/use-unsaved-changes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,8 @@ export type CPBlock =
 
 interface Props {
   slug: string;
+  /** What this section is called in the rail — the guard names it in its prompt. */
+  label: string;
   /** The document key this section is stored under — "hero", "faqs", … */
   sectionKey: keyof CenterPage | "meta";
   /** Sent instead of sectionKey when a "section" is really a few loose fields. */
@@ -60,6 +63,7 @@ const emptyItem = (fields: CPField[]) =>
 
 export function CenterPageSection({
   slug,
+  label,
   sectionKey,
   patch,
   initial,
@@ -93,7 +97,7 @@ export function CenterPageSection({
     setValue((prev: any) => (under === null ? rows : { ...(prev ?? {}), [under]: rows }));
   };
 
-  const save = async () => {
+  const submit = async () => {
     try {
       setIsSaving(true);
       const body = patch ? patch(value) : ({ [sectionKey]: value } as Partial<CenterPage>);
@@ -101,10 +105,26 @@ export function CenterPageSection({
       onSaved(updated);
       toast.success("Section saved");
     } catch (error) {
-      toast.error(apiErrorMessage(error, "Could not save this section"));
+      const message = apiErrorMessage(error, "Could not save this section");
+      toast.error(message);
+      // Rethrown so the unsaved-changes guard cannot mistake a failed save for
+      // a successful one and let the navigation through.
+      throw new Error(message);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  useSectionGuard({
+    id: `centerPage.${sectionKey}`,
+    label,
+    value,
+    onSave: submit,
+    onRestore: setValue,
+  });
+
+  const save = () => {
+    void submit().catch(() => {});
   };
 
   return (

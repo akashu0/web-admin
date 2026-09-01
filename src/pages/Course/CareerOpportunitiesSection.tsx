@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, Briefcase } from 'lucide-react';
 import type { CareerOpportunity } from '@/types/course';
+import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 
 interface CareerOpportunitiesSectionProps {
     data: CareerOpportunity[];
-    onSave: (data: CareerOpportunity[]) => void;
+    onSave: (data: CareerOpportunity[]) => Promise<void> | void;
     onNext: () => void;
 }
 
@@ -62,20 +64,34 @@ export function CareerOpportunitiesSection({
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // Validate required fields
+    /** Throws when the section is not fit to save — see DocumentsRequiredSection. */
+    const submit = async () => {
         const hasEmptyTitles = careers.some(career => !career.title?.trim());
         const hasEmptyDescriptions = careers.some(career => !career.description?.trim());
 
         if (hasEmptyTitles || hasEmptyDescriptions) {
-            alert('Please fill in all job titles and descriptions');
-            return;
+            throw new Error('Please fill in all job titles and descriptions');
         }
 
-        onSave(careers);
-        onNext();
+        await onSave(careers);
+    };
+
+    useSectionGuard({
+        id: 'course.career',
+        label: 'Career Opportunities',
+        value: careers,
+        onSave: submit,
+        onRestore: setCareers,
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await submit();
+            onNext();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not save this section');
+        }
     };
 
     return (

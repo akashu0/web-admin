@@ -9,13 +9,16 @@ import { DrawerSection, Field, FieldGrid, StatChip } from "@/components/common/d
 import { apiErrorMessage } from "@/services/api";
 import { vacancyService } from "@/services/vacancyService";
 import type { Vacancy, VacancyPublishStatus } from "@/types/vacancy";
+import { JobFaqSection } from "./JobFaqSection";
 
 /**
  * One job, for the person deciding whether to publish it.
  *
- * Read-only apart from the publish control. Job content is authored in the CRM,
- * and letting web-admin edit it too would mean the same opening could say
- * different things in two places with no way to tell which was current.
+ * Read-only apart from the publish control and the FAQ. Job content is authored
+ * in the CRM, and letting web-admin edit it too would mean the same opening
+ * could say different things in two places with no way to tell which was
+ * current. Which FAQ it carries is not job content — it is a publishing
+ * decision, so it belongs here and nowhere else.
  *
  * There is no employer anywhere on this page. Not hidden — absent: the API's
  * redacted projection does not carry it, and `Vacancy` here has no field for it.
@@ -150,6 +153,14 @@ export function JobViewPage() {
                         <Field label="Package (fees)" value={job.package?.fees} />
                         <Field label="Processing time" value={job.package?.processingTime} />
                     </FieldGrid>
+                </DrawerSection>
+
+                <DrawerSection title="FAQ">
+                    <JobFaqSection
+                        vacancyId={job.vacancyId}
+                        faqId={job.faqId}
+                        onSaved={() => { void refetch(); }}
+                    />
                 </DrawerSection>
 
                 <DrawerSection title="Documents required">

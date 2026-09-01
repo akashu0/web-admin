@@ -25,6 +25,7 @@ import {
 
 import { toast } from 'sonner';
 import type { IFAQ, CreateFAQInput, UpdateFAQInput } from '@/types/faq';
+import { FAQ_ENTITY_TYPES } from '@/types/faq';
 import { faqService } from '@/services/faqservice';
 import { FAQTable } from './FAQTable';
 import type { SortState } from '@/components/ui/table';
@@ -212,9 +213,11 @@ export const FAQPage = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All types</SelectItem>
-                            <SelectItem value="University">University</SelectItem>
-                            <SelectItem value="Course">Course</SelectItem>
-                            <SelectItem value="Country">Country</SelectItem>
+                            {FAQ_ENTITY_TYPES.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                    {type}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

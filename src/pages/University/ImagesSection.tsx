@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useSectionGuard } from "@/hooks/use-unsaved-changes";
 
 interface ImagesSectionProps {
     slug: string;
@@ -105,8 +106,26 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
         setExistingGallery((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // What "unsaved" means here: files picked but not yet uploaded, and existing
+    // images removed but not yet persisted.
+    useSectionGuard({
+        id: "university.images",
+        label: "Images",
+        value: { logoFile, bannerFile, galleryFiles, existingGallery, cleared: clearedImages() },
+        onSave: () => handleSubmit(),
+        onRestore: (baseline) => {
+            setLogoFile(null);
+            setBannerFile(null);
+            setGalleryFiles([]);
+            setGalleryPreviews([]);
+            setExistingGallery(baseline.existingGallery);
+            setLogoPreview(initialData.logoUrl || null);
+            setBannerPreview(initialData.bannerUrl || null);
+        },
+    });
+
+    const handleSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
 
         const hasFiles = Boolean(logoFile || bannerFile || galleryFiles.length);
         const removedGallery =
@@ -118,8 +137,8 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
             return;
         }
 
+        setIsSubmitting(true);
         try {
-            setIsSubmitting(true);
 
             // Removals first, then uploads. The images endpoint only $pushes —
             // it has no way to drop a URL, which is why deleting a photo used to
@@ -152,13 +171,16 @@ export function ImagesSection({ slug, initialData, onSuccess }: ImagesSectionPro
         } catch (error: any) {
             console.error("Error updating images:", error);
             toast.error(error.response?.data?.message || "Failed to update images");
+            // Rethrown so the unsaved-changes guard does not treat a failed
+            // upload as a save and let the navigation through.
+            throw error;
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => { void handleSubmit(e).catch(() => {}); }}>
             <Card>
                 <CardHeader>
                     <CardTitle>Images</CardTitle>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
+import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
 
 
 const mediaSchema = z.object({
@@ -29,17 +30,18 @@ interface MediaSectionProps {
 export function MediaSection({ slug, initialData, onSuccess }: MediaSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        watch,
-    } = useForm<MediaFormData>({
+    const form = useForm<MediaFormData>({
         resolver: zodResolver(mediaSchema),
         defaultValues: {
             youtubeVideoUrl: initialData.youtubeVideoUrl || "",
         },
     });
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        watch,
+    } = form;
 
     const youtubeUrl = watch("youtubeVideoUrl");
 
@@ -54,11 +56,19 @@ export function MediaSection({ slug, initialData, onSuccess }: MediaSectionProps
 
     const videoId = getYoutubeVideoId(youtubeUrl || "");
 
+    /** The save itself. Throws on failure, so the unsaved-changes guard
+     *  can refuse to let a failed save through. */
+    const submit = async (data: MediaFormData) => {
+        await universityService.updateMedia(slug, data);
+        onSuccess();
+    };
+
+    useRhfSectionGuard({ id: 'university.media', label: 'Media', form, submit });
+
     const onSubmit = async (data: MediaFormData) => {
         try {
             setIsSubmitting(true);
-            await universityService.updateMedia(slug, data);
-            onSuccess();
+            await submit(data);
         } catch (error: any) {
             console.error("Error updating media:", error);
             toast.error(error.response?.data?.message || "Failed to update media");
@@ -66,6 +76,7 @@ export function MediaSection({ slug, initialData, onSuccess }: MediaSectionProps
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>

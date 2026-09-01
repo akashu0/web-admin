@@ -6,6 +6,9 @@ import { courseService } from '@/services/courseService';
 import { visaService } from '@/services/visaService';
 import type { Visa } from '@/types/visa';
 import { universityService } from '@/services/universityService';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
+import { NotLiveWarning } from '@/components/common/reference-status';
+import { showsOnWebsite } from '@/lib/publishing';
 import { faqService } from '@/services/faqservice';
 import type { IFAQ } from '@/types/faq'; // Make sure you have this type
 
@@ -17,26 +20,6 @@ interface UniversityReferencesTabProps {
         faq?: string; // Add FAQ to initial data
     };
     onSuccess: () => void;
-}
-
-/**
- * Whether the website will actually render this reference.
- *
- * `resolveUniversityRefs` on the API fetches the visa and the FAQ with
- * publicOnly, so a draft or inactive one is dropped from the payload and the
- * site hides that whole tab. Attaching one used to look like it worked and did
- * nothing — this is the same rule the server applies, spelled out for the editor.
- */
-const showsOnWebsite = (status?: string) =>
-    !status || status === 'active' || status === 'published';
-
-function NotLiveWarning({ kind, status, where }: { kind: string; status?: string; where: string }) {
-    return (
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            This {kind} is <strong>{status}</strong>, so it will not appear on the website.
-            Publish it in the {where} menu.
-        </p>
-    );
 }
 
 export function UniversityReferencesTab({ slug, initialData, onSuccess }: UniversityReferencesTabProps) {
@@ -121,16 +104,32 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
         return () => clearTimeout(timer);
     }, [courseSearch]);
 
+    const submit = async () => {
+        await universityService.updateReferences(slug, {
+            visa: selectedVisa,
+            courses: selectedCourses,
+            faqs: selectedFAQ,
+        });
+
+        onSuccess();
+    };
+
+    useSectionGuard({
+        id: "university.references",
+        label: "References",
+        value: { visa: selectedVisa, courses: selectedCourses, faq: selectedFAQ },
+        onSave: submit,
+        onRestore: (baseline) => {
+            setSelectedVisa(baseline.visa);
+            setSelectedCourses(baseline.courses);
+            setSelectedFAQ(baseline.faq);
+        },
+    });
+
     const handleSave = async () => {
         try {
             setIsSaving(true);
-            await universityService.updateReferences(slug, {
-                visa: selectedVisa,
-                courses: selectedCourses,
-                faqs: selectedFAQ,
-            });
-
-            onSuccess();
+            await submit();
         } catch (error: any) {
             console.error('Error saving references:', error);
             toast.error(error.response?.data?.message || 'Failed to save references');

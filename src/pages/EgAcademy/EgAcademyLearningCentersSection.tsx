@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2, Edit, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { egAcademyCourseService } from '@/services/egAcademyCourseService';
 import {
   CONTINENT_OPTIONS,
@@ -162,10 +163,22 @@ export function EgAcademyLearningCentersSection({
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
+  /**
+   * A centre being added or edited is unsaved work like any other form, so it
+   * registers with the guard: the open editor is what `value` tracks, and
+   * saving it is whichever of add/update is open.
+   */
+  useSectionGuard({
+    id: 'academyCourse.learningCenters',
+    label: editingCenterId ? 'Learning Centre (editing)' : 'Learning Centre (new)',
+    value: isAddingNew || editingCenterId ? { formData, otherFees } : null,
+    onSave: () => (editingCenterId ? handleUpdateCenter() : handleAddCenter()),
+    onRestore: () => resetForm(),
+  });
+
   const handleAddCenter = async () => {
     if (!formData.city || !formData.country || !formData.continent) {
-      toast.error('City, Country, and Continent are required');
-      return;
+      throw new Error('City, Country, and Continent are required');
     }
     try {
       setIsSaving(true);
@@ -174,7 +187,7 @@ export function EgAcademyLearningCentersSection({
       resetForm();
       onRefresh();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to add learning center');
+      throw new Error(error.response?.data?.message || 'Failed to add learning center');
     } finally {
       setIsSaving(false);
     }
@@ -183,8 +196,7 @@ export function EgAcademyLearningCentersSection({
   const handleUpdateCenter = async () => {
     if (!editingCenterId) return;
     if (!formData.city || !formData.country || !formData.continent) {
-      toast.error('City, Country, and Continent are required');
-      return;
+      throw new Error('City, Country, and Continent are required');
     }
     try {
       setIsSaving(true);
@@ -193,7 +205,7 @@ export function EgAcademyLearningCentersSection({
       resetForm();
       onRefresh();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update learning center');
+      throw new Error(error.response?.data?.message || 'Failed to update learning center');
     } finally {
       setIsSaving(false);
     }
@@ -557,7 +569,14 @@ export function EgAcademyLearningCentersSection({
               <Button
                 type="button"
                 className="bg-primary hover:bg-primary"
-                onClick={editingCenterId ? handleUpdateCenter : handleAddCenter}
+                onClick={() =>
+                  void (editingCenterId ? handleUpdateCenter() : handleAddCenter()).catch(
+                    (error: unknown) =>
+                      toast.error(
+                        error instanceof Error ? error.message : 'Could not save the learning centre',
+                      ),
+                  )
+                }
                 disabled={isSaving}
               >
                 {isSaving ? (

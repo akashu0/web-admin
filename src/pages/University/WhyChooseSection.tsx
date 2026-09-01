@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { useSectionGuard } from "@/hooks/use-unsaved-changes";
 import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,12 +24,24 @@ export function WhyChooseSection({ slug, initialData, onSuccess }: WhyChooseSect
         content: initialData?.content ?? "",
     });
 
+    const submit = async () => {
+        await universityService.updateWhyChoose(slug, value);
+        onSuccess();
+    };
+
+    useSectionGuard({
+        id: "university.whyChoose",
+        label: "Why Choose",
+        value,
+        onSave: submit,
+        onRestore: setValue,
+    });
+
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             setIsSubmitting(true);
-            await universityService.updateWhyChoose(slug, value);
-            onSuccess();
+            await submit();
         } catch (error: any) {
             console.error("Error updating why choose:", error);
             toast.error(error.response?.data?.message || "Failed to update why choose");

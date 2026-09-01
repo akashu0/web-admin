@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, MapPin, Globe, Search, GraduationCap } from "lucide-react";
 import type { University } from "@/types/university";
 import { universityService } from "@/services/universityService";
+import { toast } from "sonner";
+import { useSectionGuard } from "@/hooks/use-unsaved-changes";
 
 interface StudyCentersSectionProps {
     data: string[];
     universityId?: string;
-    onSave: (data: string[], universityId?: string) => void;
+    onSave: (data: string[], universityId?: string) => Promise<void> | void;
     onNext: () => void;
 }
 
@@ -70,9 +72,25 @@ const StudyCentersSection: React.FC<StudyCentersSectionProps> = ({
         setUniversityDropdownOpen(false);
     };
 
-    const handleSave = () => {
-        onSave(data, selectedUniversityId);
-        onNext();
+    const submit = async () => {
+        await onSave(data, selectedUniversityId);
+    };
+
+    useSectionGuard({
+        id: "course.studyCenters",
+        label: "University",
+        value: selectedUniversityId,
+        onSave: submit,
+        onRestore: setSelectedUniversityId,
+    });
+
+    const handleSave = async () => {
+        try {
+            await submit();
+            onNext();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Could not save this section");
+        }
     };
 
     const selectedUniversity = universities.find((uni) => uni._id === selectedUniversityId);

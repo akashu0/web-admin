@@ -1,6 +1,7 @@
 // src/pages/FAQ/FAQFormDialog.tsx
-import { useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
+import { useGuardedDialog, useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { faqFormSchema, type FAQFormData } from '@/lib/validations/faq.validation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,7 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
-import type { IFAQ, CreateFAQInput, UpdateFAQInput } from '@/types/faq';
+import type { IFAQ, CreateFAQInput, UpdateFAQInput, FAQEntityType } from '@/types/faq';
+import { FAQ_ENTITY_TYPES } from '@/types/faq';
 
 interface FAQFormDialogProps {
     open: boolean;
@@ -57,6 +59,11 @@ export const FAQFormDialog = ({
     const entityType = watch('entityType');
     const status = watch('status');
 
+    // True once the effect below has seeded the form for this opening. The
+    // guard cannot snapshot on `open` alone: the seeding runs after that render,
+    // so the snapshot would predate it and an untouched form would read dirty.
+    const [seeded, setSeeded] = useState(false);
+
     useEffect(() => {
         if (editData) {
             setValue('entityType', editData.entityType);
@@ -71,7 +78,20 @@ export const FAQFormDialog = ({
                 questions: [{ question: '', answer: '', order: 0 }],
             });
         }
+        setSeeded(open);
     }, [editData, setValue, reset, open]);
+
+    const values = useWatch({ control });
+    useSectionGuard({
+        id: 'faq.form',
+        label: editData ? 'FAQ' : 'New FAQ',
+        value: values,
+        ready: open && seeded,
+        onSave: () => handleSubmit(handleFormSubmit)(),
+        onRestore: (baseline) => reset(baseline as FAQFormData),
+    });
+
+    const guardedOpenChange = useGuardedDialog(onOpenChange);
 
     const handleFormSubmit = (data: FAQFormData) => {
         if (editData) {
@@ -95,7 +115,7 @@ export const FAQFormDialog = ({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={guardedOpenChange}>
             <DialogContent className="max-w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
@@ -109,18 +129,18 @@ export const FAQFormDialog = ({
                         <Label htmlFor="entityType">Entity Type *</Label>
                         <Select
                             value={entityType}
-                            onValueChange={(value) =>
-                                setValue('entityType', value as 'University' | 'Course' | 'Country')
-                            }
+                            onValueChange={(value) => setValue('entityType', value as FAQEntityType)}
                             disabled={!!editData}
                         >
                             <SelectTrigger>
                                 <SelectValue placeholder="Select entity type" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="University">University</SelectItem>
-                                <SelectItem value="Course">Course</SelectItem>
-                                <SelectItem value="Country">Country</SelectItem>
+                                {FAQ_ENTITY_TYPES.map((type) => (
+                                    <SelectItem key={type} value={type}>
+                                        {type}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                         {errors.entityType && (
@@ -259,7 +279,7 @@ export const FAQFormDialog = ({
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => onOpenChange(false)}
+                            onClick={() => guardedOpenChange(false)}
                             disabled={isLoading}
                         >
                             Cancel

@@ -1,5 +1,6 @@
 // src/lib/validations/faq.validation.ts
 import { z } from 'zod';
+import { FAQ_ENTITY_TYPES } from '@/types/faq';
 
 // Base question schema
 const questionSchema = z.object({
@@ -10,7 +11,7 @@ const questionSchema = z.object({
 
 // Schema for creating FAQ (used in form)
 export const faqFormSchema = z.object({
-    entityType: z.enum(['University', 'Course', 'Country'], {
+    entityType: z.enum(FAQ_ENTITY_TYPES, {
         message: 'Entity type is required',
     }),
     title: z.string().min(1, 'Title is required').max(200, 'Title must not exceed 200 characters'),

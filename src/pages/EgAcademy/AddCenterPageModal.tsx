@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useGuardedDialog, useSectionGuard } from "@/hooks/use-unsaved-changes";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,10 +43,24 @@ export function AddCenterPageModal({
     ? `study-in-${name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`
     : "";
 
+  useSectionGuard({
+    id: "centerPage.new",
+    label: "New centre page",
+    value: { name, country, slug },
+    ready: open,
+    onSave: () => submit(),
+    onRestore: () => {
+      setName("");
+      setCountry("");
+      setSlug("");
+    },
+  });
+
+  const guardedOpenChange = useGuardedDialog(onOpenChange);
+
   const submit = async () => {
     if (!name.trim()) {
-      toast.error("Give the centre a name");
-      return;
+      throw new Error("Give the centre a name");
     }
     try {
       setIsSaving(true);
@@ -61,14 +76,18 @@ export function AddCenterPageModal({
       setSlug("");
       onCreated(created);
     } catch (error) {
-      toast.error(apiErrorMessage(error, "Could not create that page"));
+      throw new Error(apiErrorMessage(error, "Could not create that page"));
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleSubmit = () => {
+    void submit().catch((error: Error) => toast.error(error.message));
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={guardedOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a centre page</DialogTitle>
@@ -112,7 +131,7 @@ export function AddCenterPageModal({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={isSaving}>
+          <Button onClick={handleSubmit} disabled={isSaving}>
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { WhyChooseEditor, type WhyChooseValue } from '@/components/common/WhyChooseEditor';
+import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 
 interface WhyChooseSectionProps {
     data?: WhyChooseValue;
-    onSave: (data: WhyChooseValue) => void;
+    onSave: (data: WhyChooseValue) => Promise<void> | void;
     onNext: () => void;
 }
 
@@ -22,10 +24,26 @@ export function WhyChooseSection({ data, onSave, onNext }: WhyChooseSectionProps
         content: data?.content ?? '',
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const submit = async () => {
+        await onSave(value);
+    };
+
+    useSectionGuard({
+        id: 'course.whyChoose',
+        label: 'Why Choose',
+        value,
+        onSave: submit,
+        onRestore: setValue,
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(value);
-        onNext();
+        try {
+            await submit();
+            onNext();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not save this section');
+        }
     };
 
     return (

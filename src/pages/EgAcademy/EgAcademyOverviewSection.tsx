@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from 'react-hook-form';
+import { useRhfSectionGuard } from '@/hooks/use-unsaved-changes';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -35,13 +36,13 @@ export function EgAcademyOverviewSection({
 }: EgAcademyOverviewSectionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } =
-    useForm<EgAcademyOverview>({
-      defaultValues: {
-        ...data,
-        intakes: data.intakes ?? [],
-      },
-    });
+  const form = useForm<EgAcademyOverview>({
+    defaultValues: {
+      ...data,
+      intakes: data.intakes ?? [],
+    },
+  });
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
 
   const courseName = watch('courseName');
   const courseImage = watch('courseImage');
@@ -67,10 +68,23 @@ export function EgAcademyOverviewSection({
     }
   };
 
+  // Saves without advancing — "Save & leave" and the sticky bar's Save must not
+  // move the employee to the next section behind their back.
+  const submit = async (formData: EgAcademyOverview) => {
+    await onSave(formData);
+  };
+
+  useRhfSectionGuard({
+    id: 'academyCourse.overview',
+    label: 'Course Overview',
+    form,
+    submit,
+  });
+
   const onSubmit = async (formData: EgAcademyOverview) => {
     try {
       setIsSubmitting(true);
-      await onSave(formData);
+      await submit(formData);
       if (onNext) onNext();
     } catch (error) {
       console.error('Error saving overview:', error);

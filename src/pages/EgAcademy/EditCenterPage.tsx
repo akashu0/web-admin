@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useUnsavedContext, useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { UnsavedBar } from "@/components/common/UnsavedBar";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,8 @@ export default function EditCenterPage() {
   // server actually stored, rather than what was typed — same reason
   // EditUniversity keys its sections by version.
   const [version, setVersion] = useState(0);
+  const { requestLeave } = useUnsavedContext();
+  const { dirty } = useUnsavedChanges();
 
   useEffect(() => {
     if (!slug) {
@@ -98,11 +102,11 @@ export default function EditCenterPage() {
           <p className="mt-0.5 truncate text-xs text-muted-foreground">/centers/{page.slug}</p>
         </div>
 
-        <nav className="space-y-1 p-4">
+        <nav className={cn("space-y-1 p-4 transition-opacity", dirty && "opacity-60")}>
           {CENTER_SECTIONS.map((section) => (
             <button
               key={section.id}
-              onClick={() => setActiveId(section.id)}
+              onClick={() => requestLeave(() => setActiveId(section.id))}
               className={cn(
                 "flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
                 activeId === section.id
@@ -136,7 +140,7 @@ export default function EditCenterPage() {
                 </Button>
               )}
               <Button
-                onClick={togglePublish}
+                onClick={() => requestLeave(togglePublish)}
                 disabled={isPublishing}
                 className={cn(
                   "gap-2",
@@ -162,8 +166,11 @@ export default function EditCenterPage() {
         </div>
 
         <div className="p-8">
-          <div className="mx-auto max-w-5xl rounded-lg border border-border bg-card p-6 shadow-sm">
+          <div className="mx-auto max-w-5xl space-y-4">
+          <UnsavedBar />
+          <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
             <CenterPageSection
+              label={active.label}
               // Remount per section, and again after a save. Deliberately NOT on
               // every render: unrelated parent updates (publishing, for one) must
               // leave an in-progress edit — including a just-uploaded image URL —
@@ -180,6 +187,7 @@ export default function EditCenterPage() {
                 setVersion((v) => v + 1);
               }}
             />
+          </div>
           </div>
         </div>
       </main>

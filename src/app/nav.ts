@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Library,
   MapPin,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,6 +72,12 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Content",
     items: [
       { label: "FAQs", to: "/faqs", icon: HelpCircle },
+      {
+        label: "Reviews",
+        to: "/reviews",
+        icon: Star,
+        hint: "Approve what students wrote",
+      },
       { label: "Popup Banners", to: "/popup-banners", icon: Image },
       { label: "eG Library", to: "/library", icon: Library },
     ],

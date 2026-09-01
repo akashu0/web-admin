@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Trash2, ToggleLeft, ToggleRight, ImageIcon, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSectionGuard, useUnsavedContext } from '@/hooks/use-unsaved-changes';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -34,6 +35,7 @@ export const PopupBannerPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [deleteId, setDeleteId] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const { requestLeave } = useUnsavedContext();
 
     const [title, setTitle] = useState('');
     const [linkUrl, setLinkUrl] = useState('');
@@ -72,15 +74,21 @@ export const PopupBannerPage = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    useSectionGuard({
+        id: 'popupBanner.new',
+        label: 'New banner',
+        value: { title, linkUrl, imageFile },
+        ready: showForm,
+        onSave: () => submit(),
+        onRestore: () => resetForm(),
+    });
+
+    const submit = async () => {
         if (!imageFile) {
-            toast.error('Please select a banner image');
-            return;
+            throw new Error('Please select a banner image');
         }
         if (!title.trim()) {
-            toast.error('Please enter a title');
-            return;
+            throw new Error('Please enter a title');
         }
 
         const formData = new FormData();
@@ -96,10 +104,15 @@ export const PopupBannerPage = () => {
             setShowForm(false);
             resetForm();
         } catch (err: any) {
-            toast.error(err?.response?.data?.message || 'Failed to upload banner');
+            throw new Error(err?.response?.data?.message || 'Failed to upload banner');
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        void submit().catch((error: Error) => toast.error(error.message));
     };
 
     const handleToggle = async (id: string) => {
@@ -218,7 +231,13 @@ export const PopupBannerPage = () => {
             )}
 
             {/* Upload Dialog */}
-            <Dialog open={showForm} onOpenChange={open => { setShowForm(open); if (!open) resetForm(); }}>
+            <Dialog
+                open={showForm}
+                onOpenChange={open => {
+                    const apply = () => { setShowForm(open); if (!open) resetForm(); };
+                    if (open) apply(); else requestLeave(apply);
+                }}
+            >
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Upload Popup Banner</DialogTitle>

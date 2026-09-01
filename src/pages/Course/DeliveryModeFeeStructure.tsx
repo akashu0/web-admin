@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
+import { deepEqual } from '@/lib/deep-equal';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -191,13 +194,39 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
         setSavedFees(prev => prev.filter((_, i) => i !== index));
     };
 
+    // A fee row that has been typed but not yet added with "Add" is unsaved work
+    // too, so it counts towards dirtiness — and saving refuses while one is open
+    // rather than persisting the list and dropping the row silently.
+    const draftFee = isAddingNew && !deepEqual(formData, EMPTY_FEE) ? formData : null;
+
+    const submit = async () => {
+        if (draftFee) {
+            throw new Error('Add the fee you are entering, or clear it, before saving.');
+        }
+        if (onSave) await onSave(savedFees);
+    };
+
+    useSectionGuard({
+        id: 'course.feeStructures',
+        label: 'Fee Structure',
+        value: { savedFees, draftFee },
+        onSave: submit,
+        onRestore: (baseline) => {
+            setSavedFees(baseline.savedFees);
+            setFormData({ ...EMPTY_FEE });
+            setOtherFees([]);
+            setEditingIndex(null);
+        },
+    });
+
     const handleFinalSave = async () => {
         try {
             setIsSubmitting(true);
-            if (onSave) await onSave(savedFees);
+            await submit();
             if (onNext) onNext();
         } catch (error) {
             console.error('Error saving fee structures:', error);
+            toast.error(error instanceof Error ? error.message : 'Could not save the fee structure');
         } finally {
             setIsSubmitting(false);
         }

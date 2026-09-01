@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authStorage, clearAuthStorage } from '@/lib/authStorage';
 import type { User } from '../types/auth';
 
 /** module → action → allowed, exactly as the API resolves it. */
@@ -40,13 +41,22 @@ export const useAuthStore = create<AuthState>()(
                 isAuthenticated: true,
             }),
             setTokens: (token, refreshToken) => set({ token, refreshToken }),
-            logout: () => set({
-                user: null, token: null, refreshToken: null,
-                permissions: {}, isAuthenticated: false,
-            }),
+            logout: () => {
+                set({
+                    user: null, token: null, refreshToken: null,
+                    permissions: {}, isAuthenticated: false,
+                });
+                // AFTER the set, not before: persist writes the cleared state
+                // back synchronously, so clearing first would leave the key
+                // behind again. Both stores, since a sign-in may have landed in
+                // either depending on "Keep me logged in".
+                clearAuthStorage();
+            },
         }),
         {
             name: 'auth-storage',
+            // localStorage or sessionStorage, per the "Keep me logged in" box.
+            storage: authStorage,
         }
     )
 );

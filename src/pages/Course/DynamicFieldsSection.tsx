@@ -4,10 +4,12 @@ import { Settings } from 'lucide-react';
 import { useState } from 'react';
 import { DynamicFieldBuilder } from '@/components/common/DynamicFieldBuilder';
 import type { DynamicField } from '@/types/course';
+import { toast } from 'sonner';
+import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 
 interface DynamicFieldsSectionProps {
     data: DynamicField[];
-    onSave: (data: DynamicField[]) => void;
+    onSave: (data: DynamicField[]) => Promise<void> | void;
     onNext?: () => void;
 }
 
@@ -18,10 +20,24 @@ export function DynamicFieldsSection({
 }: DynamicFieldsSectionProps) {
     const [fields, setFields] = useState<DynamicField[]>(data || []);
 
-    const handleSave = () => {
-        onSave(fields);
-        if (onNext) {
-            onNext();
+    const submit = async () => {
+        await onSave(fields);
+    };
+
+    useSectionGuard({
+        id: 'course.dynamicFields',
+        label: 'Additional Fields',
+        value: fields,
+        onSave: submit,
+        onRestore: setFields,
+    });
+
+    const handleSave = async () => {
+        try {
+            await submit();
+            onNext?.();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Could not save this section');
         }
     };
 

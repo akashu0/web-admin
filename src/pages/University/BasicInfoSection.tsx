@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
 import { useCountryNames } from "@/hooks/useCountryNames";
+import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
 
 const CONTINENT_OPTIONS = [
     "Africa",
@@ -56,13 +57,7 @@ interface BasicInfoSectionProps {
 export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSectionProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setValue,
-        watch,
-    } = useForm<BasicInfoFormData>({
+    const form = useForm<BasicInfoFormData>({
         resolver: zodResolver(basicInfoSchema),
         defaultValues: {
             name: initialData.name,
@@ -80,6 +75,13 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
             status: initialData.status,
         },
     });
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        setValue,
+        watch,
+    } = form;
 
     const status = watch("status");
     const country = watch("country");
@@ -89,19 +91,27 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
     const continent = watch("continent");
     const universityType = watch("universityType");
 
+    /** The save itself. Throws on failure, so the unsaved-changes guard
+     *  can refuse to let a failed save through. */
+    const submit = async (data: BasicInfoFormData) => {
+        const { status, ...basicInfo } = data;
+        await universityService.updateBasicInfo(slug, basicInfo);
+        // `status` is NOT in the server's basic-info allowlist, so posting it
+        // here was a silent no-op: the tab said saved and the record stayed a
+        // draft. Publishing has its own endpoint, which skips the full-document
+        // validation this section save runs.
+        if (status !== initialData.status) {
+            await universityService.bulkUpdateStatus([initialData._id], status);
+        }
+        onSuccess();
+    };
+
+    useRhfSectionGuard({ id: 'university.basicInfo', label: 'Basic Information', form, submit });
+
     const onSubmit = async (data: BasicInfoFormData) => {
         try {
             setIsSubmitting(true);
-            const { status, ...basicInfo } = data;
-            await universityService.updateBasicInfo(slug, basicInfo);
-            // `status` is NOT in the server's basic-info allowlist, so posting it
-            // here was a silent no-op: the tab said saved and the record stayed a
-            // draft. Publishing has its own endpoint, which skips the full-document
-            // validation this section save runs.
-            if (status !== initialData.status) {
-                await universityService.bulkUpdateStatus([initialData._id], status);
-            }
-            onSuccess();
+            await submit(data);
         } catch (error: any) {
             console.error("Error updating basic info:", error);
             toast.error(error.response?.data?.message || "Failed to update basic information");
@@ -109,6 +119,7 @@ export function BasicInfoSection({ slug, initialData, onSuccess }: BasicInfoSect
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
