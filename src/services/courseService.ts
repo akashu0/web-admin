@@ -177,19 +177,38 @@ export const courseService = {
     },
 
     /**
-     * The "University" tab. `universityId` is a TOP-LEVEL course field and the
-     * OVERVIEW section save is the only one that writes it (courseSet in the Go
-     * API parses and validates the hex there, and an empty string clears it).
+     * The "University" tab — university link, FAQ set and study centres.
      *
-     * PATCHing /section/study-centers stored the whole request body under
-     * `studyCenters` — so the link was never saved AND the typed array was
-     * replaced by an object. This tab has no centre picker; it only picks a
-     * university.
+     * Two calls, because they land in two places:
+     *
+     *  - `universityIds` and `faqs` are TOP-LEVEL course fields, and the OVERVIEW
+     *    section is the only endpoint that writes them (courseSet parses and
+     *    validates the hex there; an empty list/string clears the link). The API
+     *    mirrors `universityIds[0]` into `universityId` itself — never send that
+     *    field from here, or the two can disagree.
+     *  - `studyCenters` is a section array of its own.
+     *
+     * The array is sent BARE — `[{ centerId }]`, not `{ studyCenters: [...] }`.
+     * Wrapping it is what stored the whole request body under `studyCenters`
+     * once, replacing the typed array with an object; the API now unwraps a
+     * single-key envelope and rejects a non-list (courseListSections), and
+     * TestCourseSectionSavesRoundTrip covers this exact payload.
+     *
+     * Always sent, including empty values: skipping the call when nothing was
+     * chosen is what made CLEARING a selection impossible.
      */
-    updateStudyCenters: async (slug: string, data: { universityId?: string }) => {
+    updateStudyCenters: async (
+        slug: string,
+        data: { universityIds?: string[]; faqs?: string; centerIds?: string[] },
+    ) => {
         const response = await apiClient.patch(`/courses/${slug}/section/overview`, {
-            universityId: data.universityId ?? "",
+            universityIds: data.universityIds ?? [],
+            faqs: data.faqs ?? "",
         });
+        await apiClient.patch(
+            `/courses/${slug}/section/study-centers`,
+            (data.centerIds ?? []).map((centerId) => ({ centerId })),
+        );
         return response.data;
     },
 

@@ -67,6 +67,16 @@ export interface Vacancy {
   documents?: VacancyDocument[];
 
   /**
+   * The "why this job" pitch, written in the CRM and shown on the public job
+   * page. Read-only here: publishing decides WHETHER a job goes live, not what
+   * it says — but the publisher has to be able to read the copy they are putting
+   * out, which is why it is on this redacted view at all.
+   *
+   * `content` is plain text, not HTML.
+   */
+  whyChoose?: { heading?: string; content?: string };
+
+  /**
    * The catalog FAQ shown with this opening — one id, never a list.
    *
    * A publishing decision rather than job content, so it is set from here and

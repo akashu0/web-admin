@@ -155,6 +155,16 @@ export function JobViewPage() {
                     </FieldGrid>
                 </DrawerSection>
 
+                {job.whyChoose?.content?.trim() && (
+                    <DrawerSection title={job.whyChoose.heading?.trim() || "Why this Job"}>
+                        {/* Plain text — rendered, not interpreted. whitespace-pre-line
+                            keeps the author's line breaks. */}
+                        <p className="whitespace-pre-line text-sm text-muted-foreground">
+                            {job.whyChoose.content}
+                        </p>
+                    </DrawerSection>
+                )}
+
                 <DrawerSection title="FAQ">
                     <JobFaqSection
                         vacancyId={job.vacancyId}

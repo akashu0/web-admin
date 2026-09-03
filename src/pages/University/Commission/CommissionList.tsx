@@ -244,7 +244,7 @@ export const CommissionList = () => {
         <div>
             <PageHeader
                 title="Partner Commissions"
-                subtitle={`${total} records — a university's own commission is edited on its Commission tab`}
+                subtitle={`${total} records — a university's own rates are edited on its B2C Incentive and B2B Incentive tabs`}
                 actions={<Button onClick={openCreate}>+ Add commission</Button>}
             />
 
@@ -299,7 +299,7 @@ export const CommissionList = () => {
                     isFetchingNextPage={isFetchingNextPage}
                     hasNextPage={hasNextPage}
                     emptyTitle="No commissions yet"
-                    emptyDescription="A university's commission is added on its own Commission tab."
+                    emptyDescription="A university's rates are added on its own B2C Incentive and B2B Incentive tabs."
                 />
             </Card>
 

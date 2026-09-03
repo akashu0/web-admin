@@ -134,8 +134,12 @@ export function EditUniversity() {
                     <TabsTrigger value="reviews">Reviews</TabsTrigger>
                     <TabsTrigger value="images">Images</TabsTrigger>
                     <TabsTrigger value="media">Media</TabsTrigger>
-                    <TabsTrigger value="commission">Commission</TabsTrigger>
-                    <TabsTrigger value="ptCommission">PT Commission</TabsTrigger>
+                    {/* The rate cards, named for who earns them. The tab VALUES
+                        stay `commission`/`ptCommission`: they key the audience
+                        the API is asked for (omitted = agent), and renaming a
+                        label is not a reason to move stored data. */}
+                    <TabsTrigger value="commission">B2C Incentive</TabsTrigger>
+                    <TabsTrigger value="ptCommission">B2B Incentive</TabsTrigger>
                     <TabsTrigger value="refrences">Refrences</TabsTrigger>
                 </TabsList>
 
@@ -219,7 +223,7 @@ export function EditUniversity() {
                 <TabsContent value="commission" className="space-y-4 mt-4">
                     <CommissionSection
                         slug={slug!}
-                        onSuccess={() => handleSectionUpdate("Partner Commission")}
+                        onSuccess={() => handleSectionUpdate("B2C Incentive")}
                     />
                 </TabsContent>
 
@@ -228,7 +232,7 @@ export function EditUniversity() {
                     <CommissionSection
                         slug={slug!}
                         audience="parttimer"
-                        onSuccess={() => handleSectionUpdate("Part-timer Commission")}
+                        onSuccess={() => handleSectionUpdate("B2B Incentive")}
                     />
                 </TabsContent>
 

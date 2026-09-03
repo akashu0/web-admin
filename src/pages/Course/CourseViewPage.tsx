@@ -22,6 +22,8 @@ import { EmptyState } from "@/components/common/states";
 import { Field, FieldGrid, StatChip } from "@/components/common/detail";
 import { courseService } from "@/services/courseService";
 import { visaService } from "@/services/visaService";
+import { studyCenterService } from "@/services/studyCenterService";
+import { universityService } from "@/services/universityService";
 import type {
     Brochure,
     CareerOpportunity,
@@ -66,6 +68,47 @@ export function CourseViewPage() {
         queryFn: () => visaService.getAllVisas({ limit: 200 }),
     });
     const visaById = new Map((visas?.data ?? []).map((v) => [v._id, v]));
+
+    // Same for study centres: the STAFF course payload carries only
+    // `studyCenters[].centerId` (it is the public detail that swaps ids for
+    // documents), so this tab rendered "Centre" with a blank location for every
+    // row until the names were looked up here.
+    const centerIds = (course?.studyCenters ?? []).map((s) => s.centerId).filter(Boolean);
+    const { data: centers } = useQuery({
+        queryKey: ["study-centers", "for-course-view", centerIds],
+        queryFn: () => studyCenterService.getByIds(centerIds),
+        enabled: centerIds.length > 0,
+    });
+    const centerById = new Map((centers ?? []).map((c) => [c._id, c]));
+
+    // Same story for universities: the staff payload carries `universityIds`,
+    // so the names have to be looked up. Falls back to the legacy singular
+    // field for a course that predates cmd/backfillcourseuniversities.
+    // `isActive` absent means active — a document stored before the flag existed
+    // was added deliberately (see DocumentRequired in types/course).
+    const activeDocuments = (course?.documentsRequired ?? []).filter(
+        (d: DocumentRequired) => d.isActive !== false && d.documentName?.trim(),
+    );
+    // Grouped in first-seen order, which is catalogue order because that is the
+    // order the editor saves them in.
+    const documentGroups = Array.from(
+        activeDocuments.reduce((acc, d) => {
+            const key = d.category?.trim() || "Documents";
+            acc.set(key, [...(acc.get(key) ?? []), d]);
+            return acc;
+        }, new Map<string, DocumentRequired[]>()),
+    );
+
+    const universityIds = course?.universityIds?.length
+        ? course.universityIds
+        : course?.universityId
+            ? [course.universityId]
+            : [];
+    const { data: universities } = useQuery({
+        queryKey: ["universities", "for-course-view", universityIds],
+        queryFn: () => universityService.getByIds(universityIds),
+        enabled: universityIds.length > 0,
+    });
 
     if (isLoading) return <PageLoader />;
 
@@ -180,6 +223,10 @@ export function CourseViewPage() {
                     <TabsTrigger value="career">
                         <Briefcase className="mr-2 size-4" />
                         Career
+                    </TabsTrigger>
+                    <TabsTrigger value="universities">
+                        Universities
+                        {universityIds.length > 0 && ` (${universityIds.length})`}
                     </TabsTrigger>
                     <TabsTrigger value="centers">
                         <MapPin className="mr-2 size-4" />
@@ -303,25 +350,38 @@ export function CourseViewPage() {
                 </TabsContent>
 
                 {/* ── Documents ── */}
-                <TabsContent value="documents" className="mt-4">
-                    {c.documentsRequired?.length ? (
-                        <Card className="divide-y divide-border p-0">
-                            {c.documentsRequired.map((d: DocumentRequired, i: number) => (
-                                <div key={i} className="flex flex-wrap items-start justify-between gap-3 p-4">
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium">{d.documentName}</p>
-                                        {d.description && (
-                                            <p className="text-sm text-muted-foreground">{d.description}</p>
-                                        )}
-                                    </div>
-                                    <Badge tone={d.isMandatory ? "green" : "neutral"}>
-                                        {d.isMandatory ? "Mandatory" : "Optional"}
-                                    </Badge>
-                                </div>
-                            ))}
-                        </Card>
+                <TabsContent value="documents" className="mt-4 space-y-4">
+                    {activeDocuments.length ? (
+                        // Grouped exactly as the editor and the website group them.
+                        // Only the ACTIVE documents: the record keeps the ones an
+                        // editor switched off so their details survive, and this
+                        // page answers "what does the website show".
+                        documentGroups.map(([category, docs]) => (
+                            <div key={category}>
+                                <SectionTitle title={category} />
+                                <Card className="divide-y divide-border p-0">
+                                    {docs.map((d, i: number) => (
+                                        <div key={i} className="flex flex-wrap items-start justify-between gap-3 p-4">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium">{d.documentName}</p>
+                                                {d.description && (
+                                                    <p className="text-sm text-muted-foreground">{d.description}</p>
+                                                )}
+                                            </div>
+                                            <Badge tone={d.isMandatory ? "green" : "neutral"}>
+                                                {d.isMandatory ? "Mandatory" : "Optional"}
+                                            </Badge>
+                                        </div>
+                                    ))}
+                                </Card>
+                            </div>
+                        ))
                     ) : (
-                        <EmptyState icon={<FileText className="size-8" />} title="No documents listed" />
+                        <EmptyState
+                            icon={<FileText className="size-8" />}
+                            title="No documents switched on"
+                            description="Turn them on in the Documents Required tab of the editor."
+                        />
                     )}
                 </TabsContent>
 
@@ -383,20 +443,49 @@ export function CourseViewPage() {
                     )}
                 </TabsContent>
 
+                {/* ── Universities ── */}
+                <TabsContent value="universities" className="mt-4">
+                    {universityIds.length ? (
+                        <Card className="divide-y divide-border p-0">
+                            {universityIds.map((id, i: number) => {
+                                const uni = (universities ?? []).find((u) => u._id === id);
+                                return (
+                                    <div key={id || i} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                                        <span className="text-sm font-medium flex items-center gap-2">
+                                            {uni?.name ?? "University no longer available"}
+                                            {/* The first is the primary — what an
+                                                application records. */}
+                                            {i === 0 && <Badge tone="violet">Primary</Badge>}
+                                        </span>
+                                        <span className="text-sm text-muted-foreground">
+                                            {[uni?.city, uni?.country].filter(Boolean).join(", ")}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </Card>
+                    ) : (
+                        <EmptyState icon={<GraduationCap className="size-8" />} title="No universities linked" />
+                    )}
+                </TabsContent>
+
                 {/* ── Study centres ── */}
                 <TabsContent value="centers" className="mt-4">
                     {c.studyCenters?.length ? (
                         <Card className="divide-y divide-border p-0">
-                            {c.studyCenters.map((s, i: number) => (
-                                <div key={i} className="flex flex-wrap items-center justify-between gap-3 p-4">
-                                    <span className="text-sm font-medium">
-                                        {s.name ?? "Centre"}
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                        {[s.location, s.country].filter(Boolean).join(", ")}
-                                    </span>
-                                </div>
-                            ))}
+                            {c.studyCenters.map((s, i: number) => {
+                                const center = centerById.get(s.centerId);
+                                return (
+                                    <div key={s.centerId || i} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                                        <span className="text-sm font-medium">
+                                            {center?.name ?? "Centre no longer available"}
+                                        </span>
+                                        <span className="text-sm text-muted-foreground">
+                                            {[center?.location, center?.country].filter(Boolean).join(", ")}
+                                        </span>
+                                    </div>
+                                );
+                            })}
                         </Card>
                     ) : (
                         <EmptyState icon={<MapPin className="size-8" />} title="No study centres linked" />

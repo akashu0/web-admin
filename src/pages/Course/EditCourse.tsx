@@ -11,7 +11,8 @@ import {
     Briefcase,
     MapPin,
     Settings,
-    Sparkles
+    Sparkles,
+    FileDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ import { CareerOpportunitiesSection } from "./CareerOpportunitiesSection";
 import { WhyChooseSection } from "./WhyChooseSection";
 import { DynamicFieldsSection } from "./DynamicFieldsSection";
 import DeliveryModeFeeStructure from "./DeliveryModeFeeStructure";
+import { BrochureSection } from "./BrochureSection";
 
 
 interface SidebarItem {
@@ -43,7 +45,7 @@ const sidebarItems: SidebarItem[] = [
     { id: "documents", label: "Documents Required", icon: <FileCheck className="h-4 w-4" /> },
     { id: "visa", label: "Visa Process", icon: <Globe className="h-4 w-4" /> },
     { id: "career", label: "Career Opportunities", icon: <Briefcase className="h-4 w-4" /> },
-    // { id: "brochure", label: "Brochure", icon: <Settings className="h-4 w-4" /> },
+    { id: "brochure", label: "Brochure", icon: <FileDown className="h-4 w-4" /> },
     { id: "dynamicFields", label: "Additional Fields", icon: <Settings className="h-4 w-4" /> },
 ];
 
@@ -94,7 +96,18 @@ export default function EditCourse() {
                     durationMonths: response.overview.durationMonths || "",
                     dynamicFields: response.overview.dynamicFields || [],
                 },
-                universityId: response.universityId || ""
+                // The list is the editable truth; the API derives `universityId`
+                // from its first entry. A legacy record that has not been
+                // through cmd/backfillcourseuniversities carries only the
+                // singular field, so fall back to it rather than showing the
+                // course as having no university.
+                universityIds:
+                    response.universityIds?.length
+                        ? response.universityIds
+                        : response.universityId
+                            ? [response.universityId]
+                            : [],
+                faqs: response.faqs || "",
             };
 
             setCourseData(normalizedData);
@@ -149,7 +162,10 @@ export default function EditCourse() {
                     await courseService.updateStudyCenters(slug!, data);
                     break;
                 // Brochures are added and removed one at a time by
-                // BrochureSection itself — there is no whole-list save.
+                // BrochureSection itself — there is no whole-list save, so this
+                // case exists only to fall through to the refetch below.
+                case "brochure":
+                    break;
                 case "dynamicFields":
                     await courseService.updateDynamicFields(slug!, data);
                     break;
@@ -272,16 +288,19 @@ export default function EditCourse() {
                             <StudyCentersSection
                                 key={version}
                                 data={courseData.studyCenters?.map(center => center.centerId) || []}
-                                universityId={courseData.universityId || ""}
-                                // Always saved, including an empty id: skipping the
+                                universityIds={courseData.universityIds || []}
+                                faqs={courseData.faqs || ""}
+                                // Always saved, including empty values: skipping the
                                 // call when nothing was chosen is what made
-                                // CLEARING a university impossible.
-                                onSave={(_centerIds, universityId) =>
+                                // CLEARING a selection impossible.
+                                onSave={(centerIds, universityIds, faqs) =>
                                     handleSectionUpdate("studyCenters", {
-                                        universityId: universityId ?? "",
+                                        universityIds: universityIds ?? [],
+                                        faqs: faqs ?? "",
+                                        centerIds: centerIds ?? [],
                                     })
                                 }
-                                onNext={() => setActiveSection("documents")}
+                                onNext={() => setActiveSection("feeStructures")}
                             />
                         )}
 
@@ -317,19 +336,22 @@ export default function EditCourse() {
                                 key={version}
                                 data={courseData.careerOpportunities}
                                 onSave={(data) => handleSectionUpdate("career", data)}
-                                onNext={() => setActiveSection("dynamicFields")}
+                                onNext={() => setActiveSection("brochure")}
                             />
                         )}
 
-                        {/* 
-                        {activeSection === "brochure" && courseData.brochure && (
+                        {/* BrochureSection uploads and deletes one file at a
+                            time straight to the API, so `onSave` only has to
+                            refetch — there is no whole-list PATCH for it. */}
+                        {activeSection === "brochure" && (
                             <BrochureSection
+                                key={version}
                                 data={courseData.brochure || []}
-                                onSave={(data) => handleSectionUpdate("brochure", data)}
+                                onSave={() => handleSectionUpdate("brochure", null)}
                                 onNext={() => setActiveSection("dynamicFields")}
                                 courseSlug={slug!}
                             />
-                        )} */}
+                        )}
 
                         {activeSection === "dynamicFields" && (
                             <DynamicFieldsSection

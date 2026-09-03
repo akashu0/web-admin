@@ -8,7 +8,12 @@ import { CommissionForm } from "./Commission/Commissionform";
 import { toFormValues, type CommissionFormValues } from "@/types/commission";
 
 /**
- * The partner commission for THIS university, edited in place.
+ * The incentive rate card for THIS university, edited in place.
+ *
+ * Two of them, one per audience: the B2C Incentive tab (agents — the legacy
+ * rows, which carry no `audience`) and the B2B Incentive tab (part-timers).
+ * The stored records are still `partner_commissions` and the API still speaks
+ * `audience=parttimer`; only what staff read changed.
  *
  * One record per university, upserted by the API — so there is no create/edit
  * distinction here, and an imported record that was never linked gets adopted
@@ -38,7 +43,7 @@ export function CommissionSection({
             qc.invalidateQueries({ queryKey: ["commissions"] });
             onSuccess?.();
         },
-        onError: (err) => toast.error(apiErrorMessage(err, "Failed to save commission")),
+        onError: (err) => toast.error(apiErrorMessage(err, "Failed to save the incentive")),
     });
 
     if (isLoading) {
@@ -52,7 +57,7 @@ export function CommissionSection({
     if (isError) {
         return (
             <Card className="border-destructive/30 bg-destructive/5 p-3 text-destructive">
-                Failed to load the commission for this university.
+                Failed to load the incentive for this university.
             </Card>
         );
     }

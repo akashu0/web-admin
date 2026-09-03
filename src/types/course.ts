@@ -1,4 +1,3 @@
-import type { LearningCenter } from "./learningCenter";
 
 // types/course.ts
 export type DynamicFieldType = 'text' | 'textarea' | 'dropdown' | 'radio';
@@ -147,16 +146,43 @@ export interface FeeStructure {
     dynamicFields?: Array<{ id: string; fieldName: string; fieldValue: string; fieldType: 'text' | 'number'; order: number }>;
 }
 
+/**
+ * One line of "what to send us with your application".
+ *
+ * `isActive` and `isMandatory` answer different questions, and the public page
+ * renders each: active decides whether the document is SHOWN, mandatory whether
+ * it is shown as required. "IELTS, if required" is active and not mandatory.
+ *
+ * `isActive` is optional because absent means active — every document stored
+ * before the field existed was added deliberately, and defaulting those to
+ * inactive would empty the section on every existing course.
+ */
 export interface DocumentRequired {
     id: string;
     documentName: string;
     description: string;
     isMandatory: boolean;
+    /** "Personal", "Academic", … — see DEFAULT_COURSE_DOCUMENTS. */
+    category?: string;
+    isActive?: boolean;
 }
 
 /** A course links to a Visa record; the steps live on that record, not here. */
 export interface VisaProcess {
     visaId: string;
+}
+
+/**
+ * A course links to a StudyCenter record the same way.
+ *
+ * This is the shape the STAFF endpoint returns — the bare id, nothing else.
+ * Only the public detail swaps it for the centre document (resolveCourseRefs),
+ * so anything here that wants a centre name must look it up through
+ * studyCenterService. It was typed as the full `LearningCenter` before, which
+ * is why the view page rendered "Centre" with a blank location for every row.
+ */
+export interface CourseStudyCenter {
+    centerId: string;
 }
 
 export interface CareerOpportunity {
@@ -188,10 +214,18 @@ export interface WhyChoose {
 
 export interface CourseFormData {
     feeStructures: FeeStructure[];
-    universityId: string;
+    /**
+     * The universities offering this course, in the order they were entered.
+     * The first is the primary — the API mirrors it into `universityId` for the
+     * readers that can still only take one (an application is for a single
+     * university), so this list is the one to edit.
+     */
+    universityIds: string[];
+    /** Id of the FAQ question set shown on the public course page, or "". */
+    faqs?: string;
     _id?: string;
     overview: CourseOverview;
-    studyCenters?: LearningCenter[];
+    studyCenters?: CourseStudyCenter[];
     documentsRequired: DocumentRequired[];
     visaProcess: VisaProcess[];
     careerOpportunities: CareerOpportunity[];
@@ -219,8 +253,11 @@ export interface Course {
     // a type error and forced casts at each call site. They are the same shapes
     // the form uses.
     feeStructures: FeeStructure[];
-    universityId: string;
-    studyCenters?: LearningCenter[];
+    universityIds?: string[];
+    /** Derived by the API from `universityIds[0]`; read-only here. */
+    universityId?: string;
+    faqs?: string;
+    studyCenters?: CourseStudyCenter[];
     dynamicFields?: DynamicField[];
     brochure?: Brochure[];
     overview: CourseOverview;

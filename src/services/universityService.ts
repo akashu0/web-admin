@@ -1,4 +1,4 @@
-import type { FeeStructure, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
+import type { FeeStructure, University, UniversityFacets, UniversityListResponse, UniversityQueryParams, UniversityResponse } from '../types/university';
 import { apiClient } from './api';
 
 export const universityService = {
@@ -50,6 +50,32 @@ export const universityService = {
     getUniversityBySlug: async (slug: string): Promise<UniversityResponse> => {
         const response = await apiClient.get<UniversityResponse>(`/universities/${slug}`);
         return response.data;
+    },
+
+    /**
+     * The universities behind a course's `universityIds` list.
+     *
+     * By id rather than filtering a list, because the list endpoint clamps
+     * `limit` to 100 server-side and a university past that would silently come
+     * back missing. `/universities/{key}` takes an id or a slug.
+     */
+    getByIds: async (ids: string[]): Promise<University[]> => {
+        const wanted = ids.filter(Boolean);
+        if (!wanted.length) return [];
+
+        const settled = await Promise.all(
+            wanted.map(async (id) => {
+                try {
+                    const res = await apiClient.get<UniversityResponse>(`/universities/${id}`);
+                    return res.data?.data ?? null;
+                } catch {
+                    // A deleted university is a gap, not a failed page — the
+                    // course still has to render.
+                    return null;
+                }
+            }),
+        );
+        return settled.filter((u): u is University => !!u);
     },
 
     // Update Basic Information
