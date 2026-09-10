@@ -21,6 +21,7 @@ import {
     type PartnerCommission,
     type CommissionFormValues,
     type CourseType,
+    tierIsPriced,
 } from "../../../types/commission";
 
 const COURSE_TYPES: CourseType[] = [
@@ -207,7 +208,7 @@ export const CommissionList = () => {
             sortable: false,
             header: "Others",
             render: (commission) => {
-                const offered = COURSE_TYPES.filter((ct) => commission[ct]?.ranges?.length);
+                const offered = COURSE_TYPES.filter((ct) => tierIsPriced(commission[ct]));
                 const others = offered.filter((ct) => ct !== "bachelors" && ct !== "masters");
                 return offered.length > 2 ? (
                     <span className="text-muted-foreground">+{others.length} more</span>

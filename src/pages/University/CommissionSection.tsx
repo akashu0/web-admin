@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { commissionService } from "@/services/commissionService";
 import { apiErrorMessage } from "@/services/api";
 import { CommissionForm } from "./Commission/Commissionform";
+import { NotLiveWarning } from "@/components/common/reference-status";
+import { showsOnWebsite } from "@/lib/publishing";
 import { toFormValues, type CommissionFormValues } from "@/types/commission";
 
 /**
@@ -18,13 +20,20 @@ import { toFormValues, type CommissionFormValues } from "@/types/commission";
  * One record per university, upserted by the API — so there is no create/edit
  * distinction here, and an imported record that was never linked gets adopted
  * (and linked) by the first save rather than duplicated.
+ *
+ * The portal only serves a rate card whose university is published, so a card
+ * saved on a draft is authored correctly and read by nobody. That is worth
+ * saying here rather than leaving someone to wonder why agents cannot see it.
  */
 export function CommissionSection({
     slug,
+    status,
     audience,
     onSuccess,
 }: {
     slug: string;
+    /** The university's publish status, for the not-live warning. */
+    status?: string;
     /** "parttimer" for the part-timer rate card; omitted = the agent card. */
     audience?: "agent" | "parttimer";
     onSuccess?: () => void;
@@ -64,6 +73,16 @@ export function CommissionSection({
 
     return (
         <Card className="overflow-hidden">
+            {!showsOnWebsite(status) && (
+                <div className="p-3 pb-0">
+                    <NotLiveWarning
+                        kind="university"
+                        status={status}
+                        where="Universities list"
+                        surface="agent and part-time portals"
+                    />
+                </div>
+            )}
             <CommissionForm
                 // The form seeds its state once, so a remount is what makes a
                 // save (or a cancel) show the stored record again.

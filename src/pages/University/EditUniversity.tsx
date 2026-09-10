@@ -223,6 +223,7 @@ export function EditUniversity() {
                 <TabsContent value="commission" className="space-y-4 mt-4">
                     <CommissionSection
                         slug={slug!}
+                        status={universityData.status}
                         onSuccess={() => handleSectionUpdate("B2C Incentive")}
                     />
                 </TabsContent>
@@ -231,6 +232,7 @@ export function EditUniversity() {
                 <TabsContent value="ptCommission" className="space-y-4 mt-4">
                     <CommissionSection
                         slug={slug!}
+                        status={universityData.status}
                         audience="parttimer"
                         onSuccess={() => handleSectionUpdate("B2B Incentive")}
                     />

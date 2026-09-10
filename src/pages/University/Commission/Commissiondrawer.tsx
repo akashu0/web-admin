@@ -8,6 +8,7 @@ import {
     type PartnerCommission,
     type CommissionFormValues,
     type CourseType,
+    tierIsPriced,
 } from "../../../types/commission";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ const TITLES: Record<DrawerMode, string> = {
 
 const CommissionDetailView = ({ commission }: { commission: PartnerCommission }) => {
     const offeredTypes = COURSE_TYPES.filter(
-        (ct: CourseType) => commission[ct]?.ranges?.length
+        (ct: CourseType) => tierIsPriced(commission[ct])
     );
 
     return (

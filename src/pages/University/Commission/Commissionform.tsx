@@ -13,6 +13,7 @@ import {
 
 const emptyTier = (): CommissionTierForm => ({
     ranges: [],
+    fundedRanges: [],
     isFullyFunded: false,
 });
 
@@ -94,6 +95,28 @@ export const CommissionForm = ({
         key: K,
         val: CommissionFormValues[K]
     ) => setValues((prev: any) => ({ ...prev, [key]: val }));
+
+    /**
+     * Copy one level's rates onto others — Bachelors and Masters are priced
+     * identically often enough that retyping every tier by hand was the biggest
+     * time sink in this form.
+     *
+     * Deep-copies the rows: sharing the array reference would make editing the
+     * copy edit the original too.
+     */
+    const copyLevel = (from: CourseType, targets: CourseType[]) =>
+        setValues((prev) => {
+            const source = prev[from];
+            const next = { ...prev };
+            for (const to of targets) {
+                next[to] = {
+                    isFullyFunded: source.isFullyFunded,
+                    ranges: source.ranges.map((r) => ({ ...r })),
+                    fundedRanges: source.fundedRanges.map((r) => ({ ...r })),
+                };
+            }
+            return next;
+        });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -199,9 +222,11 @@ export const CommissionForm = ({
                         {COURSE_TYPES.map((ct: CourseType) => (
                             <CommissionTierField
                                 key={ct}
+                                self={ct}
                                 label={COURSE_TYPE_LABELS[ct]}
                                 value={values[ct]}
                                 onChange={(val) => set(ct, val)}
+                                onCopyToLevels={(targets) => copyLevel(ct, targets)}
                             />
                         ))}
                     </div>

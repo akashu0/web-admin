@@ -4,9 +4,23 @@ export interface TierRange {
 }
 
 export interface CommissionTier {
+    /** The standard rate — a self-funded placement. */
     ranges: TierRange[];
+    /** The rate for fully-funded courses. Separate because they differ. */
+    fundedRanges?: TierRange[];
     isFullyFunded?: boolean;
 }
+
+/**
+ * Does this level carry anything worth showing?
+ *
+ * Either rate list counts, and so does the funded flag on its own: the imported
+ * sheets use "fully funded, no figure" to mean "we place here, ask us". Callers
+ * that tested `ranges.length` alone silently dropped both of those.
+ */
+export const tierIsPriced = (tier?: CommissionTier | null): boolean =>
+    !!tier &&
+    (!!tier.ranges?.length || !!tier.fundedRanges?.length || !!tier.isFullyFunded);
 
 export type CourseType =
     | "bachelors"
@@ -79,6 +93,7 @@ export interface TierRangeForm {
 
 export interface CommissionTierForm {
     ranges: TierRangeForm[];
+    fundedRanges: TierRangeForm[];
     isFullyFunded: boolean;
 }
 
@@ -104,8 +119,12 @@ export interface CommissionFormValues {
 // Both editors (the standalone drawer and the university's Commission tab) fill
 // the same form from the same record shape, so the conversion lives here.
 
+const toRangeForms = (ranges: TierRange[] | null | undefined): TierRangeForm[] =>
+    ranges?.map((r) => ({ label: r.label ?? "", value: r.value })) ?? [];
+
 export const toTierForm = (tier: CommissionTier | null | undefined): CommissionTierForm => ({
-    ranges: tier?.ranges?.map((r) => ({ label: r.label ?? "", value: r.value })) ?? [],
+    ranges: toRangeForms(tier?.ranges),
+    fundedRanges: toRangeForms(tier?.fundedRanges),
     isFullyFunded: tier?.isFullyFunded ?? false,
 });
 
