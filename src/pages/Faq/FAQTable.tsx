@@ -93,7 +93,7 @@ export const FAQTable = ({
             align: 'center',
             render: (faq) => (
                 <Badge tone="neutral">
-                    {faq.questions.length} {faq.questions.length === 1 ? 'Question' : 'Questions'}
+                    {(faq.questions ?? []).length} {(faq.questions ?? []).length === 1 ? 'Question' : 'Questions'}
                 </Badge>
             ),
         },

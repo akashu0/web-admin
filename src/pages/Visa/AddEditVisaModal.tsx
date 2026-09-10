@@ -62,8 +62,14 @@ export function AddEditVisaModal({
         if (visa) {
             setFormData({
                 country: visa.country,
+                // `?? []` on all three lists: they carry `omitempty` on the API
+                // side, so a visa with none of a given list arrives with the key
+                // ABSENT, not as []. Reading it straight blew the modal up with
+                // "cannot read properties of undefined" — which also made the
+                // editor useless as the repair tool for a record whose list was
+                // stored in the wrong shape.
                 // Keep MongoDB _ids when editing
-                visaDocuments: visa.visaDocuments.map(doc => ({
+                visaDocuments: (visa.visaDocuments ?? []).map(doc => ({
                     ...(doc._id && { _id: doc._id }), // Include _id only if it exists
                     name: doc.name,
                     description: doc.description,
@@ -72,7 +78,7 @@ export function AddEditVisaModal({
                 visaFee: visa.visaFee,
                 currency: visa.currency,
                 // Keep MongoDB _ids when editing
-                visaSteps: visa.visaSteps.map(step => ({
+                visaSteps: (visa.visaSteps ?? []).map(step => ({
                     ...(step._id && { _id: step._id }), // Include _id only if it exists
                     stepNumber: step.stepNumber,
                     title: step.title,
@@ -81,7 +87,7 @@ export function AddEditVisaModal({
                 })),
                 visaRenewalCost: visa.visaRenewalCost,
                 // Keep MongoDB _ids when editing
-                renewalDocuments: visa.renewalDocuments.map(doc => ({
+                renewalDocuments: (visa.renewalDocuments ?? []).map(doc => ({
                     ...(doc._id && { _id: doc._id }), // Include _id only if it exists
                     name: doc.name,
                     description: doc.description,

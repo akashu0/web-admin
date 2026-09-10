@@ -6,6 +6,7 @@ import { courseService } from '@/services/courseService';
 import { visaService } from '@/services/visaService';
 import type { Visa } from '@/types/visa';
 import { universityService } from '@/services/universityService';
+import { apiErrorMessage } from '@/services/api';
 import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { NotLiveWarning } from '@/components/common/reference-status';
 import { showsOnWebsite } from '@/lib/publishing';
@@ -40,30 +41,51 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
     const [isLoadingFAQ, setIsLoadingFAQ] = useState(false); // Add loading state for FAQ
     const [isSaving, setIsSaving] = useState(false);
 
+    // A FAILED list and an EMPTY list are not the same thing, and the dropdown
+    // had no way to say which. Every fetch below used to swallow its error into
+    // console.error, so a 500 from /visas or /faqs rendered as "Select Visa
+    // Process" over no options — indistinguishable from "nobody has created one
+    // yet". That cost a day of looking in the wrong place.
+    const [visaError, setVisaError] = useState(false);
+    const [faqError, setFaqError] = useState(false);
+    const [coursesError, setCoursesError] = useState('');
+
     // Fetch data on mount
     useEffect(() => {
         fetchVisaProcesses();
-        fetchCourses();
         fetchFAQs(); // Add FAQ fetch
+        // Courses are NOT fetched here: the debounce effect below already runs
+        // on mount, and doing both issued the same request twice per open.
     }, []);
 
-    // Update when initialData changes
-    useEffect(() => {
-        setSelectedVisa(initialData.visa || '');
-        setSelectedCourses(initialData.courses || []);
-        setSelectedFAQ(initialData.faq || ''); // Add FAQ
-    }, [initialData]);
+    // NO resync from `initialData`.
+    //
+    // There used to be an effect here mirroring the prop back into state on
+    // every `[initialData]` change. `initialData` is a fresh object literal on
+    // every parent render (EditUniversity), and the parent re-renders whenever
+    // the unsaved-changes context value changes — which is the moment this
+    // section first becomes dirty. So picking a visa reset the pick.
+    //
+    // Nothing is needed in its place: the seeds above run on mount, and the
+    // parent passes `key={version}`, so a re-fetched record arrives as a
+    // REMOUNT. See the note on `version` in EditUniversity.
 
     const fetchCourses = async () => {
         try {
             setIsLoadingCourses(true);
+            setCoursesError('');
             const response = await courseService.getAllCourses({
                 search: courseSearch,
                 limit: 50,
             });
             setCourses(response.data);
         } catch (error) {
+            // Deliberately NOT a toast: this one is debounced on every keystroke
+            // in the search box, so a broken endpoint would stack one toast per
+            // character typed. It reports inside the dropdown instead.
             console.error('Error fetching courses:', error);
+            setCourses([]);
+            setCoursesError(apiErrorMessage(error, 'Could not load courses'));
         } finally {
             setIsLoadingCourses(false);
         }
@@ -72,12 +94,16 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
     const fetchVisaProcesses = async () => {
         try {
             setIsLoadingVisa(true);
+            setVisaError(false);
             const response = await visaService.getAllVisas({
                 limit: 100,
             });
             setVisaProcesses(response.data);
         } catch (error) {
             console.error('Error fetching visa processes:', error);
+            setVisaProcesses([]);
+            setVisaError(true);
+            toast.error(apiErrorMessage(error, 'Could not load visa processes'));
         } finally {
             setIsLoadingVisa(false);
         }
@@ -86,10 +112,14 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
     const fetchFAQs = async () => {
         try {
             setIsLoadingFAQ(true);
+            setFaqError(false);
             const response = await faqService.getFAQDropdown();
             setFaqs(response.data); // Use separate state for FAQs
         } catch (error) {
             console.error('Error fetching FAQs:', error);
+            setFaqs([]);
+            setFaqError(true);
+            toast.error(apiErrorMessage(error, 'Could not load FAQs'));
         } finally {
             setIsLoadingFAQ(false);
         }
@@ -167,7 +197,13 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                         disabled={isLoadingVisa}
                     >
                         <option value="">
-                            {isLoadingVisa ? 'Loading...' : 'Select Visa Process'}
+                            {isLoadingVisa
+                                ? 'Loading...'
+                                : visaError
+                                    ? 'Could not load visa processes'
+                                    : visaProcesses.length === 0
+                                        ? 'No visa processes available'
+                                        : 'Select Visa Process'}
                         </option>
                         {visaProcesses.map((visa) => (
                             <option key={visa._id} value={visa._id}>
@@ -218,7 +254,13 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                         disabled={isLoadingFAQ}
                     >
                         <option value="">
-                            {isLoadingFAQ ? 'Loading...' : 'Select FAQ'}
+                            {isLoadingFAQ
+                                ? 'Loading...'
+                                : faqError
+                                    ? 'Could not load FAQs'
+                                    : faqs.length === 0
+                                        ? 'No FAQs available'
+                                        : 'Select FAQ'}
                         </option>
                         {faqs.map((faq) => (
                             <option key={faq._id} value={faq._id}>
@@ -304,6 +346,10 @@ export function UniversityReferencesTab({ slug, initialData, onSuccess }: Univer
                                         </div>
                                     );
                                 })
+                            ) : coursesError ? (
+                                <div className="px-4 py-3 text-center text-destructive">
+                                    {coursesError}
+                                </div>
                             ) : (
                                 <div className="px-4 py-3 text-center text-muted-foreground">
                                     {courseSearch ? 'No courses found' : 'Start typing to search courses'}

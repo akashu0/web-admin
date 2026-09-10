@@ -69,7 +69,9 @@ export const FAQFormDialog = ({
             setValue('entityType', editData.entityType);
             setValue('title', editData.title);
             setValue('status', editData.status);
-            setValue('questions', editData.questions);
+            // Absent rather than [] when the FAQ has no questions — see the
+            // note in AddEditVisaModal.
+            setValue('questions', editData.questions ?? []);
         } else {
             reset({
                 entityType: 'University',

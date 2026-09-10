@@ -58,7 +58,7 @@ export const FAQViewDialog = ({
                         <div>
                             <p className="text-sm text-muted-foreground mb-1">Total Questions</p>
                             <Badge tone="neutral" className="text-sm">
-                                {faq.questions.length} {faq.questions.length === 1 ? 'Question' : 'Questions'}
+                                {(faq.questions ?? []).length} {(faq.questions ?? []).length === 1 ? 'Question' : 'Questions'}
                             </Badge>
                         </div>
                     </div>
@@ -68,7 +68,9 @@ export const FAQViewDialog = ({
                     {/* Questions and Answers */}
                     <div className="space-y-6">
                         <h3 className="text-lg font-semibold">Questions & Answers</h3>
-                        {faq.questions
+                        {/* Copied before sorting: sort() mutates, and this array
+                            is the one held in state. */}
+                        {[...(faq.questions ?? [])]
                             .sort((a, b) => a.order - b.order)
                             .map((item, index) => (
                                 <div key={index} className="space-y-3 p-4 bg-muted rounded-lg border border-border">
