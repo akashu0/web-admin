@@ -11,7 +11,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import type { CourseOverview } from '@/types/course';
 import { LEVEL_OPTIONS, INTAKE_OPTIONS, STREAM_OPTIONS } from '@/types/course';
@@ -40,20 +40,16 @@ export function CourseOverviewSection({
     });
     const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
 
-    const courseName = watch('courseName');
     const courseImage = watch('courseImage');
     const selectedIntakes = watch('intakes') ?? [];
 
-    // Auto-generate slug
-    useEffect(() => {
-        if (courseName) {
-            const slug = courseName
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
-            setValue('slug', slug);
-        }
-    }, [courseName, setValue]);
+    // No slug derivation here on purpose. The server owns the slug, this form
+    // only ever edits an existing course (creation goes through
+    // AddCourseModal), and `EditCourse` seeds the real one into `data`.
+    // Generating one from an effect made the form mutate itself on mount, which
+    // the unsaved-changes guard correctly reported as an unsaved edit — and no
+    // save could ever clear it, because the overview PATCH allowlist has no
+    // `slug` for the value to come back in.
 
     const toggleIntake = (intake: string) => {
         const current = selectedIntakes ?? [];
@@ -151,7 +147,9 @@ export function CourseOverviewSection({
                         />
                         {/* Read-only because the server derives the slug from the
                             course name and the section save's allowlist has no
-                            `slug` — an editable box here was a silent no-op. */}
+                            `slug` — an editable box here was a silent no-op.
+                            The value is seeded from the course's own slug in
+                            EditCourse, not from `overview`, which never has one. */}
                         <p className="mt-1 text-xs text-muted-foreground">
                             Generated from the course name. Used in the URL and cannot be changed.
                         </p>

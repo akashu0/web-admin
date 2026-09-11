@@ -20,6 +20,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PageLoader } from "@/components/common/PageLoader";
 import { EmptyState } from "@/components/common/states";
 import { Field, FieldGrid, StatChip } from "@/components/common/detail";
+import { tuitionFeeTypeLabel } from "@/lib/tuition-fee-types";
 import { courseService } from "@/services/courseService";
 import { visaService } from "@/services/visaService";
 import { studyCenterService } from "@/services/studyCenterService";
@@ -315,7 +316,7 @@ export function CourseViewPage() {
                             <Card key={i} className="p-5">
                                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                                     <h3 className="font-semibold">
-                                        {fee.tuitionFeeType || "Fee structure"}
+                                        {tuitionFeeTypeLabel(fee.tuitionFeeType) || "Fee structure"}
                                     </h3>
                                     <div className="flex flex-wrap items-center gap-2">
                                         {fee.currency && <Badge tone="neutral">{fee.currency}</Badge>}

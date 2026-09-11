@@ -109,12 +109,6 @@ export const CONTINENT_OPTIONS = [
   'South America',
 ] as const;
 
-export const TUITION_FEE_TYPES = [
-  'Fully Tuition Fee Funded',
-  'Scholarships',
-  'Regular (Self-Funded Program)',
-] as const;
-
 export const SCHOLARSHIP_PERCENTAGES = [
   '10%', '20%', '30%', '40%', '50%',
   '60%', '70%', '80%', '90%', '100%',

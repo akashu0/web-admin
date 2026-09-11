@@ -92,6 +92,12 @@ export default function EditCourse() {
                 brochure: response?.brochure || [],
                 overview: {
                     ...response.overview,
+                    // The slug lives on the COURSE, not inside `overview` — the
+                    // API has no `overview.slug` to send back. Seed it here so
+                    // the read-only box shows the slug that is actually in the
+                    // URL; without it the form derived its own guess, which the
+                    // unsaved-changes guard then read as an edit nobody made.
+                    slug: response.slug,
                     durationYears: response.overview.durationYears || "",
                     durationMonths: response.overview.durationMonths || "",
                     dynamicFields: response.overview.dynamicFields || [],

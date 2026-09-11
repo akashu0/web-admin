@@ -50,7 +50,8 @@ export function useUnsavedChanges() {
  * `value` is whatever the section currently holds — `useWatch({ control })` for
  * a react-hook-form section, the state object for a useState one. Dirtiness is
  * "differs from the snapshot taken when this section became live", which is
- * exactly what Discard restores. It is deliberately NOT react-hook-form's
+ * exactly what Discard restores. The snapshot is re-taken on a `ready` false ->
+ * true edge and after a successful save. It is deliberately NOT react-hook-form's
  * `formState.isDirty`: the existing `setValue` calls (intake toggles, image
  * pickers) omit `shouldDirty`, so isDirty stays false through real edits.
  */
@@ -103,6 +104,12 @@ export function useSectionGuard<T>({
   const hasSave = Boolean(onSave);
   const save = useCallback(async () => {
     await latest.current.onSave?.();
+    // What was just saved IS the new baseline. Without this the only ways back
+    // to clean are the value drifting back by itself, a `ready` edge, or the
+    // parent remounting the section — so a section whose parent does not remount
+    // on save kept the bar up after a save that plainly succeeded. `onSave`
+    // throws on failure, so this only runs for a save that really happened.
+    setBaseline(latest.current.value);
   }, []);
   const discard = useCallback(() => {
     latest.current.onRestore?.(baseline);

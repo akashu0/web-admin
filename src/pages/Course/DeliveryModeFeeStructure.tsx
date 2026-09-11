@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { deepEqual } from '@/lib/deep-equal';
+import { TUITION_FEE_TYPE_OPTIONS, tuitionFeeTypeLabel } from '@/lib/tuition-fee-types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,12 +23,6 @@ import type { FeeStructure } from '@/types/course';
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-const TUITION_FEE_TYPES = [
-    'Fully Tuition Fee Funded',
-    'Scholarships',
-    'Regular (Self-Funded Program)',
-] as const;
 
 const SCHOLARSHIP_PERCENTAGES = [
     '10%', '20%', '30%', '40%', '50%',
@@ -274,7 +269,7 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {fee.tuitionFeeType && (
                                                 <Badge className="bg-accent text-primary border-primary/30">
-                                                    {fee.tuitionFeeType}
+                                                    {tuitionFeeTypeLabel(fee.tuitionFeeType)}
                                                 </Badge>
                                             )}
                                             {fee.scholarshipPercentage && fee.scholarshipPercentage !== 'Not Applicable' && (
@@ -381,8 +376,8 @@ export const DeliveryModeFeeStructure: React.FC<DeliveryModeFeeStructureProps> =
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-card">
-                                        {TUITION_FEE_TYPES.map(t => (
-                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        {TUITION_FEE_TYPE_OPTIONS.map(o => (
+                                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>

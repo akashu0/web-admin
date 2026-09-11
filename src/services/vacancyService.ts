@@ -1,6 +1,9 @@
 import { apiClient } from "./api";
 import type {
+  CommissionAudience,
   Vacancy,
+  VacancyCommission,
+  VacancyCommissionFormValues,
   VacancyFacets,
   VacancyPublishStatus,
   VacancyQueryParams,
@@ -92,5 +95,58 @@ export const vacancyService = {
       { faqId },
     );
     return withKey(response.data.data);
+  },
+
+  /**
+   * The rate card eG earns on one job, for one audience.
+   *
+   * Lives here rather than in commissionService for the reason at the top of
+   * this file: the `/vacancies/review` paths are spelled out in one place so
+   * nothing drifts onto the CRM's unredacted routes. commissionService speaks
+   * `/partner-commissions` and `/universities`, and a job path in it would be
+   * the one change that could blur that line.
+   *
+   * `null` rather than a throw when the job has not been priced yet — an empty
+   * incentive tab is the ordinary state of a new opening, not a failure.
+   */
+  getCommission: async (vacancyId: string, audience: CommissionAudience) => {
+    const response = await apiClient.get<Envelope<VacancyCommission | null>>(
+      `/vacancies/review/${vacancyId}/commission`,
+      { params: { audience } },
+    );
+    return response.data.data ?? null;
+  },
+
+  /**
+   * Upsert the card. One per job per audience, so there is no create/edit
+   * distinction for the caller to get wrong.
+   *
+   * The audience travels as a query parameter, never in the body — the API has
+   * no field for it there, so the B2B tab cannot write onto the B2C card. Sent
+   * explicitly on both sides rather than omitted for the agent: unlike the
+   * university's rows, nothing here predates the field.
+   *
+   * `isActive` is deliberately not sent. The API defaults it on create and
+   * preserves it afterwards, and there is no UI for it to disagree with.
+   */
+  saveCommission: async (
+    vacancyId: string,
+    values: VacancyCommissionFormValues,
+    audience: CommissionAudience,
+  ) => {
+    const response = await apiClient.put<Envelope<VacancyCommission>>(
+      `/vacancies/review/${vacancyId}/commission`,
+      {
+        // Flattened here, once: the editor nests the rate fields so the tier
+        // editor can take them as one value, the stored card is flat.
+        ranges: values.tier.ranges,
+        fundedRanges: values.tier.fundedRanges,
+        isFullyFunded: values.tier.isFullyFunded,
+        additionalBonus: values.additionalBonus,
+        importantNotes: values.importantNotes,
+      },
+      { params: { audience } },
+    );
+    return response.data.data;
   },
 };

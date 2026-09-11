@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { PageLoader } from "@/components/common/PageLoader";
 import { EmptyState } from "@/components/common/states";
 import { Field, FieldGrid, StatChip } from "@/components/common/detail";
+import { tuitionFeeTypeLabel } from "@/lib/tuition-fee-types";
 import { egAcademyCourseService } from "@/services/egAcademyCourseService";
 import type {
     EgAcademyFeeStructure,
@@ -165,7 +166,7 @@ export function EgAcademyCourseViewPage() {
                                 <div className="flex flex-wrap items-center gap-2">
                                     {centre.continent && <Badge tone="neutral">{centre.continent}</Badge>}
                                     {centre.feeStructure?.tuitionFeeType && (
-                                        <Badge tone="primary">{centre.feeStructure.tuitionFeeType}</Badge>
+                                        <Badge tone="primary">{tuitionFeeTypeLabel(centre.feeStructure.tuitionFeeType)}</Badge>
                                     )}
                                     {centre.feeStructure?.currency && (
                                         <Badge tone="red">{centre.feeStructure.currency}</Badge>

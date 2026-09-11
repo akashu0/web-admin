@@ -17,12 +17,11 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { universityService } from "@/services/universityService";
 import { useRhfSectionGuard } from "@/hooks/use-unsaved-changes";
-
-const TUITION_FEE_TYPES = [
-    "Fully Tuition Fee Funded",
-    "Scholarships",
-    "Regular (Self-Funded Program)",
-] as const;
+import {
+    TUITION_FEE_TYPE_OPTIONS,
+    TUITION_FEE_TYPE_VALUES,
+    type TuitionFeeType,
+} from "@/lib/tuition-fee-types";
 
 const LEVEL_OPTIONS = [
     "Certification",
@@ -73,11 +72,9 @@ const feeStructureSchema = z.object({
             /^\d+(\.\d+)?(\s*-\s*\d+(\.\d+)?)?$/,
             "Enter a number or a range like 1000-2000"
         ),
-    tuitionFeeType: z.enum([
-        "Fully Tuition Fee Funded",
-        "Scholarships",
-        "Regular (Self-Funded Program)",
-    ]).optional(),
+    // The STORED values, not the labels — a row saved before the wording
+    // changed must still validate.
+    tuitionFeeType: z.enum(TUITION_FEE_TYPE_VALUES).optional(),
     scholarshipPercentage: z.string().optional(),
 });
 
@@ -254,7 +251,7 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                         onValueChange={(v) =>
                                             setValue(
                                                 `fees.${index}.tuitionFeeType`,
-                                                v as typeof TUITION_FEE_TYPES[number]
+                                                v as TuitionFeeType
                                             )
                                         }
                                     >
@@ -262,8 +259,8 @@ export function FeeSection({ slug, initialData, onSuccess }: FeeSectionProps) {
                                             <SelectValue placeholder="Select funding type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {TUITION_FEE_TYPES.map((t) => (
-                                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                                            {TUITION_FEE_TYPE_OPTIONS.map((o) => (
+                                                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { ImageUpload } from '@/components/common/ImageUpload';
 import {
@@ -44,20 +44,13 @@ export function EgAcademyOverviewSection({
   });
   const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
 
-  const courseName = watch('courseName');
   const courseImage = watch('courseImage');
   const selectedIntakes = watch('intakes') ?? [];
 
-  // Auto-generate slug from course name
-  useEffect(() => {
-    if (courseName) {
-      const slug = courseName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-      setValue('slug', slug);
-    }
-  }, [courseName, setValue]);
+  // No slug derivation here on purpose — see the read-only box below.
+  // Generating one from an effect made the form mutate itself on mount, which
+  // the unsaved-changes guard reported as an unsaved edit that no save could
+  // clear, because the overview PATCH allowlist has no `slug`.
 
   const toggleIntake = (intake: string) => {
     const current = selectedIntakes ?? [];
@@ -141,17 +134,22 @@ export function EgAcademyOverviewSection({
 
           {/* Slug */}
           <div>
-            <Label htmlFor="slug">Slug (URL-friendly) *</Label>
+            <Label htmlFor="slug">Slug (URL-friendly)</Label>
             <Input
               id="slug"
-              {...register('slug', { required: 'Slug is required' })}
+              {...register('slug')}
               placeholder="auto-generated-from-name"
               className="mt-2 bg-muted"
-              disabled={isSubmitting}
+              readOnly
             />
-            {errors.slug && (
-              <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>
-            )}
+            {/* Read-only, and no longer required: the server derives the slug
+                and the section save's allowlist has no `slug`, so an editable
+                box was a silent no-op — and the required rule blocked Save
+                outright on a course whose overview carries no slug. The value
+                is seeded from the course itself in EditEgAcademyCourse. */}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Generated from the course name. Used in the URL and cannot be changed.
+            </p>
           </div>
 
           {/* Description */}

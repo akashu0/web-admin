@@ -52,7 +52,10 @@ export default function EditEgAcademyCourse() {
     try {
       setIsLoading(true);
       const data = await egAcademyCourseService.getCourseBySlug(slug!);
-      setCourseData(data);
+      // The slug lives on the COURSE, not inside `overview` — seed it so the
+      // read-only box shows the real one instead of a guess the overview form
+      // derives for itself, which the unsaved-changes guard read as an edit.
+      setCourseData({ ...data, overview: { ...data.overview, slug: data.slug } });
       setVersion(v => v + 1);
     } catch (error: any) {
       console.error('Error fetching course:', error);

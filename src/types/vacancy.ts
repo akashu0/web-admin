@@ -15,6 +15,8 @@
  * placement pipeline in the CRM. The screens say "Jobs".
  */
 
+import { toTierForm, type CommissionTierForm, type TierRange } from "./commission";
+
 export type VacancyPublishStatus = "draft" | "published";
 
 export interface VacancyPay {
@@ -111,3 +113,81 @@ export const PUBLISH_STATUSES = [
   { value: "draft", label: "Draft" },
   { value: "published", label: "Published" },
 ] as const;
+
+/* ----------------------------- Incentive cards ---------------------------- */
+
+/**
+ * Who earns a rate card. The screens say B2C and B2B; the API says agent and
+ * parttimer, the same split the university tabs use.
+ */
+export type CommissionAudience = "agent" | "parttimer";
+
+export const AUDIENCE_LABELS: Record<CommissionAudience, string> = {
+  agent: "B2C",
+  parttimer: "B2B",
+};
+
+/**
+ * What eG earns on one job, for one audience.
+ *
+ * FLAT, unlike the university card: a job has no course levels to price. Where a
+ * job needs tiering it goes on each range's `label` — blank for a flat rate,
+ * "1-5" / "6-15" to tier by how many candidates were placed.
+ *
+ * `fundedRanges` and `isFullyFunded` keep the university's words because they
+ * mean the same thing — there is a second rate for the fully-funded variant —
+ * and keeping them lets the existing tier editor render this card unchanged.
+ *
+ * No employer and no internal ids: the API sends neither, and there is no field
+ * here for them to land in.
+ */
+export interface VacancyCommission {
+  vacancyRef: string;
+  audience?: CommissionAudience;
+
+  ranges?: TierRange[];
+  fundedRanges?: TierRange[];
+  isFullyFunded?: boolean;
+
+  additionalBonus?: string;
+  importantNotes?: string;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * The editor's state.
+ *
+ * The three rate fields are nested under `tier` so the whole group can be handed
+ * to the existing CommissionTierField as one value/onChange pair. The card the
+ * API stores is flat, so the service flattens on the way out — in one place,
+ * rather than in the component.
+ */
+export interface VacancyCommissionFormValues {
+  tier: CommissionTierForm;
+  additionalBonus: string;
+  importantNotes: string;
+}
+
+export const emptyCommissionForm = (): VacancyCommissionFormValues => ({
+  tier: { ranges: [], fundedRanges: [], isFullyFunded: false },
+  additionalBonus: "",
+  importantNotes: "",
+});
+
+export const toCommissionFormValues = (
+  c: VacancyCommission,
+): VacancyCommissionFormValues => ({
+  // The university's own converter fills the tier half, so there is no second
+  // copy of that logic. `ranges` is spelled out because the API omits an empty
+  // list entirely, where CommissionTier requires the key to be present.
+  tier: toTierForm({
+    ranges: c.ranges ?? [],
+    fundedRanges: c.fundedRanges,
+    isFullyFunded: c.isFullyFunded,
+  }),
+  additionalBonus: c.additionalBonus ?? "",
+  importantNotes: c.importantNotes ?? "",
+});

@@ -17,9 +17,9 @@ import { Plus, Trash2, Edit, Loader2, ChevronDown, ChevronUp } from 'lucide-reac
 import { toast } from 'sonner';
 import { useSectionGuard } from '@/hooks/use-unsaved-changes';
 import { egAcademyCourseService } from '@/services/egAcademyCourseService';
+import { TUITION_FEE_TYPE_OPTIONS, tuitionFeeTypeLabel } from '@/lib/tuition-fee-types';
 import {
   CONTINENT_OPTIONS,
-  TUITION_FEE_TYPES,
   SCHOLARSHIP_PERCENTAGES,
   CURRENCY_OPTIONS,
 } from '@/types/egAcademyCourse';
@@ -286,7 +286,7 @@ export function EgAcademyLearningCentersSection({
                       <div className="mt-2 flex items-center gap-3 flex-wrap">
                         {fee.tuitionFeeType && (
                           <Badge className="bg-accent text-primary border-primary/30 text-xs">
-                            {fee.tuitionFeeType}
+                            {tuitionFeeTypeLabel(fee.tuitionFeeType)}
                           </Badge>
                         )}
                         {fee.currency && (
@@ -437,8 +437,8 @@ export function EgAcademyLearningCentersSection({
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
-                    {TUITION_FEE_TYPES.map(t => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    {TUITION_FEE_TYPE_OPTIONS.map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -116,7 +116,13 @@ export interface CourseOverview {
     _id?: string;
     courseName: string;
     headingDescription: string;
-    slug: string;
+    /**
+     * Display only, and optional because the API never sends it: the real slug
+     * is derived server-side and returned on the COURSE, not in here. EditCourse
+     * seeds it from `response.slug`; the overview save's allowlist has no `slug`,
+     * so nothing written to it is persisted.
+     */
+    slug?: string;
     description: string;
     durationYears?: string;
     durationMonths?: string;
