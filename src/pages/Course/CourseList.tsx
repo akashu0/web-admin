@@ -21,6 +21,7 @@ import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 import { courseService, type CourseFacets } from "@/services/courseService";
 import { useCountryNames } from "@/hooks/useCountryNames";
 import { FilterSelect } from "@/components/common/FilterSelect";
+import { universityService } from "@/services/universityService";
 import type { Course } from "@/types/course";
 import { AddCourseModal } from "./AddCourseModal";
 import type { SortParams } from '@/services/api';
@@ -64,6 +65,8 @@ interface CourseFilters extends SortParams {
     level?: string;
     studyMode?: string;
     awardedBy?: string;
+    /** Courses offered at this university — matched against the course's universityIds. */
+    universityId?: string;
     duration?: string;
     scholarship?: string;
 }
@@ -100,6 +103,28 @@ export function CourseList() {
     useEffect(() => {
         setFilters((prev) => ({ ...prev, search: search || undefined }));
     }, [search]);
+
+    // The University filter follows the Country filter, like the facets below.
+    const [universities, setUniversities] = useState<{ value: string; label: string }[]>([]);
+    useEffect(() => {
+        let stale = false;
+        universityService
+            .getOptions(filters.country)
+            .then((next) => {
+                if (stale) return;
+                setUniversities(next);
+                // A university outside the newly chosen country would match nothing.
+                setFilters((prev) =>
+                    prev.universityId && !next.some((u) => u.value === prev.universityId)
+                        ? { ...prev, universityId: undefined }
+                        : prev,
+                );
+            })
+            .catch(() => setUniversities([]));
+        return () => {
+            stale = true;
+        };
+    }, [filters.country]);
 
     useEffect(() => {
         let stale = false;
@@ -236,7 +261,7 @@ export function CourseList() {
 
     // `status` always has a value, so it is not what makes the bar "active".
     const hasActiveFilters = Boolean(
-        searchInput || filters.country || filters.level || filters.studyMode ||
+        searchInput || filters.country || filters.universityId || filters.level || filters.studyMode ||
         filters.stream || filters.awardedBy || filters.duration || filters.scholarship ||
         filters.status !== 'all'
     );
@@ -386,6 +411,14 @@ export function CourseList() {
                     onChange={(v) => setFilter("country", v)}
                     options={countries}
                     allLabel="All Countries"
+                />
+                <FilterSelect
+                    label="University"
+                    value={filters.universityId}
+                    onChange={(v) => setFilter("universityId", v)}
+                    options={universities}
+                    allLabel="All Universities"
+                    className="w-[240px]"
                 />
                 <FilterSelect
                     label="Level"

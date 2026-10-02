@@ -2,6 +2,19 @@ import type { FeeStructure, University, UniversityFacets, UniversityListResponse
 import { apiClient } from './api';
 
 export const universityService = {
+    // Id + name for a filter dropdown, drafts included (labelled) and optionally
+    // narrowed to one country. The CRM pickers' endpoint — 200 rows max.
+    getOptions: async (country?: string): Promise<{ value: string; label: string }[]> => {
+        const response = await apiClient.get<{ data: { id: string; name: string; status?: string }[] }>(
+            `/lookup/universities`,
+            { params: { country: country || undefined } },
+        );
+        return (response.data.data ?? []).map((u) => ({
+            value: u.id,
+            label: u.status && u.status !== 'published' ? `${u.name} (${u.status})` : u.name,
+        }));
+    },
+
     getAllUniversities: async (params: UniversityQueryParams): Promise<UniversityListResponse> => {
         const response = await apiClient.get<UniversityListResponse>(`/universities`, {
             params,
